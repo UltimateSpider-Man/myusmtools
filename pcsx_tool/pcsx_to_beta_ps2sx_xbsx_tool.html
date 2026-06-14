@@ -1,0 +1,1898 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PS2SX/XBSX ⇄ PCSX — bidirectional opcode translator (USM)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700;800&family=Major+Mono+Display&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#0c0d10;
+  --bg-2:#111317;
+  --bg-3:#1a1d22;
+  --line:#272a31;
+  --line-2:#3a3e47;
+  --ink:#e8e8e2;
+  --ink-dim:#9aa0aa;
+  --ink-faint:#5a606b;
+  --hot:#ff6b35;        /* xbox green-replacement: amber for changed bytes */
+  --hot-2:#ffb347;
+  --cool:#41d1ff;       /* pc */
+  --good:#7af0a3;
+  --bad:#ff5570;
+  --warn:#fbe069;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'JetBrains Mono', ui-monospace, monospace;font-size:13px;line-height:1.5}
+body{
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(255,107,53,.06), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(65,209,255,.05), transparent 55%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.012) 0 1px, transparent 1px 24px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.012) 0 1px, transparent 1px 24px),
+    var(--bg);
+  min-height:100vh;
+}
+
+/* ── header strip ───────────────────────────────────────────────── */
+.banner{
+  position:sticky;top:0;z-index:10;
+  border-bottom:1px solid var(--line);
+  background:rgba(12,13,16,.86);
+  backdrop-filter:blur(6px);
+}
+.banner-inner{
+  max-width:1280px;margin:0 auto;
+  padding:14px 24px;
+  display:flex;align-items:center;gap:18px;
+}
+.brand{
+  font-family:'Major Mono Display', 'JetBrains Mono', monospace;
+  font-size:18px;letter-spacing:.06em;
+  color:var(--ink);
+  white-space:nowrap;
+}
+.brand .arrow{color:var(--hot);margin:0 .35em}
+.brand .pcsx{color:var(--cool)}
+.tag{
+  font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint);
+  padding:3px 8px;border:1px solid var(--line);border-radius:2px;
+}
+.crumb{
+  margin-left:auto;font-size:11px;color:var(--ink-faint);letter-spacing:.08em;
+}
+.crumb b{color:var(--hot-2)}
+
+/* ── shell ─────────────────────────────────────────────────────── */
+main{max-width:1280px;margin:0 auto;padding:24px}
+.row{display:grid;grid-template-columns:1.1fr .9fr;gap:24px}
+@media (max-width:980px){.row{grid-template-columns:1fr}}
+
+.panel{
+  background:linear-gradient(180deg, var(--bg-2), var(--bg-3));
+  border:1px solid var(--line);
+  border-radius:3px;
+  position:relative;
+}
+.panel::before{
+  content:"";position:absolute;left:-1px;top:-1px;width:16px;height:1px;background:var(--hot);
+}
+.panel::after{
+  content:"";position:absolute;right:-1px;bottom:-1px;width:16px;height:1px;background:var(--cool);
+}
+.panel-h{
+  padding:12px 16px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:12px;
+  font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-dim);
+}
+.panel-h .num{
+  display:inline-block;min-width:22px;height:22px;line-height:22px;text-align:center;
+  border:1px solid var(--line-2);color:var(--ink);
+  font-size:11px;letter-spacing:0;
+}
+.panel-h .pull{margin-left:auto;color:var(--ink-faint);text-transform:none;letter-spacing:.04em;font-size:11px}
+.panel-b{padding:16px}
+
+/* ── dropzone ──────────────────────────────────────────────────── */
+.drop{
+  border:1.5px dashed var(--line-2);
+  background:repeating-linear-gradient(45deg, rgba(255,255,255,.012) 0 8px, transparent 8px 16px);
+  padding:34px 24px;border-radius:3px;
+  text-align:center;cursor:pointer;
+  transition:border-color .15s, background-color .15s;
+}
+.drop:hover, .drop.over{border-color:var(--hot);background-color:rgba(255,107,53,.04)}
+.drop-h{font-family:'Major Mono Display', monospace;font-size:22px;letter-spacing:.04em;color:var(--ink)}
+.drop-s{margin-top:8px;color:var(--ink-faint);font-size:12px}
+.drop-s b{color:var(--ink-dim)}
+.drop input{display:none}
+
+/* ── readouts ──────────────────────────────────────────────────── */
+.kv{display:grid;grid-template-columns:140px 1fr;gap:6px 18px;font-size:12.5px}
+.kv .k{color:var(--ink-faint);letter-spacing:.04em}
+.kv .v{color:var(--ink);font-variant-numeric:tabular-nums}
+.kv .v .hot{color:var(--hot)}
+.kv .v .cool{color:var(--cool)}
+.kv .v .good{color:var(--good)}
+.kv .v .bad{color:var(--bad)}
+.kv .v .dim{color:var(--ink-faint)}
+
+.divider{height:1px;background:var(--line);margin:14px 0;
+  background-image:linear-gradient(90deg, transparent, var(--line) 30%, var(--line) 70%, transparent)}
+
+/* ── toggles ───────────────────────────────────────────────────── */
+.tlist{display:flex;flex-direction:column;gap:2px}
+.toggle{
+  display:flex;align-items:center;gap:14px;
+  padding:10px 12px;background:var(--bg-2);border:1px solid var(--line);
+  border-radius:2px;
+  cursor:pointer;user-select:none;
+}
+.toggle:hover{border-color:var(--line-2)}
+.toggle .sw{
+  width:28px;height:14px;border-radius:1px;background:#26282d;border:1px solid var(--line-2);
+  position:relative;flex-shrink:0;transition:background .15s, border-color .15s;
+}
+.toggle .sw::after{
+  content:"";position:absolute;left:1px;top:1px;width:10px;height:10px;
+  background:var(--ink-faint);transition:transform .15s, background .15s;
+}
+.toggle.on .sw{background:rgba(255,107,53,.18);border-color:var(--hot)}
+.toggle.on .sw::after{transform:translateX(14px);background:var(--hot)}
+.toggle .l{flex:1}
+.toggle .l b{display:block;color:var(--ink);font-weight:500;font-size:12.5px}
+.toggle .l span{color:var(--ink-faint);font-size:11px;display:block;margin-top:2px;letter-spacing:.02em}
+.toggle .ct{color:var(--ink-dim);font-variant-numeric:tabular-nums;font-size:11px}
+
+/* ── action button ─────────────────────────────────────────────── */
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{
+  font-family:inherit;font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+  padding:11px 18px;border-radius:2px;cursor:pointer;
+  background:transparent;color:var(--ink);border:1px solid var(--line-2);
+  transition:border-color .15s, color .15s, background .15s;
+}
+.btn:hover{border-color:var(--ink-faint);color:#fff}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-prime{
+  background:linear-gradient(180deg, rgba(255,107,53,.18), rgba(255,107,53,.08));
+  border-color:var(--hot);color:#ffd9c2;
+}
+.btn-prime:hover{background:linear-gradient(180deg, rgba(255,107,53,.28), rgba(255,107,53,.14));color:#fff}
+.btn-prime:disabled{background:transparent;border-color:var(--line);color:var(--ink-faint)}
+
+/* ── log / hex ─────────────────────────────────────────────────── */
+.log{
+  background:#08090b;border:1px solid var(--line);border-radius:2px;
+  padding:10px 12px;font-size:12px;line-height:1.65;
+  max-height:280px;overflow:auto;white-space:pre;
+  color:var(--ink-dim);
+}
+.log .ok{color:var(--good)}
+.log .wn{color:var(--warn)}
+.log .er{color:var(--bad)}
+.log .x{color:var(--hot)}
+.log .p{color:var(--cool)}
+.log .h{color:var(--ink)}
+
+.hex{
+  background:#08090b;border:1px solid var(--line);border-radius:2px;
+  font-size:11.5px;line-height:1.55;padding:8px 0;
+  max-height:340px;overflow:auto;
+}
+.hex .row-h{
+  display:grid;
+  grid-template-columns:74px 1fr 1fr;
+  gap:8px;padding:0 12px;
+  font-size:10px;color:var(--ink-faint);letter-spacing:.1em;text-transform:uppercase;
+  border-bottom:1px solid var(--line);padding-bottom:4px;margin-bottom:4px;
+}
+.hex .ln{
+  display:grid;
+  grid-template-columns:74px 1fr 1fr;
+  gap:8px;padding:0 12px;
+  font-variant-numeric:tabular-nums;
+}
+.hex .ln .off{color:var(--ink-faint)}
+.hex .ln .from b{color:var(--bad)}
+.hex .ln .to b{color:var(--good)}
+.hex .empty{padding:18px;color:var(--ink-faint);text-align:center}
+
+/* ── stats grid ────────────────────────────────────────────────── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:2px;overflow:hidden}
+.stat{background:var(--bg-2);padding:14px 14px}
+.stat .n{font-family:'Major Mono Display', monospace;font-size:24px;color:var(--ink)}
+.stat .n.h{color:var(--hot)}
+.stat .n.c{color:var(--cool)}
+.stat .n.g{color:var(--good)}
+.stat .l{font-size:10px;color:var(--ink-faint);letter-spacing:.16em;text-transform:uppercase;margin-top:4px}
+
+/* ── tables ────────────────────────────────────────────────────── */
+.tbl{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+.tbl th{text-align:left;padding:6px 10px;color:var(--ink-faint);font-weight:400;letter-spacing:.06em;text-transform:uppercase;font-size:10px;border-bottom:1px solid var(--line)}
+.tbl td{padding:5px 10px;border-bottom:1px solid var(--bg-3)}
+.tbl tr:hover td{background:rgba(255,255,255,.02)}
+.tbl .src{color:var(--ink-dim)}
+.tbl .arrow{color:var(--hot);padding:0 4px}
+.tbl .dst{color:var(--ink)}
+.tbl .delta{color:var(--ink-faint);font-size:11px}
+
+footer{
+  max-width:1280px;margin:24px auto;padding:14px 24px;
+  border-top:1px solid var(--line);
+  font-size:11px;color:var(--ink-faint);letter-spacing:.04em;
+  display:flex;gap:24px;flex-wrap:wrap;
+}
+footer b{color:var(--ink-dim)}
+
+.scrub{display:inline-block;height:8px;background:var(--bg-3);border:1px solid var(--line);position:relative;border-radius:1px;overflow:hidden;width:160px;vertical-align:middle;margin-left:8px}
+.scrub .fill{height:100%;background:linear-gradient(90deg, var(--hot), var(--hot-2));}
+
+details summary{
+  cursor:pointer;padding:8px 0;color:var(--ink-dim);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  list-style:none;
+}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:"▸ ";color:var(--hot);transition:transform .15s;display:inline-block}
+details[open] summary::before{content:"▾ "}
+details[open] summary{color:var(--ink)}
+
+/* ── mode strip (direction selector) ───────────────────────────── */
+.modeStrip{
+  position:sticky;top:51px;z-index:9;
+  border-bottom:1px solid var(--line);
+  background:rgba(12,13,16,.86);
+  backdrop-filter:blur(6px);
+}
+.modeStripInner{
+  max-width:1280px;margin:0 auto;
+  padding:10px 24px;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+}
+.modeStripInner > .modeLabel{
+  font-size:10px;letter-spacing:.18em;color:var(--ink-faint);
+  text-transform:uppercase;margin-right:6px;
+}
+.modeBtn{
+  font-family:inherit;color:var(--ink-dim);cursor:pointer;
+  background:var(--bg-2);border:1px solid var(--line);
+  padding:7px 14px;border-radius:2px;
+  display:inline-flex;align-items:baseline;gap:6px;
+  transition:border-color .15s, color .15s, background .15s;
+  white-space:nowrap;
+}
+.modeBtn:hover{border-color:var(--line-2);color:var(--ink)}
+.modeBtn.on{
+  border-color:var(--hot);color:var(--ink);
+  background:linear-gradient(180deg, rgba(255,107,53,.14), rgba(255,107,53,.04));
+}
+.modeBtn .mt{font-size:12px;letter-spacing:.06em;font-weight:500}
+.modeBtn .ma{color:var(--ink-faint);margin:0 2px;font-size:11px}
+.modeBtn.on .ma{color:var(--hot)}
+.modeBtn .mh{font-size:10px;color:var(--ink-faint);letter-spacing:.04em;margin-left:6px;text-transform:lowercase}
+.modeBtn.on .mh{color:var(--ink-dim)}
+
+/* ── transform rows can be hidden when not applicable ──────────── */
+.toggle.na{opacity:.35;pointer-events:none}
+.toggle.na .l b::after{content:" — n/a in this mode";color:var(--ink-faint);font-weight:400;font-size:10.5px;letter-spacing:0;text-transform:none}
+</style>
+</head>
+<body>
+
+<header class="banner">
+  <div class="banner-inner">
+    <div class="brand">venom <span class="tag" id="srcTag">.ps2sx<span style="opacity:.4">/</span>.xbsx</span><span class="arrow" id="brandArrow">→</span><span class="pcsx">venom</span> <span class="tag" id="dstTag">.pcsx</span></div>
+    <div class="crumb">Ultimate Spider-Man · <b id="modeTag">awaiting input…</b></div>
+  </div>
+</header>
+
+<nav class="modeStrip">
+  <div class="modeStripInner">
+    <span class="modeLabel">direction</span>
+    <button class="modeBtn on" data-mode="sx2pc" type="button">
+      <span class="mt">SX</span><span class="ma">→</span><span class="mt">PCSX</span>
+      <span class="mh">PS2SX/XBSX → retail PC</span>
+    </button>
+    <button class="modeBtn" data-mode="pc2ps2" type="button">
+      <span class="mt">PCSX</span><span class="ma">→</span><span class="mt">PS2SX</span>
+      <span class="mh">retail PC → PS2 beta build</span>
+    </button>
+    <button class="modeBtn" data-mode="pc2xb" type="button">
+      <span class="mt">PCSX</span><span class="ma">→</span><span class="mt">XBSX</span>
+      <span class="mh">retail PC → Xbox beta build</span>
+    </button>
+  </div>
+</nav>
+
+<main>
+
+  <div class="row">
+    <!-- ─────────────── LEFT: INPUT ─────────────── -->
+    <section class="panel">
+      <div class="panel-h"><span class="num">01</span> Source · <span style="color:var(--ink)" id="srcPanelLabel">PS2SX <span class="dim">or</span> XBSX</span> <span class="pull" id="srcPanelSub">PlayStation 2 / Xbox beta build script</span></div>
+      <div class="panel-b">
+
+        <label class="drop" id="drop">
+          <input type="file" id="file" accept=".ps2sx,.xbsx,.pcsx,.bin">
+          <div class="drop-h" id="dropTitle">drop .PS2SX or .XBSX</div>
+          <div class="drop-s" id="dropSub">format auto-detected from extension · marker <b>0xA1A1A1A1</b> at <b>0x6C</b> stripped if present</div>
+        </label>
+
+        <div id="srcBox" style="display:none;margin-top:18px">
+          <div class="kv">
+            <div class="k">file</div>            <div class="v" id="srcName">—</div>
+            <div class="k">source format</div>   <div class="v" id="srcFmt">—</div>
+            <div class="k">bytes</div>           <div class="v" id="srcLen">—</div>
+            <div class="k">name_hash</div>       <div class="v" id="srcHash">—</div>
+            <div class="k">script name</div>     <div class="v" id="srcScript">—</div>
+            <div class="k">file_size hdr</div>   <div class="v" id="srcFsz">—</div>
+            <div class="k">code_size hdr</div>   <div class="v" id="srcCsz">—</div>
+            <div class="k">marker @0x6C</div>    <div class="v" id="srcMark">—</div>
+            <div class="k">BSL global ops</div>  <div class="v" id="srcBg">—</div>
+            <div class="k">BSL local ops</div>   <div class="v" id="srcBl">—</div>
+            <div class="k">M-table refs</div>    <div class="v" id="srcMt">—</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ─────────────── RIGHT: TRANSFORMS ─────────────── -->
+    <section class="panel">
+      <div class="panel-h"><span class="num">02</span> Transforms · <span id="modeTag2" style="color:var(--ink)">auto</span> <span class="pull">region tables, opcode shifts & post-bytecode passes adapt to detected source</span></div>
+      <div class="panel-b">
+
+        <div class="tlist">
+          <div class="toggle on" data-key="strip">
+            <div class="sw"></div>
+            <div class="l"><b id="lblStrip">Strip 0xA1A1A1A1 marker @ 0x6C</b><span id="descStrip">PS2 beta build leaves a 4-byte writer marker the PC loader doesn't expect</span></div>
+            <div class="ct" id="ctStrip">—</div>
+          </div>
+          <div class="toggle on" data-key="bslg">
+            <div class="sw"></div>
+            <div class="l"><b>BSL global SLC remap (0A 04 00 00 …)</b><span><span id="bslgDesc">PS2: 16-region piecewise covering every PS2 idx in [0x0000..0x01F0]. XB: 18-region piecewise from 6-script corpus (VENOM + CITY_ARENA + V03_THROW_DOWN + S03_RHINO_RAMPAGE_ENC + S02_WORKOUT + S13_FINAL_BATTLE; 3559 sites, 2415 matched pairs). Captures +1 region [0x23..0xDC] (now incl. 0x37/0x38/0x3B confirmed +1 by 4-5 scripts), +3 [0xDD..0xEB], +4 [0xEC..0xF4], +6 [0xF5..0x123] and [0x131..0x1C4], +7 [0x124..0x130]. 6 VENOM-only identity islands preserved (0x5A/0x92/0xE7/0x10B/0x119/0x1C5).</span></span></div>
+            <div class="ct" id="ctBslg">0</div>
+          </div>
+          <div class="toggle on" data-key="bsll">
+            <div class="sw"></div>
+            <div class="l"><b>BSL local SLC remap (0A 04 07 00 …)</b><span><span id="bsllDesc">PS2: 9-region piecewise covering [0x0000..0x01F0]. XB: 8-region piecewise from 6-script corpus (1705 sites, 1313 matched pairs). Broad identity zone [0x00..0xB6] (×136 at 0x44, ×121 at 0x88, ×100 at 0x1A — overwhelming). -1 super-region from [0xB7..0x1F0] with 3 VENOM-only identity islands preserved (0xCD/0xED/0xF4). Local 0xE5 was previously identity but corpus vote (S03 -1 ×5 vs VENOM +0 ×4) flipped it to -1.</span></span></div>
+            <div class="ct" id="ctBsll">0</div>
+          </div>
+          <div class="toggle on" data-key="bslgrp">
+            <div class="sw"></div>
+            <div class="l"><b>BSL group remap (0A 04 GG GG …, GG ∉ {0,7})</b><span>Script-class method calls — group field is itself a global SLC index (none observed in PS2 or XB sample, retained for future calibration)</span></div>
+            <div class="ct" id="ctBslgrp">0</div>
+          </div>
+          <div class="toggle on" data-key="mtab">
+            <div class="sw"></div>
+            <div class="l"><b>Method-table offset shift (piecewise)</b><span>PS2: <code>91 1D 0C 00</code> → +4 in [0x100, 0x300). XB: identity. <b>VENOM</b>'s 91 1D / 11 1C / 11 1D immediates byte-match XB↔PC (5/3/5 unique values, all 1:1). <b>CITY_ARENA</b> shows large method-table shifts (e.g. <code>91 1D 0C 00</code> values <code>0x6BC..0x6E0</code> → <code>0x54C..0x564</code>, Δ -0x170; 11 1C/11 1D entries shifted +/- 0x14 to +0x10290), but these are <b>class-specific</b> (depend on script's instantiated class layout) and CANNOT be applied generically — applying them would corrupt VENOM. Same reasoning as the removed PS2 11_1C/11_1D shift. Future fix: gate by script class hash.</span></div>
+            <div class="ct" id="ctMtab">0</div>
+          </div>
+          <div class="toggle" data-key="lit">
+            <div class="sw"></div>
+            <div class="l"><b>Literal-ID rewrite (01 1D vv vv vv vv)</b><span>Specific game/event IDs (none observed in the PS2 beta sample — disabled by default)</span></div>
+            <div class="ct" id="ctLit">0</div>
+          </div>
+          <div class="toggle on" data-key="compact">
+            <div class="sw"></div>
+            <div class="l"><b id="lblCompact">Compact post-bytecode records (drop u64→u32 padding)</b><span id="descCompact"><b>PS2 only.</b> PS2 records carry a u64-zero where PC has a u32-zero. Match <code>00*8 vv 00 00 00</code> (vv ∈ {04, 05}) and drop the leading 4 zero bytes. XB and PC use the same u32 padding, so this pass is a no-op when source is XB.</span></div>
+            <div class="ct" id="ctCompact">0</div>
+          </div>
+          <div class="toggle on" data-key="e3mark">
+            <div class="sw"></div>
+            <div class="l"><b id="lblE3mark">Insert E3*4 freed-marker on section-start records</b><span id="descE3mark">236 canonical resource hashes always appear in retail PCSX as <code>… E3*4 hash …</code>. Both PS2 and XB sources may omit the slot — the converter detects them and inserts the missing 4 bytes. Pointer-table tag byte: <b>0x0B</b> for PS2, <b>0x0A</b> for XB.</span></div>
+            <div class="ct" id="ctE3mark">0</div>
+          </div>
+          <div class="toggle on" data-key="fsize">
+            <div class="sw"></div>
+            <div class="l"><b id="lblFsize">Patch file_size in header (+0x08)</b><span id="descFsize">Reflects new file length after marker strip</span></div>
+            <div class="ct" id="ctFsize">—</div>
+          </div>
+          <div class="toggle" data-key="pad">
+            <div class="sw"></div>
+            <div class="l"><b id="lblPad">Pad with 0xE3 to original size</b><span id="descPad">Some loaders prefer the input length preserved (off by default — 4 bytes shorter is the canonical PCSX form)</span></div>
+            <div class="ct" id="ctPad">—</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="actions">
+          <button class="btn btn-prime" id="run" disabled>► Translate</button>
+          <button class="btn" id="dl" disabled>↓ Download</button>
+          <button class="btn" id="reset">Reset</button>
+        </div>
+
+      </div>
+    </section>
+  </div>
+
+  <!-- ─────────────── STATS BAND ─────────────── -->
+  <div style="margin-top:24px" class="stats">
+    <div class="stat"><div class="n h" id="kbytesIn">—</div><div class="l">in bytes</div></div>
+    <div class="stat"><div class="n c" id="kbytesOut">—</div><div class="l">out bytes</div></div>
+    <div class="stat"><div class="n g" id="kops">—</div><div class="l">opcodes patched</div></div>
+    <div class="stat"><div class="n" id="kdiff">—</div><div class="l">bytes changed</div></div>
+  </div>
+
+  <!-- ─────────────── DIFF + LOG ─────────────── -->
+  <div class="row" style="margin-top:24px">
+    <section class="panel">
+      <div class="panel-h"><span class="num">03</span> Hex diff · changed regions <span class="pull">first 60 — full file in download</span></div>
+      <div class="panel-b" style="padding:0">
+        <div class="hex" id="hex">
+          <div class="empty">load a file and run translate to see byte-level changes</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-h"><span class="num">04</span> Translation log <span class="pull">streaming</span></div>
+      <div class="panel-b" style="padding:14px">
+        <div class="log" id="log"><span class="dim">awaiting source file…</span></div>
+
+        <details style="margin-top:14px">
+          <summary>Verify against reference output</summary>
+          <div style="margin-top:10px">
+            <label class="drop" style="padding:18px 16px" id="drop2">
+              <input type="file" id="ref" accept=".pcsx,.ps2sx,.xbsx,.bin">
+              <div class="drop-h" style="font-size:14px" id="refDropTitle">drop reference output</div>
+              <div class="drop-s">compare your output byte-for-byte against a known-good file</div>
+            </label>
+            <div id="cmpOut" style="margin-top:12px;display:none">
+              <div class="kv">
+                <div class="k">match rate</div>     <div class="v" id="cmpRate">—</div>
+                <div class="k">first diff</div>     <div class="v" id="cmpFirst">—</div>
+                <div class="k">total diffs</div>    <div class="v" id="cmpTotal">—</div>
+                <div class="k">size match</div>     <div class="v" id="cmpSize">—</div>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+  </div>
+
+  <!-- ─────────────── REMAP TABLES ─────────────── -->
+  <div class="row" style="margin-top:24px">
+    <section class="panel">
+      <div class="panel-h"><span class="num">05</span> BSL global SLC remap · <span id="tabGSrc" style="color:var(--ink)">PS2</span> <span class="pull">0A 04 00 00 XX XX</span></div>
+      <div class="panel-b" style="padding:0">
+        <table class="tbl">
+          <thead><tr><th>src idx</th><th></th><th>+Δ</th><th></th></tr></thead>
+          <tbody id="tabG"></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="panel">
+      <div class="panel-h"><span class="num">06</span> BSL local SLC remap · <span id="tabLSrc" style="color:var(--ink)">PS2</span> <span class="pull">0A 04 07 00 XX XX</span></div>
+      <div class="panel-b" style="padding:0">
+        <table class="tbl">
+          <thead><tr><th>src idx</th><th></th><th>+Δ</th><th></th></tr></thead>
+          <tbody id="tabL"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+</main>
+
+<footer>
+  <div><b>spec</b> · ssx-family early-build script container · 0x68-byte header · code @ 0x6C(pc) / 0x70(ps2,xb)</div>
+  <div><b>opcodes</b> · VM dispatch table 0..54 verified identity (xbe @ 0x006CE797 / 0x006CF417)</div>
+  <div><b>build</b> · standalone HTML, no network · bidirectional: SX→PCSX & PCSX→SX</div>
+</footer>
+
+<script>
+"use strict";
+
+// ─────────────────────────────────────────────────────────────────
+//   PS2SX / XBSX → PCSX translator
+//
+//   PS2 path (preserved unchanged):
+//     · 38 unique PS2 scripts, 37 paired with retail PC scripts by name
+//     · 11 length-aligned pairs (lockstep walk → byte-identical bytecode)
+//     · 26 length-mismatched pairs harvested via multi-window (32, 24, 16,
+//       12 byte) preceding-context fingerprint matching
+//     · BSL remap: 16 GLOBAL + 9 LOCAL regions covering every PS2 idx in
+//       [0x0000..0x01F0] including explicit identity zones at the bottom.
+//
+//   XB path — derived from a 6-script Xbox/PC corpus:
+//     · VENOM                 :  102g + 47l   sites  (small clean script)
+//     · CITY_ARENA            :  712g + 112l  sites  (heavily rewritten)
+//     · V03_THROW_DOWN        :  497g + 258l  sites
+//     · S03_RHINO_RAMPAGE_ENC : 1192g + 834l  sites  (largest, most signal)
+//     · S02_WORKOUT           :  628g + 297l  sites
+//     · S13_FINAL_BATTLE      :  428g + 157l  sites
+//       TOTAL                 : 3559g + 1705l sites ⇒ 2415g + 1313l matched pairs
+//     · alignment via histogram + multi-window fingerprint match (windows
+//       = {32, 24, 16, 12} bytes preceding context with BSL & m-tab
+//       immediates masked); per-(xb_idx, pc_idx) counts merged into a
+//       single histogram, dominant Δ wins per xb_idx
+//     · BSL remap: 18 GLOBAL + 8 LOCAL regions. Multi-script confirmation
+//       overrides VENOM-only signals on conflict (5 globals + 1 local
+//       conflicts resolved, e.g., 0x37/0x38/0x3B were VENOM-only +0
+//       singletons but multi-script vote is +1 with ×133/×57/×8 counts).
+//     · Method-table opcodes (91 1D, 11 1C, 11 1D) and literal-IDs
+//       (01 1D) — kept identity. VENOM's match byte-for-byte; CITY_ARENA
+//       and others show large class-specific shifts that CANNOT be applied
+//       generically without script-class metadata.
+//     · Pointer-table tag byte for E3-marker discrimination is 0x0A on
+//       XB (vs 0x0B on PS2) — verified across all 6 scripts.
+// ─────────────────────────────────────────────────────────────────
+
+// ─────────────────────────────────────────────────────────────────
+// PS2 BSL Global / Local SLC remap — REGION-BASED.
+// 16 GLOBAL + 9 LOCAL regions reproduce every retained pair observation
+// exactly. Validated 11/11 byte-identical on length-matched scripts.
+// ─────────────────────────────────────────────────────────────────
+
+const PS2_BSL_GLOBAL_REGIONS = [
+  [0x0000, 0x0011,  0],   // identity zone — PS2 idx == PC idx
+  [0x0012, 0x006B,  4],
+  [0x006C, 0x0086,  5],
+  [0x0087, 0x0095,  6],   // +6 island
+  [0x0096, 0x00E1,  4],   // dip back to +4
+  [0x00E2, 0x00EC,  5],
+  [0x00ED, 0x00EE,  8],   // brief +8 transition (2 indices)
+  [0x00EF, 0x00FA,  9],   // +9 micro-region
+  [0x00FB, 0x00FE, 11],   // +11 micro-region
+  [0x00FF, 0x011D, 12],
+  [0x011E, 0x0129, 13],   // +13 island
+  [0x012A, 0x0148, 12],   // back to +12
+  [0x0149, 0x0152, 13],
+  [0x0153, 0x0162, 14],   // +14 mini-zone
+  [0x0163, 0x0191, 15],
+  [0x0192, 0x01F0, 16],
+];
+
+const PS2_BSL_LOCAL_REGIONS = [
+  [0x0000, 0x0030, 0],    // identity zone
+  [0x0031, 0x004F, 1],
+  [0x0050, 0x0054, 2],
+  [0x0055, 0x006C, 3],    // +3 island
+  [0x006D, 0x00B5, 2],    // back to +2
+  [0x00B6, 0x00BB, 3],
+  [0x00BC, 0x00C2, 4],    // brief +4 transition
+  [0x00C3, 0x00ED, 5],
+  [0x00EE, 0x01F0, 6],
+];
+
+// ─────────────────────────────────────────────────────────────────
+// XB BSL Global / Local SLC remap — REGION-BASED.
+// Derived from a 6-script Xbox/PC paired corpus.
+//
+// Corpus stats (sites · matched%):
+//   VENOM                 :  102g / 47l   (91% / 91%)   small clean script
+//   CITY_ARENA            :  712g / 112l  (41% / 56%)   heavily rewritten
+//   V03_THROW_DOWN        :  497g / 258l  (60% / 52%)
+//   S03_RHINO_RAMPAGE_ENC : 1192g / 834l  (78% / 82%)   largest, most signal
+//   S02_WORKOUT           :  628g / 297l  (75% / 84%)
+//   S13_FINAL_BATTLE      :  428g / 157l  (78% / 86%)
+//   ─────────────────────────────────────────────────────────────
+//   TOTAL                 : 3559g / 1705l ⇒ 2415g + 1313l matched pairs
+//
+// Multi-window fingerprint matching (windows = {32, 24, 16, 12} bytes
+// of preceding context with BSL & m-tab immediates masked) yields per
+// (xb_idx, pc_idx) pair counts that are merged into a single histogram.
+// At each xb_idx, the pc_idx with the highest cross-script vote wins.
+//
+// Conflict resolution (xb_idx where VENOM said +0 but corpus says shift):
+//   0x37: VENOM +0 ×3       vs  4 scripts +1 ×133  →  +1
+//   0x38: VENOM +0 ×4       vs  5 scripts +1 ×57   →  +1
+//   0x3B: VENOM +0 ×1       vs  3 scripts +1 ×8    →  +1
+//   0x5D: VENOM +0 ×1       vs  S03 +1 ×1          →  +1 (surrounding region)
+//   0xF5: VENOM +0 ×4       vs  S03 +6 ×12         →  +6
+//   local 0xE5: VENOM +0 ×4 vs  S03 -1 ×5          →  -1 (surrounding region)
+//
+// VENOM-only identity islands with NO contradicting cross-script evidence
+// (kept as identity — likely engine builtins at stable slots):
+//   GLOBAL: 0x5A ×14, 0x92 ×3, 0xE7 ×11, 0x10B ×6, 0x119 ×2, 0x1C5 ×3
+//   LOCAL : 0xCD ×6, 0xED ×2, 0xF4 ×2
+//
+// New +7 anchor revealed by S02/S03/S13/V03: 0x128 → 0x12F ×64.
+// New +6 boundary anchor at top of zone: 0x1BF → 0x1C5 ×209 (5 scripts).
+// ─────────────────────────────────────────────────────────────────
+
+const XB_BSL_GLOBAL_REGIONS = [
+  [0x0000, 0x0022,  0],   // identity zone (×87 at 0x1F, ×30 at 0x1C, ×20 at 0x0D, ×13 at 0x06)
+  [0x0023, 0x0059,  1],   // broad +1 segment (now incl. 0x37/0x38/0x3B — VENOM was wrong)
+                          // anchors: 0x37 ×133, 0x38 ×57, 0x47 ×23, 0x59 ×121
+  [0x005A, 0x005A,  0],   // identity island (VENOM ×14, no contradiction)
+  [0x005B, 0x0091,  1],   // +1 segment (×150 at 0x5C, ×90 at 0x8C, ×72 at 0x9B)
+  [0x0092, 0x0092,  0],   // identity island (VENOM ×3, no contradiction)
+  [0x0093, 0x00DB,  1],   // +1 segment (×22 at 0xA1, ×11 at 0xC7)
+  [0x00DC, 0x00E6,  3],   // +3 region (×244 at 0xE4, ×35 at 0xDF, ×3 at 0xDC in S02/S03)
+  [0x00E7, 0x00E7,  0],   // identity island (VENOM ×11, no contradiction)
+  [0x00E8, 0x00E9,  3],   // +3 continuation at boundary (×7 at 0xE8 in 4 scripts confirms +3)
+  [0x00EA, 0x00EB,  4],   // +4 micro-region (XB 0xEA→PC 0xEE confirmed via 5-script OUT/REF XOR)
+  [0x00EC, 0x00F4,  4],   // +4 region (×24 at 0xF3, ×14 at 0xF1, ×9 at 0xF4)
+  [0x00F5, 0x010A,  6],   // +6 region — VENOM +0 was overruled by S03 +6 ×12
+                          // (×63 at 0x105, ×16 at 0x110, ×13 at 0x10F)
+  [0x010B, 0x010B,  0],   // identity island (VENOM ×6, no contradiction)
+  [0x010C, 0x0118,  6],   // +6 segment (×32 at 0x113, ×23 at 0x116)
+  [0x0119, 0x0119,  0],   // identity island (VENOM ×2, no contradiction)
+  [0x011A, 0x0123,  6],   // +6 segment
+  [0x0124, 0x0130,  7],   // +7 region (×74 at 0x124, ×64 at 0x128, ×64 at 0x12F, ×36 at 0x130)
+  [0x0131, 0x01C4,  6],   // broad +6 region (×209 at 0x1BF, ×41 at 0x1AC, ×38 at 0x1B1, ×31 at 0x1AF)
+  [0x01C5, 0x01F0,  0],   // identity tail (VENOM ×3, no contradiction)
+];
+
+const XB_BSL_LOCAL_REGIONS = [
+  [0x0000, 0x00B6,  0],   // broad identity zone
+                          // (×136 at 0x44, ×121 at 0x88, ×100 at 0x1A, ×51 at 0x68, ×15 at 0x58)
+  [0x00B7, 0x00CC, -1],   // -1 region (×29 at 0xC1, ×13 at 0xC9, ×10 at 0xB7)
+  [0x00CD, 0x00CD,  0],   // identity island (VENOM ×6, no contradiction)
+  [0x00CE, 0x00EC, -1],   // -1 continuation (×196 at 0xE6, ×28 at 0xDE, ×26 at 0xE8, ×22 at 0xE7,
+                          //  ×20 at 0xD8) — 0xE5 identity dropped (VENOM +0 ×4 vs S03 -1 ×5)
+  [0x00ED, 0x00ED,  0],   // identity island (VENOM ×2, no contradiction)
+  [0x00EE, 0x00F3, -1],   // -1 continuation (×106 at 0xEE)
+  [0x00F4, 0x00F4,  0],   // identity island (VENOM ×2, no contradiction)
+  [0x00F5, 0x01F0, -1],   // -1 tail (×106 at 0xF5, ×22 at 0xF8, ×18 at 0xF7)
+];
+
+// Active region tables — set on file load by detectSource().
+// Default to PS2 to preserve existing behavior on bare loads.
+let BSL_GLOBAL_REGIONS = PS2_BSL_GLOBAL_REGIONS;
+let BSL_LOCAL_REGIONS  = PS2_BSL_LOCAL_REGIONS;
+
+function bslRemap(idx, regions){
+  for (let k = 0; k < regions.length; k++){
+    const r = regions[k];
+    if (idx >= r[0] && idx <= r[1]) return (idx + r[2]) & 0xFFFF;
+  }
+  return idx;  // outside all regions — leave unchanged
+}
+// ─────────────────────────────────────────────────────────────────
+// INVERSE BSL remap (PCSX → PS2SX/XBSX direction).
+// For a given PC index, find the source (PS2/XB) index that the forward
+// would have mapped to it. Iterate regions in the same order as the forward
+// (first-match-wins on the SOURCE side); the first region where (pc - delta)
+// lies in the source range owns this PC value.
+//
+// Note: forward regions can produce overlapping PC ranges (e.g. PS2 globals
+// [0x87..0x95]+6 and [0x96..0xE1]+4 both produce PC 0x9A..0x9B). On overlap,
+// the EARLIER region wins — matching forward's first-match-wins iteration
+// when sx values in that region are processed first.
+// ─────────────────────────────────────────────────────────────────
+function bslInverseRemap(pc_idx, regions){
+  for (let k = 0; k < regions.length; k++){
+    const r = regions[k];
+    const sx = (pc_idx - r[2]) & 0xFFFF;
+    if (sx >= r[0] && sx <= r[1]) return sx;
+  }
+  return pc_idx;  // outside all regions — leave unchanged
+}
+// BSL Group remap — applied to the GG field of `0A 04 GG GG II II` when
+// GG ∉ {0x0000, 0x0007}. None observed in the PS2 sample; populate from
+// future findings if an "ambiguous group shift" surfaces.
+const BSL_GROUP = {
+};
+// PUSH-IMM-INT literal-ID remap — `01 1D vv vv vv vv` opcode.
+// None observed in the PS2 sample. The high bit (0x80000000) on Xbox is a
+// flag preserved through the remap; the same convention is assumed here.
+const LITERAL_ID = {
+};
+
+// Section-marker hashes — derived by scanning all 189 retail PCSX files
+// for every hash appearing immediately after an E3*4 boundary marker.
+// Includes both record-start hashes (preceded by `CD*4 + E3*4`) AND
+// mid-section boundary hashes (preceded by raw `E3*4` without CD*4 — typical
+// at the end of a pointer table where one section transitions into another).
+// Total: 236 canonical section-marker hashes. PS2 records that store
+// any of these hashes have the layout `… + hash` (no E3*4 slot present);
+// the converter's e3mark pass detects them and inserts the 4 missing bytes
+// of E3*4 before the hash.
+const SECTION_HASHES = new Set([
+  0x7F5C0FBA, 0x6A33D84D, 0x67F9E28B, 0x2332DD02,
+  0xD06ED8CE, 0x87E39E5C, 0x3E830F81, 0x78629A48,
+  0x8F95AA8C, 0x46FBAAC4, 0x18ACB808, 0x9808B8BD,
+  0x9968740D, 0xA0C97C80, 0xC454AFDE, 0x626B9C28,
+  0xB0988875, 0x2AF7D36D, 0x62DB40AF, 0xF45D01EB,
+  0x7580880B, 0x3ABB78C8, 0xA88C72DB, 0x59F2A01A,
+  0x676387A8, 0xCA7177FD, 0x8DBE2764, 0xEE8011ED,
+  0xE65EDFC2, 0x88947E44, 0xDB55C622, 0x672D9990,
+  0x97E4C819, 0x51CBD35A, 0x83902F81, 0xDC89F1EE,
+  0xABF77718, 0x3B2BC1D6, 0x0DB9C6B0, 0x894BB9A1,
+  0x66133D0D, 0x7105F0F5, 0x6D3EE823, 0x97476E96,
+  0xCE53FFE4, 0xCBCA8177, 0x34F94515, 0x5B43F4B1,
+  0x2D3AE01F, 0x78EA8387, 0x757576B7, 0x392B1034,
+  0x4242FD50, 0x1BBD716E, 0x67F3089F, 0x73D537EA,
+  0x60F66ABC, 0x77BE756E, 0x192E97D9, 0x9AA9BE02,
+  0x83C60F18, 0x5BC4C890, 0x0E08CD4C, 0xCE5F9DF8,
+  0xCDF40F2F, 0xC0F37254, 0x2958857E, 0x7342A0C4,
+  0xD31DAFB6, 0xB301CE8E, 0xD533B23F, 0x332A9CD8,
+  0x827BE4AD, 0x8112B7A9, 0x3803E3F6, 0xAAF5B119,
+  0x798B7928, 0xAAFC386B, 0x09C7553D, 0x42B1FD10,
+  0x42B1FD11, 0x0B7B3F44, 0x527E74CC, 0xE021CE90,
+  0xBE2DE1F8, 0x7ED6DDAD, 0x91B470EA, 0x18E96827,
+  0xDC4C2B43, 0x052B3D08, 0x0C45E995, 0x0C45E98F,
+  0xFF2706A3, 0xFE5B0BD3, 0xE3465A41, 0xE27F9904,
+  0xE530E499, 0xE53170FB, 0x0001A212, 0xE542FD1A,
+  0x4755AC1B, 0x746E5B26, 0xEF619495, 0xAD8176F9,
+  0x5C16D909, 0x10151E53, 0x8E641D31, 0x0035F651,
+  0x38B280AC, 0x19C1828C, 0xBBFBDA23, 0x85CEE82E,
+  0xEFDDCBFB, 0x79934DFC, 0x6C05C7CD, 0xE7685C64,
+  0x898D098E, 0x5F33DFE8, 0x2ACAF3D4, 0xFCA09FC0,
+  0xFCA09FC1, 0xFCA09FC2, 0xE5E3D1DF, 0xC7103C05,
+  0xC7E3FE69, 0x40E340A6, 0xEAD62360, 0x8178CB23,
+  0x24C57002, 0xE813949C, 0x212FA759, 0xC579EFD4,
+  0x48957B78, 0x0E678C19, 0x8BF46995, 0x34C2F178,
+  0x1A66C56E, 0xABB68937, 0xAFC11A58, 0xB3CBAB79,
+  0xB7D63C9A, 0xBB014888, 0xE8625888, 0x2F9BDAF2,
+  0x2F9BF16A, 0x8655D468, 0x48CB4130, 0x1DBBD37A,
+  0xEA3C23DE, 0x238B76D8, 0xF3A5049F, 0x3048E708,
+  0xA2F0D1FF, 0x35566C4A, 0x0D6D2E8F, 0x56946F3E,
+  0x96E34994, 0xDB582F96, 0xD0E401DF, 0xEE879D5D,
+  0x2E8265FC, 0x9EDB8B7E, 0x601FA612, 0x908AA69A,
+  0x4EA0074C, 0xBA2D8368, 0x570A6E17, 0xC71EC3F1,
+  0x76D8793B, 0x80AABB0B, 0x33719224, 0xDDF06796,
+  0x9BC2B3BE, 0x34652090, 0xB2959DA6, 0xBB0EB9FF,
+  0xB6AF3878, 0xC3B5029C, 0xC3B5029E, 0xB162D995,
+  0xA2784F04, 0x76E6B451, 0x74AE8CE0, 0xE07F7842,
+  0x87081C11, 0x1D935EDC, 0x386A4198, 0x61F6231E,
+  0x661FB6F8, 0xEE9A5BFB, 0xCA57699D, 0x95BCE7F8,
+  0x6441D468, 0x498F8745, 0xD0FC1A11, 0x1EF54AD1,
+  0x69157C9F, 0xDF789030, 0xA0AED810, 0x7891E066,
+  0xAA3AD92E, 0xFB3FEAE8, 0xE62AA424, 0xBAE3D14C,
+  0x6184768A, 0x1FE5AD3A, 0x03588722, 0x63C4E974,
+  0x48508B4E, 0x2ED9ACBD, 0x7CD32230, 0x3076579F,
+  0x845C8768, 0x89CDDED6, 0x90C4B7F8, 0x8B4DEC7A,
+  0x8177A060, 0x7F2CC48E, 0xB1A4ED9F, 0x14EAE49B,
+  0x40EEFD78, 0x1A6A5B1A, 0x8A0AEF7B, 0xAB871BC2,
+  0xD13CD258, 0x2EAB29F0, 0xE5F1F5A6, 0x575207DC,
+  0x4FBD821D, 0x22E0DB76, 0x859E1DB7, 0x859E1DBE,
+  0x859E1DD8, 0x859E1DDA, 0x00FF1D69, 0x421CF8FA,
+]);
+
+// method-table offset shift — PIECEWISE & SOURCE-AWARE.
+//
+// PS2 source:
+//   91 1D 0C 00  vv vv vv vv       v in [0x100, 0x300)         → v + 4
+//   The 91 1D 0C 00 shift covers a single SLC growth common across the corpus
+//   (observed 0x174 → 0x178 in COP_PISTOL/SABLE_MERC_SAW/GANG_POI_CREATOR;
+//   0x1BC → 0x1C0 in COP_PISTOL/SABLE_MERC_SAW).
+//
+//   NOTE: the previously-included `11 1C` / `11 1D` shift (+0x6A0 in
+//   [0x10000, 0x10200)) was REMOVED. It was observed in only ONE script
+//   (GANG_POI_CREATOR, 8 ops) and shifted hundreds of unrelated values
+//   incorrectly in scripts like CITY_ARENA where 11_1D / 11_1C immediates
+//   in that range must remain identity. Class-specific (depends on the
+//   script's instantiated class method-table layout); cannot be applied
+//   generically. Future fix: gate by script class hash.
+//
+// XB source:
+//   identity for all observed opcodes. The 91 1D 0C 00, 11 1C, 11 1D, and
+//   01 1D immediates byte-match between Xbox and PC builds in the VENOM
+//   corpus (5 / 3 / 5 / 37 unique values respectively, all matched 1:1).
+function mtabShift(v, opc, source){
+  if (source === 'xb') return v;   // XB → PC: method-tables are identical
+  // PS2 path:
+  if (opc === 'op91_1D_0C_00'){
+    if (v >= 0x100   && v < 0x300)    return (v + 0x4)   >>> 0;
+    return v;
+  }
+  // 11_1C / 11_1D pass through unchanged
+  return v;
+}
+// Inverse method-table shift (PC → PS2/XB). Mirror of mtabShift.
+//   Forward maps PS2SX [0x100,0x300) → PCSX [0x104,0x304).
+//   PCSX [0x300,0x304) is ambiguous (could be from PS2SX [0x2FC,0x300) shifted,
+//   or from PS2SX [0x300,0x304) identity). We default to identity for the
+//   ambiguous tail so that values ≥ 0x300 round-trip exactly; this means
+//   PS2SX values in [0x2FC,0x300) are rare and won't round-trip, but the
+//   VENOM corpus shows the bulk of immediates fall well below this band.
+function mtabShiftInverse(v, opc, target){
+  if (target === 'xb') return v;
+  if (opc === 'op91_1D_0C_00'){
+    if (v >= 0x104   && v < 0x300)    return (v - 0x4)   >>> 0;
+    return v;
+  }
+  return v;
+}
+// kept for the count-eligibility prescan only — covers only the 91_1D_0C band
+const MTAB_MIN = 0x100;
+const MTAB_MAX = 0x300;
+
+// ─────────── mode / direction ───────────
+// Three modes, each fully determines direction and the BSL/method-table
+// region tables in use:
+//   sx2pc   :  forward,  source detected from extension (.ps2sx / .xbsx)
+//   pc2ps2  :  reverse,  target = PS2SX
+//   pc2xb   :  reverse,  target = XBSX
+function dirOf(mode){      return mode === 'sx2pc' ? 'forward' : 'reverse'; }
+function tgtOf(mode){      // platform table to use (for both forward and reverse)
+  if (mode === 'sx2pc')  return null;       // determined per-file from extension
+  if (mode === 'pc2ps2') return 'ps2';
+  if (mode === 'pc2xb')  return 'xb';
+  return null;
+}
+
+// Detect source format from filename extension. Used in forward (sx2pc) mode
+// to pick which platform's region tables to apply. In reverse modes the
+// target is fixed by the chosen mode and the input must be .pcsx.
+function detectSource(filename){
+  const m = (filename || '').toLowerCase();
+  if (m.endsWith('.xbsx')) return 'xb';
+  if (m.endsWith('.ps2sx')) return 'ps2';
+  return 'ps2';   // default for unknown — preserves prior behavior
+}
+
+// Apply a platform's region tables and refresh the table panels & headers.
+// `platform` is 'ps2' or 'xb'.
+function applyPlatform(platform){
+  if (platform === 'xb'){
+    BSL_GLOBAL_REGIONS = XB_BSL_GLOBAL_REGIONS;
+    BSL_LOCAL_REGIONS  = XB_BSL_LOCAL_REGIONS;
+  } else {
+    BSL_GLOBAL_REGIONS = PS2_BSL_GLOBAL_REGIONS;
+    BSL_LOCAL_REGIONS  = PS2_BSL_LOCAL_REGIONS;
+  }
+  fillTables();
+  const fmt = platform === 'xb' ? 'XBSX' : 'PS2SX';
+  $('tabGSrc').textContent = fmt;
+  $('tabLSrc').textContent = fmt;
+}
+
+// Update banner / panel labels for the current mode. Called whenever the
+// mode changes, and again from analyse() once a file is loaded so the
+// platform-specific bits are accurate.
+function applyModeUI(){
+  const mode = state.mode;
+  const dir  = dirOf(mode);
+  const tgt  = tgtOf(mode);
+
+  // Banner
+  if (dir === 'forward'){
+    $('srcTag').innerHTML = '.ps2sx<span style="opacity:.4">/</span>.xbsx';
+    $('dstTag').textContent = '.pcsx';
+    $('brandArrow').textContent = '→';
+    $('modeTag').innerHTML = state.src
+      ? `<span style="color:${state.source==='xb'?'var(--cool)':'var(--hot-2)'}">${state.source==='xb'?'XBSX':'PS2SX'}</span> → PCSX`
+      : 'awaiting input…';
+    $('modeTag2').innerHTML = state.src
+      ? `<span style="color:${state.source==='xb'?'var(--cool)':'var(--hot-2)'}">${state.source==='xb'?'XBSX':'PS2SX'}</span> source detected`
+      : 'auto';
+  } else {
+    $('srcTag').innerHTML = '.pcsx';
+    $('dstTag').textContent = tgt === 'xb' ? '.xbsx' : '.ps2sx';
+    $('brandArrow').textContent = '⇠';   // visual cue: reverse direction
+    const tgtLbl = tgt === 'xb' ? 'XBSX' : 'PS2SX';
+    const tgtColour = tgt === 'xb' ? 'var(--cool)' : 'var(--hot-2)';
+    $('modeTag').innerHTML  = `PCSX → <span style="color:${tgtColour}">${tgtLbl}</span>`;
+    $('modeTag2').innerHTML = `PCSX → <span style="color:${tgtColour}">${tgtLbl}</span> · target fixed`;
+  }
+
+  // Source panel
+  if (dir === 'forward'){
+    $('srcPanelLabel').innerHTML = 'PS2SX <span class="dim">or</span> XBSX';
+    $('srcPanelSub').textContent = 'PlayStation 2 / Xbox beta build script';
+    $('dropTitle').textContent = 'drop .PS2SX or .XBSX';
+    $('dropSub').innerHTML = 'format auto-detected from extension · marker <b>0xA1A1A1A1</b> at <b>0x6C</b> stripped if present';
+    $('file').setAttribute('accept', '.ps2sx,.xbsx,.bin');
+    $('refDropTitle').textContent = 'drop reference .PCSX';
+  } else {
+    $('srcPanelLabel').textContent = 'PCSX';
+    $('srcPanelSub').textContent = 'retail PC build script · target fixed by mode';
+    $('dropTitle').textContent = 'drop .PCSX';
+    const tgtLbl = tgt === 'xb' ? 'XBSX' : 'PS2SX';
+    $('dropSub').innerHTML = `outputs <b>.${tgtLbl}</b> · marker <b>0xA1A1A1A1</b> reinserted at <b>0x6C</b> · all opcode shifts inverted`;
+    $('file').setAttribute('accept', '.pcsx,.bin');
+    $('refDropTitle').textContent = `drop reference .${tgtLbl}`;
+  }
+
+  // Transform labels (mode-aware wording)
+  if (dir === 'forward'){
+    $('lblStrip').textContent = 'Strip 0xA1A1A1A1 marker @ 0x6C';
+    $('descStrip').textContent = "PS2/XB beta builds leave a 4-byte writer marker the PC loader doesn't expect";
+    $('lblCompact').innerHTML = 'Compact post-bytecode records (drop u64→u32 padding)';
+    $('descCompact').innerHTML = '<b>PS2 only.</b> PS2 records carry a u64-zero where PC has a u32-zero. Match <code>00*8 vv 00 00 00</code> (vv ∈ {04, 05}) and drop the leading 4 zero bytes. XB and PC use the same u32 padding, so this pass is a no-op when source is XB.';
+    $('lblE3mark').textContent = 'Insert E3*4 freed-marker on section-start records';
+    $('descE3mark').innerHTML = '236 canonical resource hashes always appear in retail PCSX as <code>… E3*4 hash …</code>. Both PS2 and XB sources may omit the slot — the converter detects them and inserts the missing 4 bytes. Pointer-table tag byte: <b>0x0B</b> for PS2, <b>0x0A</b> for XB.';
+    $('lblFsize').textContent = 'Patch file_size in header (+0x08)';
+    $('descFsize').textContent = 'Reflects new file length after marker strip';
+    $('lblPad').textContent = 'Pad with 0xE3 to original size';
+    $('descPad').textContent = 'Some loaders prefer the input length preserved (off by default — 4 bytes shorter is the canonical PCSX form)';
+  } else {
+    const tgtLbl = tgt === 'xb' ? 'XBSX' : 'PS2SX';
+    $('lblStrip').textContent = 'Insert 0xA1A1A1A1 marker @ 0x6C';
+    $('descStrip').textContent = `PCSX has no writer marker; the ${tgtLbl} loader expects 4 bytes of 0xA1 at 0x6C between the header and the bytecode. File grows by 4 B.`;
+    $('lblCompact').innerHTML = 'Expand post-bytecode records (u32→u64 padding)';
+    $('descCompact').innerHTML = '<b>PS2 target only.</b> Insert 4 zero bytes before each <code>00*4 vv 00 00 00</code> (vv ∈ {04, 05}) window in the post-bytecode region, restoring PS2-style u64 padding. Catches all leading-zero variants — full <code>00*8</code> runs, plus the 7- and 6-zero forms (when the preceding hash word ends in 1 or 2 zero high bytes). XB uses the same padding as PC — no-op when target is XB.';
+    $('lblE3mark').textContent = 'Remove E3*4 freed-marker before section-start records';
+    $('descE3mark').innerHTML = `Scan the post-bytecode region for <code>E3*4 + hash</code> where hash ∈ the 236 canonical section-marker set; remove the 4-byte E3*4 prefix. The ${tgtLbl} writer never wrote those 4 bytes.`;
+    $('lblFsize').textContent = 'Patch file_size in header';
+    $('descFsize').textContent = 'Reflects new file length after marker insertion + record expansion';
+    $('lblPad').textContent = 'Trim to forward-canonical size';
+    $('descPad').textContent = 'Reverse direction: padding is normally not added. Off by default.';
+  }
+
+  // Disable transforms that don't apply (mtab/compact when target = xb)
+  const compactRow = document.querySelector('.toggle[data-key="compact"]');
+  const mtabRow    = document.querySelector('.toggle[data-key="mtab"]');
+  const xbContext  = (dir === 'forward' && state.source === 'xb')
+                  || (dir === 'reverse' && tgt === 'xb');
+  compactRow.classList.toggle('na', xbContext);
+  // mtab is only PS2-shifting; on XB it's a no-op too, but we leave the
+  // toggle accessible because the shift logic short-circuits on XB anyway.
+}
+
+// header layout (early-build SSX family — same across PS2/Xbox/PC)
+const OFF_FSIZE = 0x08;   // u32 file_size
+const OFF_NAME  = 0x10;   // 32-byte ASCII name
+const OFF_CSIZE = 0x34;   // u32 code_size (bytecode length in bytes)
+const OFF_NFUNC = 0x40;   // u32 num_funcs
+const OFF_NSTR  = 0x4C;   // u32 num_strings
+const OFF_NSTAT = 0x60;   // u32 num_states
+const OFF_NIMP  = 0x68;   // u32 num_imports
+const OFF_MARKER= 0x6C;   // u32 marker (ps2sx & xbsx have A1A1A1A1; pcsx does not)
+const MARKER    = 0xA1A1A1A1;
+
+// ─────────── DOM helpers ───────────
+const $ = (id) => document.getElementById(id);
+const log = (msg, cls='') => {
+  const el = $('log');
+  if (el.firstElementChild?.classList.contains('dim')) el.innerHTML = '';
+  const span = document.createElement('span');
+  if (cls) span.className = cls;
+  span.textContent = msg + '\n';
+  el.appendChild(span);
+  el.scrollTop = el.scrollHeight;
+};
+const fmtHex = (n, w=4) => '0x' + n.toString(16).toUpperCase().padStart(w, '0');
+const fmtBytes = (n) => n.toLocaleString() + ' B';
+
+// ─────────── state ───────────
+let state = {
+  src: null,        // Uint8Array
+  srcName: '',
+  mode: 'sx2pc',    // 'sx2pc' | 'pc2ps2' | 'pc2xb'
+  source: 'ps2',    // forward mode: 'ps2' | 'xb' (set by extension on file load)
+  out: null,
+  toggles: { strip:1, bslg:1, bsll:1, bslgrp:1, mtab:1, lit:1, compact:1, e3mark:1, fsize:1, pad:0 },
+  diffRanges: [],   // for hex view
+  ref: null,
+};
+
+// ─────────── populate remap tables ───────────
+function fillTables(){
+  // Render each region as a single row: [low..high] → +delta
+  const fmtRegion = ([lo, hi, d]) => {
+    const range = (hi >= 0xFFFF) ? `${fmtHex(lo)}..∞` : `${fmtHex(lo)}..${fmtHex(hi)}`;
+    const sign  = d > 0 ? `+${d}` : (d < 0 ? `${d}` : '0');
+    const cls   = d === 0 ? 'dim' : (d < 0 ? 'bad' : '');
+    return `<tr><td class="src">${range}</td><td class="arrow">→</td><td class="dst ${cls}">${sign}</td><td class="delta">Δ ${sign}</td></tr>`;
+  };
+  $('tabG').innerHTML = BSL_GLOBAL_REGIONS.map(fmtRegion).join('');
+  $('tabL').innerHTML = BSL_LOCAL_REGIONS.map(fmtRegion).join('');
+}
+fillTables();
+
+// ─────────── toggle wiring ───────────
+document.querySelectorAll('.toggle').forEach(t => {
+  t.addEventListener('click', () => {
+    t.classList.toggle('on');
+    state.toggles[t.dataset.key] = t.classList.contains('on') ? 1 : 0;
+    if (state.src) translate();
+  });
+});
+
+// ─────────── file loading ───────────
+function bindDrop(zoneId, inputId, onLoad){
+  const z = $(zoneId), inp = $(inputId);
+  const click = () => inp.click();
+  z.addEventListener('click', click);
+  inp.addEventListener('change', e => {
+    if (e.target.files[0]) loadFile(e.target.files[0], onLoad);
+  });
+  ['dragenter','dragover'].forEach(ev =>
+    z.addEventListener(ev, e => { e.preventDefault(); z.classList.add('over'); }));
+  ['dragleave','drop'].forEach(ev =>
+    z.addEventListener(ev, e => { e.preventDefault(); z.classList.remove('over'); }));
+  z.addEventListener('drop', e => {
+    if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0], onLoad);
+  });
+}
+
+function loadFile(f, cb){
+  const r = new FileReader();
+  r.onload = () => cb(new Uint8Array(r.result), f.name);
+  r.readAsArrayBuffer(f);
+}
+
+bindDrop('drop','file', (buf, name) => {
+  state.src = buf; state.srcName = name;
+  if (dirOf(state.mode) === 'forward'){
+    state.source = detectSource(name);
+    applyPlatform(state.source);
+  } else {
+    // reverse: target fixed by mode; reflect platform tables accordingly
+    state.source = tgtOf(state.mode);
+    applyPlatform(state.source);
+  }
+  applyModeUI();
+  analyse();
+  translate();
+});
+bindDrop('drop2','ref', (buf, name) => {
+  state.ref = buf;
+  log(`reference loaded: ${name} (${fmtBytes(buf.length)})`, 'p');
+  if (state.out) verify();
+});
+
+// ─────────── analysis ───────────
+function readU32(buf, off){
+  return new DataView(buf.buffer, buf.byteOffset + off, 4).getUint32(0, true);
+}
+function readU16(buf, off){
+  return new DataView(buf.buffer, buf.byteOffset + off, 2).getUint16(0, true);
+}
+function writeU32(buf, off, v){
+  new DataView(buf.buffer, buf.byteOffset + off, 4).setUint32(0, v >>> 0, true);
+}
+function writeU16(buf, off, v){
+  new DataView(buf.buffer, buf.byteOffset + off, 2).setUint16(0, v & 0xFFFF, true);
+}
+
+function readName(buf){
+  let s = '';
+  for (let i = 0; i < 32; i++){
+    const c = buf[OFF_NAME + i];
+    if (!c) break;
+    s += String.fromCharCode(c);
+  }
+  return s;
+}
+
+function analyse(){
+  const b = state.src;
+  const dir = dirOf(state.mode);
+  $('srcBox').style.display = 'block';
+  $('srcName').textContent = `${state.srcName}`;
+
+  // Source format label
+  let fmtLabel;
+  if (dir === 'forward'){
+    fmtLabel = state.source === 'xb'
+      ? '<span class="cool">XBSX</span> <span class="dim">(Xbox beta build)</span>'
+      : '<span class="hot">PS2SX</span> <span class="dim">(PlayStation 2 beta build)</span>';
+  } else {
+    const tgt = tgtOf(state.mode);
+    const tgtLbl = tgt === 'xb' ? 'XBSX' : 'PS2SX';
+    fmtLabel = `<span class="cool">PCSX</span> <span class="dim">(retail PC build) → ${tgtLbl}</span>`;
+  }
+  $('srcFmt').innerHTML = fmtLabel;
+
+  $('srcLen').innerHTML  = `<span class="hot">${b.length.toLocaleString()}</span> <span class="dim">(${fmtHex(b.length, 8)})</span>`;
+  $('srcHash').textContent = fmtHex(readU32(b, 0x00), 8);
+  $('srcScript').textContent = readName(b);
+  $('srcFsz').textContent = fmtHex(readU32(b, OFF_FSIZE), 8);
+  const codeSize = readU32(b, OFF_CSIZE);
+  $('srcCsz').innerHTML = `<span class="cool">${fmtHex(codeSize, 8)}</span> <span class="dim">(${codeSize.toLocaleString()} B)</span>`;
+
+  const m = readU32(b, OFF_MARKER);
+  if (dir === 'forward'){
+    if (m === MARKER){
+      $('srcMark').innerHTML = `<span class="good">present</span> <span class="dim">${fmtHex(m,8)}</span>`;
+    } else {
+      $('srcMark').innerHTML = `<span class="warn">absent</span> <span class="dim">${fmtHex(m,8)}</span> <span class="dim">— already PCSX-form?</span>`;
+    }
+  } else {
+    if (m === MARKER){
+      $('srcMark').innerHTML = `<span class="warn">already present</span> <span class="dim">${fmtHex(m,8)}</span> <span class="dim">— input may not be PCSX</span>`;
+    } else {
+      $('srcMark').innerHTML = `<span class="good">absent</span> <span class="dim">(will be inserted)</span>`;
+    }
+  }
+
+  // Bytecode region. In reverse mode (PCSX input) the marker is absent so
+  // bytecode begins at 0x6C; if a stray marker is present, skip 4 more bytes.
+  const codeStart = (dir === 'forward')
+                  ? ((m === MARKER) ? 0x70 : 0x6C)
+                  : ((m === MARKER) ? 0x70 : 0x6C);
+  const codeEnd   = Math.min(codeStart + codeSize, b.length);
+
+  // Pre-scan opcode sites that would be touched.
+  let bg=0, bl=0, bgrp=0, mt=0, lit=0;
+  const platform = state.source;   // 'ps2' or 'xb' (in reverse mode this is target)
+  for (let i = codeStart; i < codeEnd - 4; i++){
+    if (b[i] === 0x0A && b[i+1] === 0x04 && i+5 < codeEnd){
+      const grp = readU16(b, i+2);
+      const idx = readU16(b, i+4);
+      if (dir === 'forward'){
+        if (grp === 0x0000 && bslRemap(idx, BSL_GLOBAL_REGIONS) !== idx) bg++;
+        else if (grp === 0x0007 && bslRemap(idx, BSL_LOCAL_REGIONS) !== idx) bl++;
+        else if (grp !== 0x0000 && grp !== 0x0007 && grp in BSL_GROUP) bgrp++;
+      } else {
+        if (grp === 0x0000 && bslInverseRemap(idx, BSL_GLOBAL_REGIONS) !== idx) bg++;
+        else if (grp === 0x0007 && bslInverseRemap(idx, BSL_LOCAL_REGIONS) !== idx) bl++;
+      }
+    }
+    if (b[i] === 0x91 && b[i+1] === 0x1D && b[i+2] === 0x0C && b[i+3] === 0x00 && i+7 < codeEnd){
+      const v = readU32(b, i+4);
+      const nv = (dir === 'forward')
+               ? mtabShift(v, 'op91_1D_0C_00', platform)
+               : mtabShiftInverse(v, 'op91_1D_0C_00', platform);
+      if (nv !== v) mt++;
+    }
+    if (b[i] === 0x11 && (b[i+1] === 0x1C || b[i+1] === 0x1D) && i+5 < codeEnd){
+      const v = readU32(b, i+2);
+      const opc = (b[i+1] === 0x1C) ? 'op11_1C' : 'op11_1D';
+      const nv = (dir === 'forward')
+               ? mtabShift(v, opc, platform)
+               : mtabShiftInverse(v, opc, platform);
+      if (nv !== v) mt++;
+    }
+    if (b[i] === 0x01 && b[i+1] === 0x1D && i+5 < codeEnd){
+      const v = readU32(b, i+2);
+      if (v in LITERAL_ID) lit++;
+    }
+  }
+  $('srcBg').textContent = bg;
+  $('srcBl').textContent = bl;
+  $('srcMt').textContent = mt;
+
+  $('run').disabled = false;
+  const dirLabel = dir === 'forward' ? `${platform.toUpperCase()}→PCSX` : `PCSX→${platform.toUpperCase()}`;
+  log(`loaded ${state.srcName} · ${fmtBytes(b.length)} · mode=${dirLabel} · marker ${m===MARKER?'present':'absent'}`, 'h');
+  log(`  code region [${fmtHex(codeStart,4)}, ${fmtHex(codeEnd,4)}) · ${codeSize.toLocaleString()} B`);
+  log(`  scanned ${bg} BSL-global · ${bl} BSL-local · ${mt} method-table refs eligible for ${dir==='forward'?'remap':'inverse remap'}`);
+}
+
+// ─────────── translate (top-level dispatch) ───────────
+function translate(){
+  if (!state.src) return;
+  if (dirOf(state.mode) === 'reverse') return translateReverse();
+  return translateForward();
+}
+
+// ─────────── translate (forward: SX → PCSX) ───────────
+function translateForward(){
+  if (!state.src) return;
+  const b = state.src;
+  const inLen = b.length;
+  const codeSize = readU32(b, OFF_CSIZE);
+  const hasMarker = readU32(b, OFF_MARKER) === MARKER;
+
+  let out = new Uint8Array(b.length);
+  out.set(b);
+  const counts = { strip:0, bslg:0, bsll:0, bslgrp:0, mtab:0, lit:0, compact:0, e3mark:0, fsize:0, pad:0 };
+
+  // (1) strip A1A1A1A1 marker
+  let codeStart;
+  if (state.toggles.strip && hasMarker){
+    const trimmed = new Uint8Array(out.length - 4);
+    trimmed.set(out.subarray(0, OFF_MARKER));
+    trimmed.set(out.subarray(OFF_MARKER + 4), OFF_MARKER);
+    out = trimmed;
+    counts.strip = 1;
+    codeStart = 0x6C;
+    log('strip: removed 0xA1A1A1A1 marker @ 0x6C — file shrinks 4 B', 'x');
+  } else {
+    codeStart = hasMarker ? 0x70 : 0x6C;
+  }
+  const codeEnd = Math.min(codeStart + codeSize, out.length);
+
+  // (2)(3)(4) walk the bytecode and apply opcode-level transforms
+  const diffs = [];
+
+  for (let i = codeStart; i < codeEnd - 4; i++){
+    let consumed = false;
+    // BSL: 0A 04 GG GG II II
+    if (out[i] === 0x0A && out[i+1] === 0x04 && i+5 < codeEnd){
+      const grp = readU16(out, i+2);
+      const idx = readU16(out, i+4);
+      if (grp === 0x0000 && state.toggles.bslg){
+        const nv = bslRemap(idx, BSL_GLOBAL_REGIONS);
+        if (nv !== idx){
+          writeU16(out, i+4, nv);
+          diffs.push({ off: i+4, w: 2, kind: 'BSL-global' });
+          counts.bslg++;
+        }
+        consumed = true;
+      } else if (grp === 0x0007 && state.toggles.bsll){
+        const nv = bslRemap(idx, BSL_LOCAL_REGIONS);
+        if (nv !== idx){
+          writeU16(out, i+4, nv);
+          diffs.push({ off: i+4, w: 2, kind: 'BSL-local' });
+          counts.bsll++;
+        }
+        consumed = true;
+      } else if (grp !== 0x0000 && grp !== 0x0007 && state.toggles.bslgrp && grp in BSL_GROUP){
+        // GROUP itself is a global SLC index (script-class method call)
+        const nv = BSL_GROUP[grp];
+        if (nv !== grp){
+          writeU16(out, i+2, nv);
+          diffs.push({ off: i+2, w: 2, kind: 'BSL-group' });
+        }
+        counts.bslgrp++;
+        consumed = true;
+      }
+    }
+    if (consumed) continue;
+    // method-table: 91 1D 0C 00 vv vv vv vv
+    if (state.toggles.mtab && out[i] === 0x91 && out[i+1] === 0x1D && out[i+2] === 0x0C && out[i+3] === 0x00 && i+7 < codeEnd){
+      const v = readU32(out, i+4);
+      const nv = mtabShift(v, 'op91_1D_0C_00', state.source);
+      if (nv !== v){
+        writeU32(out, i+4, nv);
+        diffs.push({ off: i+4, w: 4, kind: 'M-tab[91 1D]' });
+        counts.mtab++;
+      }
+    }
+    // method-table: 11 1C vv vv vv vv  /  11 1D vv vv vv vv
+    if (state.toggles.mtab && out[i] === 0x11 && (out[i+1] === 0x1C || out[i+1] === 0x1D) && i+5 < codeEnd){
+      const v = readU32(out, i+2);
+      const opc = out[i+1] === 0x1C ? 'op11_1C' : 'op11_1D';
+      const nv = mtabShift(v, opc, state.source);
+      if (nv !== v){
+        writeU32(out, i+2, nv);
+        diffs.push({ off: i+2, w: 4, kind: 'M-tab[11 ' + (out[i+1]===0x1c?'1C':'1D') + ']' });
+        counts.mtab++;
+      }
+    }
+    // PUSH-IMM-INT literal-ID: 01 1D vv vv vv vv  (game/event ID rewrites)
+    if (state.toggles.lit && out[i] === 0x01 && out[i+1] === 0x1D && i+5 < codeEnd){
+      const v = readU32(out, i+2);
+      if (v in LITERAL_ID){
+        const nv = LITERAL_ID[v];
+        writeU32(out, i+2, nv);
+        diffs.push({ off: i+2, w: 4, kind: 'literal-ID' });
+        counts.lit++;
+      }
+    }
+  }
+
+  // (4b) post-bytecode record compaction — PS2-ONLY.
+  // PS2 records have a 4-byte padding word vs PC: a u64 zero on PS2 (8 bytes)
+  // becomes a u32 zero on PC (4 bytes). The canonical match is "<u64 zero>
+  // <u32 vv>" where vv is a small value (04 or 05). In bytes: 8 leading
+  // zeros + vv + 00 00 00 = 12 bytes total. Drop the leading 4 zero bytes
+  // per match.
+  //
+  // Equivalent observed surface forms — all caught by this single rule:
+  //   00 00 00 00 00 00 00 00 00 00 00 04   (00*11 + 04, the most common)
+  //   00 00 00 00 00 00 00 00 00 00 00 05   (00*11 + 05)
+  //   00 00 00 00 00 00 00 00 00 00 04      (00*10 + 04, prev field ends 0,0)
+  //   00 00 00 00 00 00 00 00 00 00 05      (00*10 + 05)
+  // The structural rule (8+1+3) matches all of these regardless of how many
+  // extra zero bytes precede the u64 padding from prior fields.
+  // Restricted to post-bytecode region — bytecode internal patterns must NOT
+  // be touched.
+  //
+  // NOT applicable to XB source: XB and PC use the same u32 padding format,
+  // so applying this rule against XB post-bytecode would generate
+  // false-positives against innocent zero-runs in static data tables.
+  if (state.toggles.compact && state.source === 'ps2'){
+    const targets = [0x04, 0x05];
+    const postStart = codeEnd;
+    let dropped = 0;
+    const result = new Uint8Array(out.length);
+    let w = 0;
+    for (let r = 0; r < postStart; r++) result[w++] = out[r];
+    let r = postStart;
+    while (r < out.length){
+      // Structural pattern: 8 leading zeros + (04|05) + 00 00 00  (12 bytes)
+      let isMatch = false;
+      if (r + 12 <= out.length){
+        let allZero = true;
+        for (let k = 0; k < 8; k++){ if (out[r+k] !== 0){ allZero = false; break; } }
+        if (allZero && targets.indexOf(out[r+8]) !== -1
+                    && out[r+9] === 0 && out[r+10] === 0 && out[r+11] === 0){
+          isMatch = true;
+        }
+      }
+      if (isMatch){
+        // Drop the first 4 zero bytes; copy the remaining 00*4 + vv 00 00 00
+        for (let k = 4; k < 12; k++) result[w++] = out[r+k];
+        r += 12;
+        dropped += 4;
+        counts.compact++;
+        diffs.push({ off: postStart + (counts.compact - 1), w: 4, kind: 'post-table compact' });
+      } else {
+        result[w++] = out[r++];
+      }
+    }
+    if (counts.compact > 0){
+      out = result.slice(0, w);
+      log(`compact: ${counts.compact}× post-bytecode records shrunk by 4 B (saved ${dropped} B total)`, 'x');
+    }
+  }
+
+  // (4c) post-bytecode E3 marker insertion — section-marker records.
+  //
+  // PCSX section structure: each post-bytecode record begins with a "freed
+  // flag" word — `E3 E3 E3 E3` for section-start records, `00 00 00 00` for
+  // regular records. Section-start records carry one of 236 canonical
+  // SECTION_HASHES values right after the freed flag.
+  //
+  // Three physical layouts produce the E3*4 marker on the PC side:
+  //   (a) `<size_class=4> + CD*4 + E3*4 + hash + 00*4 + …`
+  //         — typical record-start. The u32 immediately before the CD*4 is
+  //         the previous record's size_class field; only `4` triggers E3*4
+  //         here. Records with size_class `5` look the same except for the
+  //         freed flag, which stays `00*4` (no E3 marker, just data record).
+  //   (b) `<pointer-table entries…> + E3*4 + hash + 00*4 + …`
+  //         — mid-stream boundary. A pointer table whose entries are all of
+  //         the form `XX XX XX TT` ends and a new section starts. There is
+  //         no CD*4 record header here; the E3*4 sits directly after the
+  //         last pointer. The relocation tag byte TT is platform-specific:
+  //           - PS2 source: TT = 0x0B
+  //           - XB  source: TT = 0x0A
+  //         (Both confirmed via amalga.pak / VENOM corpus inspection.)
+  //   (c) `<other> + E3*4 + hash + 00*4 + …` — only one observed variant
+  //         (size_class=4 transitions). Subsumed by (a).
+  //
+  // Discriminator (positive triggers — both must hold):
+  //   1. `next4 == 00 00 00 00` (the freed-flag's RIGHT neighbour, which
+  //      remains zero on the PC side after the record's size_class shifts).
+  //   2. `prev4` is one of:
+  //        - `CD CD CD CD`, AND the u32 12 bytes before the hash equals 4
+  //          (record-start with size_class=4, layout (a)).
+  //        - any 4-byte word whose high byte is the platform pointer-tag
+  //          byte (pointer-table entry with relocation tag, layout (b)).
+  //
+  // Bytecode is left untouched.
+  if (state.toggles.e3mark){
+    // Records past the bytecode are 4-byte aligned. If postStart isn't on a
+    // 4-byte boundary (XB scripts where code_size is not a multiple of 4
+    // carry trailing bytecode fragment bytes — e.g. VENOM.XBSX has
+    // code_size = 0x14DA, postStart = 0x1546, but the actual record region
+    // starts at 0x1548), advance to the next aligned offset before scanning.
+    const POINTER_TAG = state.source === 'xb' ? 0x0A : 0x0B;
+    const postStart = codeEnd;
+    const recStart  = (postStart & 3) ? ((postStart + 4) & ~3) : postStart;
+    const ZEROS = 0x00000000;
+    // Pass 1: find every positive trigger in `out` BEFORE we mutate.
+    // Each trigger is the offset of a hash that needs E3*4 inserted before it.
+    const inserts = [];   // ascending offsets, dedup'd
+    for (let r = recStart; r + 8 <= out.length; r += 4){
+      const hash = readU32(out, r);
+      if (!SECTION_HASHES.has(hash)) continue;
+      const next4 = readU32(out, r+4);
+      if (next4 !== ZEROS) continue;
+      // Skip if already E3-marked
+      if (r >= 4 && out[r-4] === 0xE3 && out[r-3] === 0xE3
+                && out[r-2] === 0xE3 && out[r-1] === 0xE3) continue;
+      // Trigger A: CD*4 + hash + 00*4, with size_class=4 in u32 at r-12
+      if (r >= 12 && out[r-4] === 0xCD && out[r-3] === 0xCD
+                  && out[r-2] === 0xCD && out[r-1] === 0xCD){
+        const sizeClass = readU32(out, r-12);
+        if (sizeClass === 4){ inserts.push(r); continue; }
+        // size_class === 5 (or anything else): leave alone
+        continue;
+      }
+      // Trigger B: pointer-table entry directly before hash. Pointer entries
+      // have the form `XX XX XX TT` where TT is the platform pointer tag.
+      if (r >= 4 && out[r-1] === POINTER_TAG){
+        inserts.push(r); continue;
+      }
+      // No other trigger fires: leave alone.
+    }
+    if (inserts.length){
+      // Pass 2: rebuild `out` with E3*4 inserted at each trigger offset.
+      // Walk in ascending order; the resulting buffer is `out.length + 4*N`.
+      const result = new Uint8Array(out.length + 4 * inserts.length);
+      let w = 0;
+      let next_ins = 0;
+      for (let r = 0; r < out.length; r++){
+        if (next_ins < inserts.length && r === inserts[next_ins]){
+          // Insert E3*4 immediately before the hash byte
+          result[w++] = 0xE3; result[w++] = 0xE3;
+          result[w++] = 0xE3; result[w++] = 0xE3;
+          counts.e3mark++;
+          diffs.push({ off: r, w: 4, kind: 'E3 marker (insert)' });
+          next_ins++;
+        }
+        result[w++] = out[r];
+      }
+      out = result;
+      log(`e3mark: ${counts.e3mark}× section-marker records, ${4 * counts.e3mark} B inserted (tag=${fmtHex(POINTER_TAG,2)})`, 'x');
+    }
+    // Pass 3: also handle the case where PS2 already has 'CD*4 + 00*4 + hash'
+    // (slot present but freed flag is wrong). In that case overwrite the
+    // 00*4 with E3*4 — same discriminator rules apply.
+    for (let r = recStart; r + 8 <= out.length; r += 4){
+      // Look for 4 zeros at r, then hash at r+4, with size_class=4 at r-8
+      if (out[r] !== 0 || out[r+1] !== 0 || out[r+2] !== 0 || out[r+3] !== 0) continue;
+      const hash = readU32(out, r+4);
+      if (!SECTION_HASHES.has(hash)) continue;
+      // Need next4 (after hash) to be zero too
+      if (r + 12 > out.length) continue;
+      const next4 = readU32(out, r+8);
+      if (next4 !== ZEROS) continue;
+      // CD*4 immediately before the 00*4 slot
+      if (r >= 4 && out[r-4] === 0xCD && out[r-3] === 0xCD
+                 && out[r-2] === 0xCD && out[r-1] === 0xCD){
+        // size_class == 4 at r-12
+        if (r >= 12){
+          const sizeClass = readU32(out, r-12);
+          if (sizeClass === 4){
+            out[r] = 0xE3; out[r+1] = 0xE3; out[r+2] = 0xE3; out[r+3] = 0xE3;
+            counts.e3mark++;
+            diffs.push({ off: r, w: 4, kind: 'E3 marker (overwrite)' });
+          }
+        }
+      }
+    }
+  }
+
+  // (6) optional padding — append 0xE3 to original size (matches reference PCSX form)
+  let finalLen = out.length;
+  if (state.toggles.pad && state.toggles.strip && out.length < inLen){
+    const padded = new Uint8Array(inLen);
+    padded.set(out);
+    for (let i = out.length; i < inLen; i++) padded[i] = 0xE3;
+    out = padded;
+    finalLen = inLen;
+    counts.pad = inLen - (inLen - 4);
+    log(`pad: appended ${counts.pad} × 0xE3 to preserve original ${inLen} B size`, 'p');
+  }
+
+  // (5) patch file_size in header — done LAST so it reflects final length
+  if (state.toggles.fsize){
+    writeU32(out, OFF_FSIZE, finalLen);
+    counts.fsize = 1;
+    log(`fsize: header[0x08] = ${fmtHex(finalLen,8)}`, 'p');
+  }
+
+  state.out = out;
+  state.diffRanges = diffs;
+
+  // ─────────── update UI counters ───────────
+  $('ctStrip').textContent = counts.strip ? '✓' : '·';
+  $('ctBslg' ).textContent = counts.bslg;
+  $('ctBsll' ).textContent = counts.bsll;
+  $('ctBslgrp').textContent = counts.bslgrp;
+  $('ctMtab' ).textContent = counts.mtab;
+  $('ctLit'  ).textContent = counts.lit;
+  $('ctCompact').textContent = counts.compact;
+  $('ctE3mark').textContent = counts.e3mark;
+  $('ctFsize').textContent = counts.fsize ? '✓' : '·';
+  $('ctPad'  ).textContent = state.toggles.pad ? '+4' : '·';
+
+  $('kbytesIn' ).textContent = inLen.toLocaleString();
+  $('kbytesOut').textContent = out.length.toLocaleString();
+  const totalOps = counts.bslg + counts.bsll + counts.mtab;
+  $('kops').textContent = totalOps;
+
+  // count actual byte differences between in & out (post-marker-strip alignment)
+  let bytesChanged = 0;
+  for (let i = 0; i < b.length; i++){
+    let oi = i;
+    if (state.toggles.strip && hasMarker){
+      if (i >= OFF_MARKER && i < OFF_MARKER + 4){ bytesChanged++; continue; }
+      if (i > OFF_MARKER + 3) oi = i - 4;
+    }
+    if (oi < out.length && b[i] !== out[oi]) bytesChanged++;
+  }
+  $('kdiff').textContent = bytesChanged;
+
+  log(`translate complete: ${counts.bslg} global · ${counts.bsll} local · ${counts.mtab} m-tab · out=${out.length} B`, 'ok');
+
+  // hex diff view
+  renderHex(diffs);
+
+  // verify against ref if loaded
+  if (state.ref) verify();
+
+  $('dl').disabled = false;
+}
+
+// ─────────── translate (reverse: PCSX → SX) ───────────
+//
+// Reverse path. Inverts every transform applied by translateForward(), in
+// the reverse order so the result of f^{-1}(f(x)) reconstructs x byte-for-
+// byte (modulo passes that are inherently lossy — see notes below).
+//
+// Pass order (reverse of forward):
+//   F. fsize    : patched LAST (after all length changes).
+//   E. strip⁻¹  : insert 0xA1A1A1A1 marker @ 0x6C   (file +4 B)
+//   D. compact⁻¹: PS2 target only — insert 4 zero bytes before each post-
+//                 bytecode `00*4 + (04|05) + 00*3` site whose preceding
+//                 u32 is also zero, restoring u64 padding (file +4 B per).
+//   C. e3mark⁻¹: scan for `E3*4 + hash` where hash ∈ SECTION_HASHES, drop
+//                 the E3*4 prefix (file -4 B per match).
+//   B. bytecode: BSL inverse remap, method-table inverse shift, lit inverse.
+//                No length change.
+//   A. (no input strip; PCSX has no marker by definition)
+//
+// Implementation order: we apply B → C → D → E → F. (Bytecode-internal
+// transforms are independent of length; doing them first is fine, then
+// the length-changing post-bytecode passes, then the marker insert at the
+// header boundary.)
+//
+// Lossy notes:
+//   · BSL inverse remap is many-to-one in regions where two forward regions
+//     produce overlapping PC ranges (e.g. PS2 globals 0x87..0x95 +6 and
+//     0x96..0xE1 +4 both produce PC 0x9A..0x9B). bslInverseRemap picks
+//     the EARLIEST forward region whose source range contains (pc - delta).
+//     This matches forward's first-match-wins iteration order on source
+//     indices, but it's a heuristic — the original sx_idx is not always
+//     uniquely recoverable.
+//   · e3mark⁻¹ unconditionally drops `E3*4 + section-hash`. Forward may
+//     have OVERWRITTEN an existing `00*4` slot with E3*4 (forward pass 3),
+//     in which case the original byte was 00, not "absent". This reverse
+//     drops the 4 bytes entirely — slightly off in those cases. Best-effort.
+function translateReverse(){
+  const b = state.src;
+  const inLen = b.length;
+  const codeSize = readU32(b, OFF_CSIZE);
+  const target = state.source;   // 'ps2' or 'xb'
+
+  // Input PCSX should NOT have an A1 marker @ 0x6C. If one is present, log a
+  // warning and treat bytecode as starting at 0x70.
+  const hasStrayMarker = readU32(b, OFF_MARKER) === MARKER;
+  if (hasStrayMarker) log('warn: input has stray 0xA1A1A1A1 @ 0x6C — input may already be SX-form', 'wn');
+  const codeStart = hasStrayMarker ? 0x70 : 0x6C;
+  const codeEnd   = Math.min(codeStart + codeSize, b.length);
+
+  let out = new Uint8Array(b.length);
+  out.set(b);
+  const counts = { strip:0, bslg:0, bsll:0, bslgrp:0, mtab:0, lit:0, compact:0, e3mark:0, fsize:0, pad:0 };
+  const diffs = [];
+
+  // ── (B) bytecode-internal inverse transforms ────────────────────
+  for (let i = codeStart; i < codeEnd - 4; i++){
+    let consumed = false;
+    // BSL: 0A 04 GG GG II II
+    if (out[i] === 0x0A && out[i+1] === 0x04 && i+5 < codeEnd){
+      const grp = readU16(out, i+2);
+      const idx = readU16(out, i+4);
+      if (grp === 0x0000 && state.toggles.bslg){
+        const nv = bslInverseRemap(idx, BSL_GLOBAL_REGIONS);
+        if (nv !== idx){
+          writeU16(out, i+4, nv);
+          diffs.push({ off: i+4, w: 2, kind: 'BSL-global⁻¹' });
+          counts.bslg++;
+        }
+        consumed = true;
+      } else if (grp === 0x0007 && state.toggles.bsll){
+        const nv = bslInverseRemap(idx, BSL_LOCAL_REGIONS);
+        if (nv !== idx){
+          writeU16(out, i+4, nv);
+          diffs.push({ off: i+4, w: 2, kind: 'BSL-local⁻¹' });
+          counts.bsll++;
+        }
+        consumed = true;
+      } else if (grp !== 0x0000 && grp !== 0x0007 && state.toggles.bslgrp && grp in BSL_GROUP){
+        // BSL_GROUP is empty in current corpus — no inverse needed.
+        consumed = true;
+      }
+    }
+    if (consumed) continue;
+    // method-table: 91 1D 0C 00 vv vv vv vv  → -4 in [0x104, 0x304) for PS2
+    if (state.toggles.mtab && out[i] === 0x91 && out[i+1] === 0x1D && out[i+2] === 0x0C && out[i+3] === 0x00 && i+7 < codeEnd){
+      const v = readU32(out, i+4);
+      const nv = mtabShiftInverse(v, 'op91_1D_0C_00', target);
+      if (nv !== v){
+        writeU32(out, i+4, nv);
+        diffs.push({ off: i+4, w: 4, kind: 'M-tab[91 1D]⁻¹' });
+        counts.mtab++;
+      }
+    }
+    // method-table: 11 1C / 11 1D vv vv vv vv  (currently identity in both directions)
+    if (state.toggles.mtab && out[i] === 0x11 && (out[i+1] === 0x1C || out[i+1] === 0x1D) && i+5 < codeEnd){
+      const v = readU32(out, i+2);
+      const opc = out[i+1] === 0x1C ? 'op11_1C' : 'op11_1D';
+      const nv = mtabShiftInverse(v, opc, target);
+      if (nv !== v){
+        writeU32(out, i+2, nv);
+        diffs.push({ off: i+2, w: 4, kind: 'M-tab[11]⁻¹' });
+        counts.mtab++;
+      }
+    }
+    // PUSH-IMM-INT literal-ID: 01 1D vv vv vv vv (LITERAL_ID is empty currently)
+    if (state.toggles.lit && out[i] === 0x01 && out[i+1] === 0x1D && i+5 < codeEnd){
+      // No reverse map populated.
+    }
+  }
+
+  // ── (C) post-bytecode E3*4 marker REMOVAL ───────────────────────
+  // Scan for `E3*4 + hash` where hash ∈ SECTION_HASHES; drop the E3*4.
+  if (state.toggles.e3mark){
+    const recStart = (codeEnd & 3) ? ((codeEnd + 4) & ~3) : codeEnd;
+    const removals = [];
+    for (let r = recStart; r + 8 <= out.length; r += 4){
+      if (out[r] !== 0xE3 || out[r+1] !== 0xE3 || out[r+2] !== 0xE3 || out[r+3] !== 0xE3) continue;
+      const hash = readU32(out, r+4);
+      if (!SECTION_HASHES.has(hash)) continue;
+      removals.push(r);
+    }
+    if (removals.length){
+      const result = new Uint8Array(out.length - 4 * removals.length);
+      let w = 0, nx = 0;
+      for (let r = 0; r < out.length; ){
+        if (nx < removals.length && r === removals[nx]){
+          // Skip this 4-byte E3 block
+          diffs.push({ off: w, w: 4, kind: 'E3 marker⁻¹ (drop)' });
+          r += 4;
+          counts.e3mark++;
+          nx++;
+        } else {
+          result[w++] = out[r++];
+        }
+      }
+      out = result;
+      log(`e3mark⁻¹: ${counts.e3mark}× E3*4 prefixes removed before section-marker hashes`, 'x');
+    }
+  }
+
+  // ── (D) post-bytecode record EXPANSION (PS2 target only) ────────
+  // Match the 8-byte PCSX window:  00 00 00 00 vv 00 00 00     (vv ∈ {04, 05})
+  // and insert 4 zero bytes immediately before it, restoring PS2-style u64
+  // padding before the u32 size_class field.
+  //
+  // The previous u32 word is NOT required to be zero. Real records have a
+  // non-zero hash word right before the u32 pad, which leaves only 6 or 7
+  // leading zeros before the size_class byte (depending on whether the hash
+  // ends with 1 or 2 zero high bytes). All of these PCSX surface forms are
+  // therefore caught by this single rule:
+  //   00*4 + 04 00 00 00          ⇒   00*8 + 04 00 00 00     (full prev=0)
+  //   XX 00 00 00 + 04 00 00 00   ⇒   XX 00 00 00 00 00 00 00 + 04 00 00 00
+  //   XX YY 00 00 + 04 00 00 00   ⇒   XX YY 00 00 00 00 00 00 + 04 00 00 00
+  //   (and the same four with 05 in place of 04)
+  // Match advances r past the 8 byte window to avoid double-firing on the
+  // same record's leading-zero run.
+  //
+  // NOT applied to XB target: XB and PC use the same u32 padding format.
+  if (state.toggles.compact && target === 'ps2'){
+    const targets = [0x04, 0x05];
+    const postStart = (codeEnd & 3) ? ((codeEnd + 4) & ~3) : codeEnd;
+    const inserts = [];
+    let r = postStart;
+    while (r + 8 <= out.length){
+      const ok =
+           out[r]  ===0 && out[r+1]===0 && out[r+2]===0 && out[r+3]===0
+        && targets.indexOf(out[r+4]) !== -1
+        && out[r+5]===0 && out[r+6]===0 && out[r+7]===0;
+      if (ok){
+        inserts.push(r);
+        r += 8;
+      } else {
+        r++;
+      }
+    }
+    if (inserts.length){
+      const result = new Uint8Array(out.length + 4 * inserts.length);
+      let w = 0, nx = 0;
+      for (let rr = 0; rr < out.length; rr++){
+        if (nx < inserts.length && rr === inserts[nx]){
+          result[w++] = 0; result[w++] = 0; result[w++] = 0; result[w++] = 0;
+          diffs.push({ off: w-4, w: 4, kind: 'post-table expand' });
+          counts.compact++;
+          nx++;
+        }
+        result[w++] = out[rr];
+      }
+      out = result;
+      log(`compact⁻¹: ${counts.compact}× post-bytecode records expanded by 4 B (added ${4*counts.compact} B total)`, 'x');
+    }
+  }
+
+  // ── (E) insert A1A1A1A1 marker @ 0x6C ───────────────────────────
+  if (state.toggles.strip){
+    const result = new Uint8Array(out.length + 4);
+    result.set(out.subarray(0, OFF_MARKER));
+    result[OFF_MARKER  ] = 0xA1; result[OFF_MARKER+1] = 0xA1;
+    result[OFF_MARKER+2] = 0xA1; result[OFF_MARKER+3] = 0xA1;
+    result.set(out.subarray(OFF_MARKER), OFF_MARKER + 4);
+    out = result;
+    counts.strip = 1;
+    diffs.push({ off: OFF_MARKER, w: 4, kind: 'A1 marker (insert)' });
+    log('strip⁻¹: inserted 0xA1A1A1A1 marker @ 0x6C — file grows 4 B', 'x');
+  }
+
+  // ── (F) patch file_size in header ───────────────────────────────
+  if (state.toggles.fsize){
+    writeU32(out, OFF_FSIZE, out.length);
+    counts.fsize = 1;
+    log(`fsize: header[0x08] = ${fmtHex(out.length, 8)}`, 'p');
+  }
+
+  state.out = out;
+  state.diffRanges = diffs;
+
+  // ── update UI counters ──────────────────────────────────────────
+  $('ctStrip').textContent = counts.strip ? '+4' : '·';
+  $('ctBslg' ).textContent = counts.bslg;
+  $('ctBsll' ).textContent = counts.bsll;
+  $('ctBslgrp').textContent = counts.bslgrp;
+  $('ctMtab' ).textContent = counts.mtab;
+  $('ctLit'  ).textContent = counts.lit;
+  $('ctCompact').textContent = counts.compact;
+  $('ctE3mark').textContent = counts.e3mark;
+  $('ctFsize').textContent = counts.fsize ? '✓' : '·';
+  $('ctPad'  ).textContent = '·';
+
+  $('kbytesIn' ).textContent = inLen.toLocaleString();
+  $('kbytesOut').textContent = out.length.toLocaleString();
+  const totalOps = counts.bslg + counts.bsll + counts.mtab;
+  $('kops').textContent = totalOps;
+
+  // Approximate "bytes changed" for the stats band — sum of opcode-byte
+  // edits plus net length delta (insertions/removals).
+  const bytesChanged = (2 * (counts.bslg + counts.bsll))
+                     + (4 * counts.mtab)
+                     + (4 * counts.strip)
+                     + (4 * counts.compact)
+                     + (4 * counts.e3mark);
+  $('kdiff').textContent = bytesChanged;
+
+  log(`reverse complete: ${counts.bslg} global · ${counts.bsll} local · ${counts.mtab} m-tab · ${counts.compact} expand · ${counts.e3mark} E3⁻¹ · out=${out.length} B`, 'ok');
+
+  renderHex(diffs);
+  if (state.ref) verify();
+  $('dl').disabled = false;
+}
+
+// ─────────── hex diff render ───────────
+function renderHex(diffs){
+  const el = $('hex');
+  if (!diffs.length){
+    el.innerHTML = '<div class="empty">no byte changes from selected transforms</div>';
+    return;
+  }
+  // Mode-aware column labels
+  const dir = dirOf(state.mode);
+  let lhs, rhs;
+  if (dir === 'forward'){
+    lhs = state.source === 'xb' ? 'xbsx' : 'ps2sx';
+    rhs = 'pcsx';
+  } else {
+    lhs = 'pcsx';
+    rhs = state.source === 'xb' ? 'xbsx' : 'ps2sx';
+  }
+  let html = `<div class="row-h"><span>offset</span><span>${lhs}</span><span>${rhs}</span></div>`;
+  const show = diffs.slice(0, 60);
+  for (const d of show){
+    const fb = bytesAtSrc(d.off, d.w);
+    const tb = bytesAtOut(d.off, d.w);
+    html += `<div class="ln">
+      <span class="off">${fmtHex(d.off, 6)} <span class="dim" style="font-size:10px">${d.kind}</span></span>
+      <span class="from"><b>${fb}</b></span>
+      <span class="to"><b>${tb}</b></span>
+    </div>`;
+  }
+  if (diffs.length > 60) html += `<div class="empty">+ ${diffs.length-60} more · download for full</div>`;
+  el.innerHTML = html;
+}
+function bytesAtSrc(off, w){
+  if (dirOf(state.mode) === 'forward'){
+    // src offset = output offset + 4 (if marker stripped and off >= 0x6C)
+    const ms = (state.toggles.strip && readU32(state.src, OFF_MARKER) === MARKER && off >= OFF_MARKER);
+    const so = ms ? off + 4 : off;
+    let s = '';
+    for (let i = 0; i < w; i++){
+      const v = state.src[so + i];
+      s += (v === undefined ? '··' : v.toString(16).padStart(2,'0').toUpperCase()) + ' ';
+    }
+    return s.trim();
+  }
+  // Reverse: best-effort. Diffs from Pass B (bytecode) carry offsets in
+  // PCSX-input space (same as state.src). Diffs from C/D/E carry offsets
+  // in transient-output space — we can't always recover the source byte
+  // exactly. Render as '··' when out of range.
+  let s = '';
+  for (let i = 0; i < w; i++){
+    const v = state.src[off + i];
+    s += (v === undefined ? '··' : v.toString(16).padStart(2,'0').toUpperCase()) + ' ';
+  }
+  return s.trim();
+}
+function bytesAtOut(off, w){
+  let s = '';
+  for (let i = 0; i < w; i++){
+    const v = state.out[off + i];
+    s += (v === undefined ? '··' : v.toString(16).padStart(2,'0').toUpperCase()) + ' ';
+  }
+  return s.trim();
+}
+
+// ─────────── verify against reference ───────────
+function verify(){
+  const ref = state.ref, out = state.out;
+  $('cmpOut').style.display = 'block';
+  let same = 0;
+  const n = Math.min(ref.length, out.length);
+  let firstDiff = -1, total = 0;
+  for (let i = 0; i < n; i++){
+    if (ref[i] === out[i]) same++;
+    else {
+      if (firstDiff < 0) firstDiff = i;
+      total++;
+    }
+  }
+  total += Math.abs(ref.length - out.length);
+  const rate = (same / Math.max(ref.length, out.length) * 100).toFixed(2);
+  $('cmpRate').innerHTML = `<span class="${rate>99?'good':rate>90?'cool':'warn'}">${rate}%</span> <span class="dim">(${same.toLocaleString()} / ${Math.max(ref.length,out.length).toLocaleString()})</span>`;
+  $('cmpFirst').textContent = firstDiff < 0 ? '— identical' : fmtHex(firstDiff, 6);
+  $('cmpTotal').textContent = total.toLocaleString();
+  $('cmpSize').innerHTML = ref.length === out.length
+    ? `<span class="good">✓ ${ref.length} B</span>`
+    : `<span class="warn">${ref.length} vs ${out.length} (Δ ${out.length-ref.length})</span>`;
+  log(`verify: ${rate}% match · ${total} differing bytes · first @ ${firstDiff<0?'(none)':fmtHex(firstDiff,6)}`, total === 0 ? 'ok' : 'wn');
+}
+
+// ─────────── download ───────────
+$('dl').addEventListener('click', () => {
+  if (!state.out) return;
+  const dir = dirOf(state.mode);
+  let name;
+  if (dir === 'forward'){
+    name = state.srcName.replace(/\.(ps2sx|xbsx)$/i, '.PCSX');
+    if (!/\.PCSX$/i.test(name)) name = name + '.PCSX';
+  } else {
+    const ext = state.source === 'xb' ? '.XBSX' : '.PS2SX';
+    name = state.srcName.replace(/\.(pcsx)$/i, ext);
+    if (!new RegExp(ext + '$', 'i').test(name)) name = name + ext;
+  }
+  const blob = new Blob([state.out], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  a.click();
+  URL.revokeObjectURL(url);
+  log(`saved ${a.download} (${fmtBytes(state.out.length)})`, 'ok');
+});
+
+$('run').addEventListener('click', translate);
+
+// ─────────── mode selector wiring ───────────
+function setMode(mode){
+  state.mode = mode;
+  document.querySelectorAll('.modeBtn').forEach(btn => {
+    btn.classList.toggle('on', btn.dataset.mode === mode);
+  });
+  // Pre-set platform tables for reverse modes (so the BSL table panels show
+  // the right platform's regions even before a file is loaded).
+  if (mode === 'pc2xb')  applyPlatform('xb');
+  else if (mode === 'pc2ps2') applyPlatform('ps2');
+  // For sx2pc, leave platform tables on whatever was last detected.
+
+  applyModeUI();
+  // If a file is loaded, re-run analysis + translate under the new mode.
+  if (state.src){
+    if (dirOf(state.mode) === 'forward'){
+      state.source = detectSource(state.srcName);
+      applyPlatform(state.source);
+    } else {
+      state.source = tgtOf(state.mode);
+      applyPlatform(state.source);
+    }
+    applyModeUI();
+    analyse();
+    translate();
+  }
+}
+document.querySelectorAll('.modeBtn').forEach(btn => {
+  btn.addEventListener('click', () => setMode(btn.dataset.mode));
+});
+
+$('reset').addEventListener('click', () => {
+  state = { src:null, srcName:'', mode: state.mode, source:'ps2', out:null, toggles: state.toggles, diffRanges:[], ref:null };
+  // Re-apply platform tables based on current mode so they don't go stale.
+  if (state.mode === 'pc2xb')       { state.source = 'xb';  applyPlatform('xb');  }
+  else if (state.mode === 'pc2ps2') { state.source = 'ps2'; applyPlatform('ps2'); }
+  else                              { applyPlatform('ps2'); }
+  applyModeUI();
+  $('srcBox').style.display = 'none';
+  $('cmpOut').style.display = 'none';
+  $('hex').innerHTML = '<div class="empty">load a file and run translate to see byte-level changes</div>';
+  $('log').innerHTML = '<span class="dim">awaiting source file…</span>';
+  ['kbytesIn','kbytesOut','kops','kdiff'].forEach(id => $(id).textContent = '—');
+  ['ctStrip','ctBslg','ctBsll','ctBslgrp','ctMtab','ctLit','ctCompact','ctE3mark','ctFsize','ctPad'].forEach(id => $(id).textContent = '—');
+  $('run').disabled = true;
+  $('dl').disabled = true;
+  $('file').value = ''; $('ref').value = '';
+});
+
+// Initialise UI state on load (before any file is dropped).
+applyModeUI();
+</script>
+
+</body>
+</html>

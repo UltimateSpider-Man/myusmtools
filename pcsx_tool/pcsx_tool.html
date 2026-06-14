@@ -1,0 +1,1591 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PCSX Script Opcode Extract/Reimport Tool</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101318;
+      --panel: #171c24;
+      --panel2: #1d2430;
+      --text: #e8edf5;
+      --muted: #9ba9ba;
+      --accent: #80bfff;
+      --good: #79d59b;
+      --warn: #ffd27a;
+      --bad: #ff8e8e;
+      --border: #303848;
+      --chip: #263142;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+    header {
+      padding: 18px 22px 12px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, #18202c, #101318);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    h1 { margin: 0 0 4px; font-size: 22px; }
+    h2 { margin: 0 0 12px; font-size: 17px; }
+    h3 { margin: 16px 0 8px; font-size: 14px; color: var(--accent); }
+    p { margin: 6px 0 10px; color: var(--muted); }
+    main {
+      display: grid;
+      grid-template-columns: minmax(310px, 390px) minmax(540px, 1fr);
+      gap: 16px;
+      padding: 16px;
+    }
+    section, .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 8px 22px rgba(0,0,0,.16);
+    }
+    .stack { display: grid; gap: 14px; align-content: start; }
+    .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 4px; }
+    input[type="file"], input[type="text"], input[type="number"], select, textarea {
+      width: 100%;
+      background: var(--panel2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 9px;
+      font: inherit;
+    }
+    textarea { min-height: 140px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
+    button {
+      background: #24364d;
+      color: var(--text);
+      border: 1px solid #39506c;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font: inherit;
+      cursor: pointer;
+    }
+    button:hover { background: #2c4260; }
+    button.primary { background: #1c5c8f; border-color: #2879b8; }
+    button.primary:hover { background: #2270ad; }
+    button.good { background: #206340; border-color: #2b8a57; }
+    button.warn { background: #6b531e; border-color: #9b792f; }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    .tiny { font-size: 12px; color: var(--muted); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0 0; }
+    .chip { background: var(--chip); border: 1px solid var(--border); border-radius: 999px; padding: 3px 8px; font-size: 12px; }
+    .ok { color: var(--good); } .warning { color: var(--warn); } .error { color: var(--bad); }
+    .tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+    .tab { padding: 7px 10px; background: var(--panel2); border: 1px solid var(--border); border-radius: 999px; cursor: pointer; color: var(--muted); }
+    .tab.active { color: var(--text); border-color: #3b74a8; background: #22364e; }
+    .tabpage { display: none; }
+    .tabpage.active { display: block; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td { padding: 6px 7px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { text-align: left; color: var(--muted); background: #151a22; position: sticky; top: 89px; z-index: 4; }
+    tr:hover td { background: #1f2835; }
+    tr.selected td { background: #213a55; }
+    .tablewrap { max-height: 56vh; overflow: auto; border: 1px solid var(--border); border-radius: 10px; }
+    .summaryGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; font-size: 12px; }
+    .summaryGrid div { border-bottom: 1px dotted #334052; padding-bottom: 4px; }
+    .log {
+      min-height: 95px;
+      max-height: 180px;
+      overflow: auto;
+      background: #0c0f14;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      white-space: pre-wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+    }
+    .hexbox, .disasm {
+      max-height: 360px;
+      overflow: auto;
+      background: #0c0f14;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      white-space: pre;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+    }
+    details { border: 1px solid var(--border); border-radius: 10px; padding: 8px; background: #141923; }
+    summary { cursor: pointer; color: var(--accent); }
+    @media (max-width: 980px) { main { grid-template-columns: 1fr; } th { top: 0; } header { position: static; } }
+  </style>
+</head>
+<body>
+<header>
+  <h1>PCSX Script Opcode Extract / Reimport Tool</h1>
+  <p>Loads packed <span class="mono">.PCSX</span> files, resolves hash names with <span class="mono">string_hash_dictionary.txt</span>, extracts function opcode blocks, remaps <span class="mono">09 xx group index</span> SFR references from another PCSX/function BIN when requested, patches/rebuilds <span class="mono">sx_exe_image</span>, and edits the packed permanent string table.</p>
+</header>
+<main>
+  <div class="stack">
+    <section>
+      <h2>1) Load files</h2>
+      <label>Target PCSX file</label>
+      <input id="pcsxFile" type="file" accept=".PCSX,.pcsx,application/octet-stream" />
+      <label>Source PCSX for another function.bin remap (optional)</label>
+      <input id="sourcePcsxFile" type="file" accept=".PCSX,.pcsx,application/octet-stream" />
+      <p class="tiny">Use this when the loaded function <span class="mono">.bin</span> comes from a different PCSX. SFR references and permanent-string indices can be translated into the target PCSX.</p>
+      <label>string_hash_dictionary.txt</label>
+      <input id="dictFile" type="file" accept=".txt,text/plain" />
+      <div class="chips" id="loadChips"></div>
+    </section>
+
+    <section>
+      <h2>2) Extract</h2>
+      <label>Find function by hash/name</label>
+      <input id="findInput" type="text" placeholder="expel_effect(entity), expel_effect, or 0x12a9f678" />
+      <div class="row" style="margin-top:8px">
+        <button id="findBtn">Find / select</button>
+        <button id="extractSelectedBtn" class="primary">Extract selected .bin</button>
+        <button id="exportZipBtn">Export all .zip</button>
+      </div>
+      <p class="tiny">Extracted opcode bytes are raw little-endian 16-bit VM words. <span class="mono">buffer_len</span> in the PCSX metadata is a word count; byte length is <span class="mono">buffer_len * 2</span>.</p>
+    </section>
+
+    <section>
+      <h2>3) Reimport / add function</h2>
+      <label>Replacement opcode .bin</label>
+      <input id="binFile" type="file" accept=".bin,application/octet-stream" />
+      <label>Target hash/name for replace, or new full function name for add</label>
+      <input id="targetInput" type="text" placeholder="expel_effect(entity) or 0x12a9f678" />
+      <div class="row" style="margin-top:8px">
+        <label style="display:flex;align-items:center;gap:6px;margin:0;font-size:13px;color:var(--text)"><input id="addIfMissing" type="checkbox" /> Add as new function if missing</label>
+        <label style="display:flex;align-items:center;gap:6px;margin:0;font-size:13px;color:var(--text)"><input id="remapSfrRefs" type="checkbox" checked /> Remap <span class="mono">09 xx group index</span> SFR refs</label>
+        <label style="display:flex;align-items:center;gap:6px;margin:0;font-size:13px;color:var(--text)"><input id="remapPstRefs" type="checkbox" checked /> Remap permanent_string_table refs</label>
+      </div>
+      <p class="tiny">SFR bytes are little-endian VM words: <span class="mono">09 05 01 00 0A 00</span> means opcode <span class="mono">09 05</span>, script_object-by-name group <span class="mono">1</span>, function index <span class="mono">0x0A</span>.</p>
+      <label>Owner script_object for new function</label>
+      <select id="objectSelect"></select>
+      <div class="grid2">
+        <div>
+          <label>parms_stacksize</label>
+          <input id="parmsInput" type="number" step="1" value="4" />
+        </div>
+        <div>
+          <label>flags</label>
+          <input id="flagsInput" type="text" value="0x4" />
+        </div>
+      </div>
+      <details style="margin-top:8px">
+        <summary>Advanced hash override</summary>
+        <label>Full-name hash override</label>
+        <input id="fullHashOverride" type="text" placeholder="optional 0x12345678" />
+        <label>Short-name hash override</label>
+        <input id="shortHashOverride" type="text" placeholder="optional 0x12345678" />
+      </details>
+      <details style="margin-top:8px" open>
+        <summary>SFR opcode / permanent-string reference remap</summary>
+        <p class="tiny">Scanner recognizes these SFR opcode words: <span class="mono">09 2E</span>, <span class="mono">09 05</span>, <span class="mono">09 06</span>, <span class="mono">09 07</span>, <span class="mono">09 08</span>, <span class="mono">09 09</span>, <span class="mono">09 03</span>, <span class="mono">09 04</span>, <span class="mono">09 2D</span>, <span class="mono">09 2C</span>. The next word is the <span class="mono">script_objects_by_name</span> group and the next word is the function index in that group.</p>
+        <div class="grid2">
+          <div>
+            <label>Manual source group</label>
+            <input id="sfrFromGroup" type="text" placeholder="example: 0x0001" />
+          </div>
+          <div>
+            <label>Manual source function index</label>
+            <input id="sfrFromFunc" type="text" placeholder="example: 0x000A" />
+          </div>
+        </div>
+        <div class="grid2">
+          <div>
+            <label>Manual target group override (optional)</label>
+            <input id="sfrToGroup" type="text" placeholder="blank = selected/add target" />
+          </div>
+          <div>
+            <label>Manual target function override (optional)</label>
+            <input id="sfrToFunc" type="text" placeholder="blank = selected/add target" />
+          </div>
+        </div>
+        <p class="tiny">Manual mode rewrites exact SFR pairs. Example: source <span class="mono">1:0x0A</span> retargets <span class="mono">09 05 01 00 0A 00</span> to the selected/reimported function. When adding a new function and manual source is blank, the tool first looks for <span class="mono">1:0x0A</span>; otherwise it can retarget one unique SFR pair in the BIN.</p>
+      </details>
+      <div class="row" style="margin-top:10px">
+        <button id="reimportBtn" class="warn">Reimport / stage patch</button>
+        <button id="savePcsxBtn" class="good">Save rebuilt PCSX</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Permanent string table</h2>
+      <p class="tiny">This is the packed <span class="mono">permanent_string_table</span>. Add new strings at the end to keep existing opcode string indices stable.</p>
+      <textarea id="pstText" spellcheck="false" placeholder="Load a PCSX file to see permanent strings..."></textarea>
+      <div class="row" style="margin-top:8px">
+        <button id="applyPstBtn">Apply table text</button>
+        <button id="exportPstBtn">Export permanent_string_table.txt</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Log</h2>
+      <div id="log" class="log"></div>
+    </section>
+  </div>
+
+  <div class="stack">
+    <section>
+      <div class="tabs">
+        <div class="tab active" data-tab="summaryPage">Summary</div>
+        <div class="tab" data-tab="functionsPage">Functions</div>
+        <div class="tab" data-tab="selectedPage">Selected opcodes</div>
+        <div class="tab" data-tab="stringsPage">Strings</div>
+      </div>
+      <div id="summaryPage" class="tabpage active">
+        <h2>Loaded PCSX fields</h2>
+        <div id="summary" class="summaryGrid"></div>
+      </div>
+      <div id="functionsPage" class="tabpage">
+        <h2>script_objects / vm_executable functions</h2>
+        <div class="row" style="margin-bottom:8px">
+          <input id="tableFilter" type="text" placeholder="Filter table by object/function/hash..." style="max-width:420px" />
+          <span id="functionCount" class="tiny"></span>
+        </div>
+        <div class="tablewrap"><table id="functionsTable"></table></div>
+      </div>
+      <div id="selectedPage" class="tabpage">
+        <h2>Selected function</h2>
+        <div id="selectedInfo" class="summaryGrid"></div>
+        <h3>Load another function.bin</h3>
+        <p class="tiny">Load any extracted function <span class="mono">.bin</span> and use it as the replacement for the currently selected function. This is useful for copying opcodes from another function or another PCSX export.</p>
+        <div class="row" style="margin-bottom:8px">
+          <input id="selectedBinFile" type="file" accept=".bin,application/octet-stream" style="max-width:360px" />
+          <button id="stageSelectedBinBtn" class="warn">Stage loaded .bin into selected function</button>
+        </div>
+        <div id="selectedBinStatus" class="tiny"></div>
+        <h3>Hex bytes</h3>
+        <div id="hexView" class="hexbox"></div>
+        <h3>Opcode walk</h3>
+        <div id="disasmView" class="disasm"></div>
+      </div>
+      <div id="stringsPage" class="tabpage">
+        <h2>permanent_string_table</h2>
+        <div class="tablewrap" style="max-height:64vh"><table id="stringsTable"></table></div>
+      </div>
+    </section>
+  </div>
+</main>
+<input id="functionBinFile" type="file" accept=".bin,application/octet-stream" style="display:none" />
+
+<script>
+'use strict';
+
+const HEADER_SIZE = 0x10;
+const SE_OFFSET = 0x10;
+const SE_SIZE = 0x5C;
+const SCRIPT_OBJECT_SIZE = 0x34;
+const VM_EXECUTABLE_SIZE = 0x24;
+const INFO_T_SIZE = 0x1C;
+const PAD_BYTE = 0xE3;
+
+const OP_NAMES = {
+  0:'OP_ADD', 1:'OP_AND', 2:'OP_BF', 3:'OP_BRA', 4:'OP_BSL', 5:'OP_BSR', 6:'OP_BST', 7:'OP_BTH',
+  8:'OP_DEC', 9:'OP_DIV', 10:'OP_DUP', 11:'OP_EQ', 12:'OP_GE', 13:'OP_GT', 14:'OP_INC', 15:'OP_KIL',
+  16:'OP_LE', 18:'OP_LNT', 20:'OP_LT', 21:'OP_MOD', 22:'OP_MUL', 23:'OP_NE', 24:'OP_NEG', 25:'OP_NOP',
+  26:'OP_NOT', 27:'OP_OR', 28:'OP_POP', 29:'OP_PSH', 30:'OP_RET', 31:'OP_SHL', 32:'OP_SHR', 33:'OP_SPA',
+  34:'OP_SUB', 35:'OP_XOR', 37:'OP_STR_EQ', 38:'OP_STR_NE', 43:'OP_ECB', 44:'OP_ESB', 45:'OP_ECO',
+  46:'OP_SCO', 55:'OP_MS2'
+};
+const ARG_NAMES = {
+  0:'NULL', 1:'NUM', 2:'NUMR', 3:'STR', 4:'WORD', 5:'PCR', 6:'SPR', 7:'POPO', 8:'SDR', 9:'SFR',
+  10:'LFR', 11:'CLV', 15:'SIG', 16:'PSIG', 17:'EXT17', 18:'EXT18', 19:'EXT19', 20:'EXT20', 21:'EXT21', 22:'EXT22'
+};
+const SFR_OP_BYTES = new Set([0x2E, 0x05, 0x06, 0x07, 0x08, 0x09, 0x03, 0x04, 0x2D, 0x2C]);
+
+let pendingFunctionBinTargetKey = null;
+let state = {
+  pcsx: null,
+  sourcePcsx: null,
+  selectedFunc: null,
+  dict: new Map(),
+  dictReverse: new Map(),
+  dictCollisions: 0,
+  replacementBin: null,
+  replacementName: ''
+};
+
+const $ = (id) => document.getElementById(id);
+function log(msg, cls='') {
+  const line = cls ? `[${cls.toUpperCase()}] ${msg}` : msg;
+  $('log').textContent += line + '\n';
+  $('log').scrollTop = $('log').scrollHeight;
+}
+function setChip(id, text, cls='') {
+  const el = $('loadChips');
+  let chip = document.getElementById(id);
+  if (!chip) {
+    chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.id = id;
+    el.appendChild(chip);
+  }
+  chip.textContent = text;
+  chip.className = 'chip ' + cls;
+}
+function align(n, a) { return n + ((a - (n % a)) % a); }
+function hex32(v) { return '0x' + ((v >>> 0).toString(16).padStart(8, '0')); }
+function hex16(v) { return '0x' + ((v & 0xFFFF).toString(16).padStart(4, '0')); }
+function signed16(v) { return (v & 0x8000) ? v - 0x10000 : v; }
+function sanitizeName(s) { return (s || 'unnamed').replace(/[\\/:*?"<>|\x00-\x1F]+/g, '_').replace(/\s+/g, '_').slice(0, 110); }
+function baseName(name) { return (name || 'out').replace(/\.[^.]+$/, ''); }
+function cloneBytes(bytes, start=0, end=bytes.length) { return new Uint8Array(bytes.slice(start, end)); }
+function concatBytes(parts) {
+  const total = parts.reduce((n, p) => n + p.length, 0);
+  const out = new Uint8Array(total);
+  let o = 0;
+  for (const p of parts) { out.set(p, o); o += p.length; }
+  return out;
+}
+function bytesToHex(bytes) {
+  let out = [];
+  for (let i = 0; i < bytes.length; i += 16) {
+    const chunk = Array.from(bytes.slice(i, i + 16)).map(b => b.toString(16).padStart(2, '0')).join(' ');
+    out.push(i.toString(16).padStart(6, '0') + ': ' + chunk);
+  }
+  return out.join('\n');
+}
+function latin1Decode(bytes) {
+  let s = '';
+  for (const b of bytes) s += String.fromCharCode(b);
+  return s;
+}
+function latin1Encode(s, nul=true) {
+  const out = new Uint8Array(s.length + (nul ? 1 : 0));
+  for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i) & 0xFF;
+  if (nul) out[out.length - 1] = 0;
+  return out;
+}
+function utf8Encode(s) { return new TextEncoder().encode(s); }
+function readU16LE(bytes, off) { return bytes[off] | (bytes[off + 1] << 8); }
+function readU32LE(bytes, off) { return (bytes[off] | (bytes[off+1] << 8) | (bytes[off+2] << 16) | (bytes[off+3] << 24)) >>> 0; }
+function readS32LE(bytes, off) { return readU32LE(bytes, off) | 0; }
+function writeU16LE(bytes, off, value) {
+  value &= 0xFFFF;
+  bytes[off] = value & 0xFF;
+  bytes[off + 1] = (value >>> 8) & 0xFF;
+}
+function writeU32LE(bytes, off, value) {
+  value >>>= 0;
+  bytes[off] = value & 0xFF;
+  bytes[off + 1] = (value >>> 8) & 0xFF;
+  bytes[off + 2] = (value >>> 16) & 0xFF;
+  bytes[off + 3] = (value >>> 24) & 0xFF;
+}
+function writeS32LE(bytes, off, value) { writeU32LE(bytes, off, value >>> 0); }
+function calcSafety(field8, field4, classWord) {
+  const classId = classWord & 0xFFFF;
+  const fieldE = classWord >>> 16;
+  const v = (field8 + 0x7BADBA5D - (field4 & 0x0FFFFFFF) + classId + fieldE) & 0x0FFFFFFF;
+  return (v | 0x70000000) >>> 0;
+}
+function chuckHash(str) {
+  let res = 0 >>> 0;
+  for (let i = 0; i < str.length; i++) {
+    let c = str.charCodeAt(i) & 0xFF;
+    if (c >= 65 && c <= 90) c += 32;
+    res = (Math.imul(res, 33) + c) >>> 0;
+  }
+  return res >>> 0;
+}
+function parseHashLiteral(text) {
+  const t = (text || '').trim();
+  if (/^0x[0-9a-fA-F]{1,8}$/.test(t)) return parseInt(t, 16) >>> 0;
+  if (/^[0-9a-fA-F]{8}$/.test(t)) return parseInt(t, 16) >>> 0;
+  return null;
+}
+function parseNumber(text, fallback=0) {
+  const t = (text || '').trim();
+  if (!t) return fallback;
+  if (/^0x/i.test(t)) return parseInt(t, 16) | 0;
+  const n = Number(t);
+  return Number.isFinite(n) ? (n | 0) : fallback;
+}
+function parseOptionalNumber(text) {
+  const t = (text || '').trim();
+  if (!t) return null;
+  const n = /^0x/i.test(t) ? parseInt(t, 16) : Number(t);
+  return Number.isFinite(n) ? (n | 0) : null;
+}
+function shortFunctionName(full) {
+  const p = full.indexOf('(');
+  return p >= 0 ? full.slice(0, p) : full;
+}
+function lookupHash(hash) {
+  return state.dict.get(hash >>> 0) || hex32(hash);
+}
+function lookupHashMaybe(hash) {
+  return state.dict.get(hash >>> 0) || '';
+}
+function functionDisplayName(fn) {
+  return lookupHashMaybe(fn.fullHash) || lookupHashMaybe(fn.shortHash) || hex32(fn.fullHash);
+}
+function objectDisplayName(obj) { return lookupHashMaybe(obj.nameHash) || hex32(obj.nameHash); }
+function getAllFunctions(pcsx=state.pcsx) {
+  if (!pcsx) return [];
+  const out = [];
+  for (const obj of pcsx.objects) for (const fn of obj.functions) out.push(fn);
+  for (const fn of pcsx.extraFunctions) out.push(fn);
+  return out;
+}
+function codeBytesFor(fn, pcsx=state.pcsx) {
+  const start = fn.bufferOffset;
+  const end = start + fn.bufferLenWords * 2;
+  if (!pcsx || start < 0 || end > pcsx.sxImage.length) return new Uint8Array();
+  return pcsx.sxImage.slice(start, end);
+}
+
+class Writer {
+  constructor() { this.bytes = []; }
+  get length() { return this.bytes.length; }
+  writeByte(b) { this.bytes.push(b & 0xFF); }
+  writeBytes(arr) { for (const b of arr) this.bytes.push(b & 0xFF); }
+  pad(a, byte=PAD_BYTE) { while (this.bytes.length % a) this.writeByte(byte); }
+  toUint8Array() { return Uint8Array.from(this.bytes); }
+}
+
+function parsePCSX(arrayBuffer, fileName='input.PCSX') {
+  const bytes = new Uint8Array(arrayBuffer);
+  if (bytes.length < HEADER_SIZE + SE_SIZE) throw new Error('File is too small for a PCSX generic mash.');
+  const headerRaw = cloneBytes(bytes, 0, HEADER_SIZE);
+  const seRaw = cloneBytes(bytes, SE_OFFSET, SE_OFFSET + SE_SIZE);
+  const headerFileSize = readS32LE(bytes, 0x08);
+  const safety = readU32LE(bytes, 0x00);
+  const expectedSafety = calcSafety(headerFileSize, readU32LE(bytes, 0x04), readU32LE(bytes, 0x0C));
+  const fixedName = latin1Decode(bytes.slice(SE_OFFSET, SE_OFFSET + 0x20)).replace(/\0.*$/, '');
+  const sxSize = readS32LE(bytes, SE_OFFSET + 0x24);
+  const totalObjects = readS32LE(bytes, SE_OFFSET + 0x30);
+  const globalObjectRaw = readU32LE(bytes, SE_OFFSET + 0x34);
+  const pstSize = readS32LE(bytes, SE_OFFSET + 0x3C);
+  const systemStringTableRaw = readU32LE(bytes, SE_OFFSET + 0x40);
+  const systemStringTableSizeRaw = readS32LE(bytes, SE_OFFSET + 0x44);
+  const flags = readU32LE(bytes, SE_OFFSET + 0x50);
+  const field58 = readS32LE(bytes, SE_OFFSET + 0x58);
+  if (sxSize < 0 || sxSize > bytes.length) throw new Error('Bad sx_exe_image_size: ' + sxSize);
+  if (totalObjects <= 0 || totalObjects > 100000) throw new Error('Bad total_script_objects: ' + totalObjects);
+  if (pstSize < 0 || pstSize > 1000000) throw new Error('Bad permanent_string_table_size: ' + pstSize);
+  if (field58 < 0 || field58 > 1000000) throw new Error('Bad field_58/info count: ' + field58);
+
+  let cur = align(SE_OFFSET + SE_SIZE, 4);
+  const sxStart = cur;
+  const sxImage = cloneBytes(bytes, cur, cur + sxSize);
+  cur += sxSize;
+  cur = align(cur, 4);
+  const scriptObjectsArrayOffset = cur;
+  const objArrayRaw = cloneBytes(bytes, cur, cur + totalObjects * 4);
+  cur += totalObjects * 4;
+
+  const objects = [];
+  for (let i = 0; i < totalObjects; i++) {
+    cur = align(cur, 8);
+    cur = align(cur, 4);
+    const structOffset = cur;
+    if (cur + SCRIPT_OBJECT_SIZE > bytes.length) throw new Error('script_object out of range at ' + hex32(cur));
+    const raw = cloneBytes(bytes, cur, cur + SCRIPT_OBJECT_SIZE);
+    cur += SCRIPT_OBJECT_SIZE;
+    const obj = {
+      index: i,
+      structOffset,
+      raw,
+      nameHash: readU32LE(raw, 0x00),
+      staticSize: readS32LE(raw, 0x10),
+      staticFlags: readU32LE(raw, 0x18),
+      dataBlockSize: readS32LE(raw, 0x1C),
+      totalFuncs: readS32LE(raw, 0x24),
+      field28: readS32LE(raw, 0x28),
+      flags: readU32LE(raw, 0x30),
+      staticData: new Uint8Array(),
+      funcPtrRaw: new Uint8Array(),
+      functions: []
+    };
+    if (obj.staticSize < 0 || obj.staticSize > bytes.length) throw new Error('Bad static block size in object ' + i);
+    if (obj.totalFuncs < 0 || obj.totalFuncs > 1000000) throw new Error('Bad function count in object ' + i);
+    cur = align(cur, 4);
+    obj.staticData = cloneBytes(bytes, cur, cur + obj.staticSize);
+    cur += obj.staticSize;
+    cur = align(cur, 4);
+    obj.funcPtrRaw = cloneBytes(bytes, cur, cur + obj.totalFuncs * 4);
+    cur += obj.totalFuncs * 4;
+    for (let j = 0; j < obj.totalFuncs; j++) {
+      cur = align(cur, 4);
+      if (cur + VM_EXECUTABLE_SIZE > bytes.length) throw new Error('vm_executable out of range at ' + hex32(cur));
+      const fraw = cloneBytes(bytes, cur, cur + VM_EXECUTABLE_SIZE);
+      const fn = parseVmExecutable(fraw, cur, obj, j, false, null);
+      obj.functions.push(fn);
+      cur += VM_EXECUTABLE_SIZE;
+    }
+    objects.push(obj);
+  }
+
+  cur = align(cur, 4);
+  const scriptObjectsByNameOffset = cur;
+  const byNameRaw = cloneBytes(bytes, cur, cur + totalObjects * 4);
+  const byNameIndices = [];
+  for (let i = 0; i < totalObjects; i++) byNameIndices.push(readS32LE(byNameRaw, i * 4));
+  cur += totalObjects * 4;
+
+  cur = align(cur, 4);
+  const permanentStringTableOffset = cur;
+  const pstPtrRaw = cloneBytes(bytes, cur, cur + pstSize * 4);
+  cur += pstSize * 4;
+  const permanentStrings = [];
+  for (let i = 0; i < pstSize; i++) {
+    cur = align(cur, 4);
+    if (cur + 4 > bytes.length) throw new Error('permanent_string_table length out of range at index ' + i);
+    const len = readS32LE(bytes, cur);
+    if (len < 0 || cur + 4 + len > bytes.length) throw new Error('Bad permanent string length at index ' + i + ': ' + len);
+    const rawBytes = cloneBytes(bytes, cur + 4, cur + 4 + len);
+    const textBytes = rawBytes.length && rawBytes[rawBytes.length - 1] === 0 ? rawBytes.slice(0, -1) : rawBytes;
+    permanentStrings.push({ index: i, length: len, text: latin1Decode(textBytes), rawBytes });
+    cur += 4 + len;
+  }
+
+  cur = align(cur, 4);
+  cur = align(cur, 4);
+  const infoOffset = cur;
+  const infoRaw = cloneBytes(bytes, cur, cur + field58 * INFO_T_SIZE);
+  const infoItems = [];
+  for (let i = 0; i < field58; i++) {
+    const off = i * INFO_T_SIZE;
+    infoItems.push({
+      index: i,
+      raw: cloneBytes(infoRaw, off, off + INFO_T_SIZE),
+      field_0: readU32LE(infoRaw, off + 0x00),
+      so_name: readU32LE(infoRaw, off + 0x04),
+      field_8: readU32LE(infoRaw, off + 0x08),
+      field_C: readS32LE(infoRaw, off + 0x0C),
+      field_10: readS32LE(infoRaw, off + 0x10),
+      field_14: readS32LE(infoRaw, off + 0x14),
+      field_18: readS32LE(infoRaw, off + 0x18)
+    });
+  }
+  cur += field58 * INFO_T_SIZE;
+
+  cur = align(cur, 4);
+  const extraFunctions = [];
+  for (const info of infoItems) {
+    if (info.field_10 === -1) {
+      cur = align(cur, 4);
+      if (cur + VM_EXECUTABLE_SIZE > bytes.length) throw new Error('extra vm_executable out of range at ' + hex32(cur));
+      const fraw = cloneBytes(bytes, cur, cur + VM_EXECUTABLE_SIZE);
+      const owner = objects[info.field_18] || null;
+      const fn = parseVmExecutable(fraw, cur, owner, extraFunctions.length, true, info.index);
+      extraFunctions.push(fn);
+      cur += VM_EXECUTABLE_SIZE;
+    }
+  }
+  const parsedEnd = cur;
+  const tail = cloneBytes(bytes, cur, bytes.length);
+
+  const pcsx = {
+    fileName,
+    bytes,
+    headerRaw,
+    seRaw,
+    fixedName,
+    headerFileSize,
+    safety,
+    expectedSafety,
+    sxStart,
+    sxImage,
+    scriptObjectsArrayOffset,
+    objArrayRaw,
+    objects,
+    scriptObjectsByNameOffset,
+    byNameRaw,
+    byNameIndices,
+    permanentStringTableOffset,
+    pstPtrRaw,
+    permanentStrings,
+    systemStringTableRaw,
+    systemStringTableSizeRaw,
+    globalObjectRaw,
+    flags,
+    field58,
+    infoOffset,
+    infoRaw,
+    infoItems,
+    extraFunctions,
+    parsedEnd,
+    tail,
+    dirty: false
+  };
+  validateFunctionRanges(pcsx);
+  return pcsx;
+}
+function parseVmExecutable(raw, structOffset, ownerObject, index, extra, infoIndex) {
+  return {
+    structOffset,
+    raw,
+    ownerObject,
+    objectIndex: ownerObject ? ownerObject.index : -1,
+    index,
+    extra,
+    infoIndex,
+    fullHash: readU32LE(raw, 0x04),
+    shortHash: readU32LE(raw, 0x08),
+    parmsStackSize: readS32LE(raw, 0x0C),
+    bufferOffset: readS32LE(raw, 0x10),
+    bufferLenWords: readS32LE(raw, 0x14),
+    debugInfoRaw: readU32LE(raw, 0x18),
+    flags: readU32LE(raw, 0x1C),
+    field20: readU32LE(raw, 0x20)
+  };
+}
+function validateFunctionRanges(pcsx) {
+  for (const fn of getAllFunctions(pcsx)) {
+    if (fn.bufferOffset < 0 || fn.bufferLenWords < 0 || fn.bufferOffset + fn.bufferLenWords * 2 > pcsx.sxImage.length) {
+      log(`Warning: ${hex32(fn.fullHash)} has opcode range outside sx_exe_image`, 'warning');
+    }
+  }
+}
+function refreshFunctionRaw(fn) {
+  writeU32LE(fn.raw, 0x00, 0);
+  writeU32LE(fn.raw, 0x04, fn.fullHash);
+  writeU32LE(fn.raw, 0x08, fn.shortHash);
+  writeS32LE(fn.raw, 0x0C, fn.parmsStackSize);
+  writeS32LE(fn.raw, 0x10, fn.bufferOffset);
+  writeS32LE(fn.raw, 0x14, fn.bufferLenWords);
+  writeU32LE(fn.raw, 0x18, 0);
+  writeU32LE(fn.raw, 0x1C, fn.flags);
+  writeU32LE(fn.raw, 0x20, fn.field20 === undefined ? 0xCDCDCDCD : fn.field20);
+}
+function resizedRaw(raw, size, fill=0) {
+  const out = new Uint8Array(size);
+  out.fill(fill);
+  out.set(raw.slice(0, Math.min(raw.length, size)), 0);
+  return out;
+}
+function buildPCSX(pcsx) {
+  if (!pcsx) throw new Error('No PCSX loaded.');
+  const header = cloneBytes(pcsx.headerRaw);
+  const se = cloneBytes(pcsx.seRaw);
+  writeS32LE(se, 0x24, pcsx.sxImage.length);
+  writeS32LE(se, 0x30, pcsx.objects.length);
+  writeS32LE(se, 0x3C, pcsx.permanentStrings.length);
+  writeS32LE(se, 0x58, pcsx.infoItems.length);
+
+  const w = new Writer();
+  w.writeBytes(header);
+  w.writeBytes(se);
+  w.pad(4);
+  w.writeBytes(pcsx.sxImage);
+  w.pad(4);
+  w.writeBytes(resizedRaw(pcsx.objArrayRaw, pcsx.objects.length * 4, 0));
+
+  for (const obj of pcsx.objects) {
+    w.pad(8);
+    w.pad(4);
+    const objRaw = cloneBytes(obj.raw);
+    writeS32LE(objRaw, 0x10, obj.staticData.length);
+    writeS32LE(objRaw, 0x24, obj.functions.length);
+    w.writeBytes(objRaw);
+    w.pad(4);
+    w.writeBytes(obj.staticData);
+    w.pad(4);
+    w.writeBytes(resizedRaw(obj.funcPtrRaw, obj.functions.length * 4, 0));
+    for (const fn of obj.functions) {
+      refreshFunctionRaw(fn);
+      w.pad(4);
+      w.writeBytes(fn.raw);
+    }
+  }
+
+  w.pad(4);
+  w.writeBytes(resizedRaw(pcsx.byNameRaw, pcsx.objects.length * 4, 0));
+  w.pad(4);
+  w.writeBytes(resizedRaw(pcsx.pstPtrRaw, pcsx.permanentStrings.length * 4, 0));
+  for (const ps of pcsx.permanentStrings) {
+    w.pad(4);
+    const raw = ps.rawBytes || latin1Encode(ps.text || '', true);
+    const lenBytes = new Uint8Array(4);
+    writeS32LE(lenBytes, 0, raw.length);
+    w.writeBytes(lenBytes);
+    w.writeBytes(raw);
+  }
+  w.pad(4);
+  w.pad(4);
+  const infoRaw = new Uint8Array(pcsx.infoItems.length * INFO_T_SIZE);
+  for (const info of pcsx.infoItems) infoRaw.set(info.raw, info.index * INFO_T_SIZE);
+  w.writeBytes(infoRaw);
+  w.pad(4);
+  for (const fn of pcsx.extraFunctions) {
+    refreshFunctionRaw(fn);
+    w.pad(4);
+    w.writeBytes(fn.raw);
+  }
+  w.writeBytes(pcsx.tail || new Uint8Array());
+
+  const out = w.toUint8Array();
+  writeS32LE(out, 0x08, out.length);
+  writeU32LE(out, 0x00, calcSafety(out.length, readU32LE(out, 0x04), readU32LE(out, 0x0C)));
+  return out;
+}
+
+function replaceFunctionCode(fn, newBytes) {
+  const pcsx = state.pcsx;
+  if (!pcsx || !fn) throw new Error('No function selected.');
+  if (!newBytes || newBytes.length === 0) throw new Error('Replacement .bin is empty.');
+  if (newBytes.length % 2 !== 0) throw new Error('Opcode .bin length must be even because PCSX VM code is 16-bit words.');
+  const oldStart = fn.bufferOffset;
+  const oldLen = fn.bufferLenWords * 2;
+  if (oldStart < 0 || oldStart + oldLen > pcsx.sxImage.length) throw new Error('Selected function opcode range is invalid.');
+  const newImage = concatBytes([pcsx.sxImage.slice(0, oldStart), newBytes, pcsx.sxImage.slice(oldStart + oldLen)]);
+  const delta = newBytes.length - oldLen;
+  pcsx.sxImage = newImage;
+  for (const other of getAllFunctions(pcsx)) {
+    if (other === fn) continue;
+    if (other.bufferOffset > oldStart) other.bufferOffset += delta;
+  }
+  fn.bufferLenWords = newBytes.length / 2;
+  pcsx.dirty = true;
+  log(`Reimport staged: ${functionDisplayName(fn)} ${oldLen} bytes -> ${newBytes.length} bytes, delta ${delta}.`, 'ok');
+}
+function addFunctionToObject(obj, fullNameOrHash, newBytes, parmsStackSize, flags, fullHashOverride, shortHashOverride) {
+  const pcsx = state.pcsx;
+  if (!obj) throw new Error('Choose an owner script_object for the new function.');
+  if (!newBytes || newBytes.length === 0) throw new Error('New function opcode .bin is empty.');
+  if (newBytes.length % 2 !== 0) throw new Error('Opcode .bin length must be even.');
+  const rawInput = (fullNameOrHash || '').trim();
+  if (!rawInput && fullHashOverride == null) throw new Error('Enter a new function name or hash.');
+
+  let fullHash;
+  let shortHash;
+  let displayName = rawInput;
+  const literalHash = parseHashLiteral(rawInput);
+  if (fullHashOverride != null) fullHash = fullHashOverride >>> 0;
+  else if (literalHash != null) fullHash = literalHash;
+  else fullHash = chuckHash(rawInput);
+
+  if (shortHashOverride != null) shortHash = shortHashOverride >>> 0;
+  else if (literalHash != null) shortHash = literalHash;
+  else shortHash = chuckHash(shortFunctionName(rawInput));
+
+  if (literalHash == null && rawInput) {
+    state.dict.set(fullHash, rawInput);
+    state.dictReverse.set(rawInput.toLowerCase(), fullHash);
+    const short = shortFunctionName(rawInput);
+    state.dict.set(shortHash, short);
+    state.dictReverse.set(short.toLowerCase(), shortHash);
+  } else if (!displayName) {
+    displayName = hex32(fullHash);
+  }
+
+  const offset = pcsx.sxImage.length;
+  pcsx.sxImage = concatBytes([pcsx.sxImage, newBytes]);
+  const raw = new Uint8Array(VM_EXECUTABLE_SIZE);
+  raw.fill(0);
+  const fn = {
+    structOffset: -1,
+    raw,
+    ownerObject: obj,
+    objectIndex: obj.index,
+    index: obj.functions.length,
+    extra: false,
+    infoIndex: null,
+    fullHash,
+    shortHash,
+    parmsStackSize: parmsStackSize | 0,
+    bufferOffset: offset,
+    bufferLenWords: newBytes.length / 2,
+    debugInfoRaw: 0,
+    flags: flags >>> 0,
+    field20: 0xCDCDCDCD
+  };
+  refreshFunctionRaw(fn);
+  obj.functions.push(fn);
+  obj.totalFuncs = obj.functions.length;
+  writeS32LE(obj.raw, 0x24, obj.totalFuncs);
+  pcsx.dirty = true;
+  log(`Added function ${displayName || hex32(fullHash)} to ${objectDisplayName(obj)} at sx offset ${hex32(offset)} (${newBytes.length} bytes).`, 'ok');
+  return fn;
+}
+
+function functionKey(fn) {
+  if (!fn) return '';
+  return `${fn.extra ? 'e' : 'o'}:${fn.objectIndex}:${fn.index}:${fn.infoIndex ?? ''}`;
+}
+function getFunctionByKey(key, pcsx=state.pcsx) {
+  if (!pcsx || !key) return null;
+  const [kind, objIdx, fnIdx, infoIdx] = String(key).split(':');
+  if (kind === 'e') return pcsx.extraFunctions.find(f => String(f.infoIndex) === String(infoIdx)) || null;
+  const obj = pcsx.objects[Number(objIdx)];
+  return obj ? (obj.functions[Number(fnIdx)] || null) : null;
+}
+function setTargetFromFunction(fn) {
+  if (!fn) return;
+  state.selectedFunc = fn;
+  $('targetInput').value = lookupHashMaybe(fn.fullHash) || hex32(fn.fullHash);
+  $('parmsInput').value = String(fn.parmsStackSize);
+  $('flagsInput').value = hex32(fn.flags);
+  if (fn.ownerObject) $('objectSelect').value = String(fn.ownerObject.index);
+}
+async function loadReplacementBinFromFile(file, context='Replacement BIN') {
+  if (!file) return null;
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  state.replacementBin = bytes;
+  state.replacementName = file.name;
+  const cls = bytes.length % 2 ? 'warning' : 'ok';
+  setChip('binChip', `${file.name}: ${bytes.length} bytes`, cls);
+  const msg = `${context} loaded: ${file.name}, ${bytes.length} bytes.`;
+  log(msg, cls);
+  const status = $('selectedBinStatus');
+  if (status) status.textContent = `${file.name}: ${bytes.length} bytes loaded as replacement BIN for the selected function.`;
+  return bytes;
+}
+function sfrGroupForObjectIndex(pcsx, objectIndex) {
+  if (!pcsx) return objectIndex | 0;
+  const group = pcsx.byNameIndices.findIndex(v => v === objectIndex);
+  return group >= 0 ? group : (objectIndex | 0);
+}
+function objectForSfrGroup(pcsx, group) {
+  if (!pcsx) return null;
+  let objIndex = pcsx.byNameIndices[group];
+  if (!Number.isInteger(objIndex) || objIndex < 0 || objIndex >= pcsx.objects.length) objIndex = group;
+  return pcsx.objects[objIndex] || null;
+}
+function functionFromSfrPair(pcsx, group, funcIndex) {
+  const obj = objectForSfrGroup(pcsx, group);
+  return obj && obj.functions ? (obj.functions[funcIndex] || null) : null;
+}
+function sfrPairForFunction(pcsx, fn) {
+  if (!pcsx || !fn) return null;
+  if (fn.extra) return null;
+  return { group: sfrGroupForObjectIndex(pcsx, fn.objectIndex), funcIndex: fn.index };
+}
+function targetPairForNewFunction(pcsx, obj) {
+  if (!pcsx || !obj) return null;
+  return { group: sfrGroupForObjectIndex(pcsx, obj.index), funcIndex: obj.functions.length };
+}
+function findFunctionByHashes(pcsx, fullHash, shortHash) {
+  if (!pcsx) return null;
+  return getAllFunctions(pcsx).find(f =>
+    f.fullHash === (fullHash >>> 0) ||
+    f.shortHash === (fullHash >>> 0) ||
+    f.fullHash === (shortHash >>> 0) ||
+    f.shortHash === (shortHash >>> 0)
+  ) || null;
+}
+function scanSfrRefs(bytes) {
+  const refs = [];
+  for (let off = 0; off + 6 <= bytes.length; off += 2) {
+    if (bytes[off] === 0x09 && SFR_OP_BYTES.has(bytes[off + 1])) {
+      refs.push({
+        offset: off,
+        opByte: bytes[off + 1],
+        group: readU16LE(bytes, off + 2),
+        funcIndex: readU16LE(bytes, off + 4)
+      });
+    }
+  }
+  return refs;
+}
+function rewriteSfrRef(bytes, ref, pair) {
+  if (!pair) return false;
+  const group = pair.group & 0xFFFF;
+  const funcIndex = pair.funcIndex & 0xFFFF;
+  if (ref.group === group && ref.funcIndex === funcIndex) return false;
+  writeU16LE(bytes, ref.offset + 2, group);
+  writeU16LE(bytes, ref.offset + 4, funcIndex);
+  ref.group = group;
+  ref.funcIndex = funcIndex;
+  return true;
+}
+function resolveFunctionHashesInput(fullNameOrHash, fullHashOverride, shortHashOverride) {
+  const rawInput = (fullNameOrHash || '').trim();
+  if (!rawInput && fullHashOverride == null) throw new Error('Enter a new function name or hash.');
+  const literalHash = parseHashLiteral(rawInput);
+  const fullHash = fullHashOverride != null ? (fullHashOverride >>> 0) : (literalHash != null ? literalHash : chuckHash(rawInput));
+  const shortHash = shortHashOverride != null ? (shortHashOverride >>> 0) : (literalHash != null ? literalHash : chuckHash(shortFunctionName(rawInput)));
+  return { rawInput, literalHash, fullHash, shortHash };
+}
+function remapSfrReferences(bytes, options) {
+  const targetPair = options.targetPair;
+  if (!targetPair) return { rewritten: 0, scanned: 0, detail: 'no target pair' };
+  const refs = scanSfrRefs(bytes);
+  let rewritten = 0;
+  let manual = 0;
+  let mappedByHash = 0;
+  let fallback = 0;
+  const fromGroup = parseOptionalNumber($('sfrFromGroup').value);
+  const fromFunc = parseOptionalNumber($('sfrFromFunc').value);
+  const toGroup = parseOptionalNumber($('sfrToGroup').value);
+  const toFunc = parseOptionalNumber($('sfrToFunc').value);
+  const hasManualSource = fromGroup != null && fromFunc != null;
+  const manualTarget = {
+    group: toGroup != null ? toGroup : targetPair.group,
+    funcIndex: toFunc != null ? toFunc : targetPair.funcIndex
+  };
+
+  for (const ref of refs) {
+    if (hasManualSource && ref.group === (fromGroup & 0xFFFF) && ref.funcIndex === (fromFunc & 0xFFFF)) {
+      if (rewriteSfrRef(bytes, ref, manualTarget)) rewritten++;
+      manual++;
+      continue;
+    }
+    if (state.sourcePcsx) {
+      const sourceFn = functionFromSfrPair(state.sourcePcsx, ref.group, ref.funcIndex);
+      if (sourceFn) {
+        let targetFn = findFunctionByHashes(state.pcsx, sourceFn.fullHash, sourceFn.shortHash);
+        let pair = targetFn ? sfrPairForFunction(state.pcsx, targetFn) : null;
+        if (!pair && options.pendingFullHash != null) {
+          if (sourceFn.fullHash === options.pendingFullHash || sourceFn.shortHash === options.pendingFullHash ||
+              sourceFn.fullHash === options.pendingShortHash || sourceFn.shortHash === options.pendingShortHash) {
+            pair = targetPair;
+          }
+        }
+        if (pair && rewriteSfrRef(bytes, ref, pair)) {
+          rewritten++;
+          mappedByHash++;
+        }
+      }
+    }
+  }
+
+  if (options.mode === 'add' && !hasManualSource && rewritten === 0 && refs.length) {
+    let chosen = null;
+    if (refs.some(r => r.group === 1 && r.funcIndex === 0x0A)) {
+      chosen = { group: 1, funcIndex: 0x0A, reason: 'default 1:0x0A' };
+    } else {
+      const unique = new Map();
+      for (const r of refs) unique.set(`${r.group}:${r.funcIndex}`, { group: r.group, funcIndex: r.funcIndex });
+      if (unique.size === 1) {
+        chosen = { ...unique.values().next().value, reason: 'single unique SFR pair' };
+      }
+    }
+    if (chosen) {
+      for (const ref of refs) {
+        if (ref.group === chosen.group && ref.funcIndex === chosen.funcIndex) {
+          if (rewriteSfrRef(bytes, ref, targetPair)) rewritten++;
+          fallback++;
+        }
+      }
+      if (fallback) log(`SFR add fallback retargeted ${fallback} ref(s) from ${chosen.reason} ${chosen.group}:${hex16(chosen.funcIndex)} to ${targetPair.group}:${hex16(targetPair.funcIndex)}.`, 'ok');
+    }
+  }
+
+  if (rewritten) log(`SFR remap updated ${rewritten} reference(s) (${manual} manual match(es), ${mappedByHash} by source PCSX hash, ${fallback} add fallback).`, 'ok');
+  else if (refs.length) log(`SFR remap scanned ${refs.length} SFR reference(s); no operands changed.`, 'warning');
+  return { rewritten, scanned: refs.length };
+}
+function findPermanentStringIndexByText(pcsx, text) {
+  if (!pcsx) return -1;
+  return pcsx.permanentStrings.findIndex(ps => ps.text === text);
+}
+function ensurePermanentString(pcsx, text) {
+  let idx = findPermanentStringIndexByText(pcsx, text);
+  if (idx >= 0) return idx;
+  idx = pcsx.permanentStrings.length;
+  pcsx.permanentStrings.push({ index: idx, text, rawBytes: latin1Encode(text, true), length: text.length + 1 });
+  pcsx.dirty = true;
+  return idx;
+}
+function walkOpcodeStringRefs(bytes, callback) {
+  let off = 0;
+  let guard = 0;
+  while (off < bytes.length && guard++ < 100000) {
+    if (off + 2 > bytes.length) break;
+    const instOff = off;
+    const opword = readU16LE(bytes, off); off += 2;
+    const arg = opword & 0x7F;
+    const hasDsize = (opword & 0x80) !== 0;
+    if (hasDsize) {
+      if (off + 2 > bytes.length) break;
+      off += 2;
+    }
+    const needWordOffset = () => {
+      if (off + 2 > bytes.length) return null;
+      const thisOff = off;
+      const v = readU16LE(bytes, off);
+      off += 2;
+      return { off: thisOff, value: v };
+    };
+    const needPairOffsets = () => {
+      const a = needWordOffset();
+      const b = needWordOffset();
+      if (!a || !b) return null;
+      return [a, b];
+    };
+    if (arg === 1 || arg === 2) {
+      if (!needPairOffsets()) break;
+    } else if (arg === 3) {
+      const p = needPairOffsets();
+      if (!p) break;
+      callback({ instOff, wordOff: p[0].off, index: p[0].value, arg, slot: 0 });
+    } else if ([4,5,6,7].includes(arg)) {
+      if (!needWordOffset()) break;
+    } else if ([8,9,10,11,15,16,17,18,19,20,21,22].includes(arg)) {
+      const p = needPairOffsets();
+      if (!p) break;
+      if (arg === 11) callback({ instOff, wordOff: p[1].off, index: p[1].value, arg, slot: 1 });
+      if (arg === 15 || arg === 16) callback({ instOff, wordOff: p[0].off, index: p[0].value, arg, slot: 0 });
+    } else if (arg !== 0) {
+      break;
+    }
+  }
+}
+function remapPermanentStringReferences(bytes) {
+  if (!state.sourcePcsx) return { rewritten: 0, scanned: 0 };
+  let scanned = 0;
+  let rewritten = 0;
+  let added = 0;
+  walkOpcodeStringRefs(bytes, ref => {
+    scanned++;
+    const sourcePs = state.sourcePcsx.permanentStrings[ref.index];
+    if (!sourcePs) return;
+    const beforeCount = state.pcsx.permanentStrings.length;
+    const targetIndex = ensurePermanentString(state.pcsx, sourcePs.text);
+    if (state.pcsx.permanentStrings.length > beforeCount) added++;
+    if (targetIndex !== ref.index) {
+      writeU16LE(bytes, ref.wordOff, targetIndex);
+      rewritten++;
+    }
+  });
+  if (rewritten || added) log(`permanent_string_table remap updated ${rewritten} reference(s), added ${added} string(s).`, 'ok');
+  else if (scanned) log(`permanent_string_table remap scanned ${scanned} string reference(s); no indices changed.`, 'ok');
+  return { rewritten, scanned, added };
+}
+function prepareImportedOpcodeBytes(inputBytes, options) {
+  if (!inputBytes || inputBytes.length === 0) throw new Error('Opcode .bin is empty.');
+  if (inputBytes.length % 2 !== 0) throw new Error('Opcode .bin length must be even because PCSX VM code is 16-bit words.');
+  const bytes = cloneBytes(inputBytes);
+  if ($('remapSfrRefs') && $('remapSfrRefs').checked) remapSfrReferences(bytes, options);
+  if ($('remapPstRefs') && $('remapPstRefs').checked) remapPermanentStringReferences(bytes);
+  return bytes;
+}
+function stageReplacementIntoFunction(fn, inputBytes) {
+  if (!state.pcsx || !fn) throw new Error('Select a target function first.');
+  const targetPair = sfrPairForFunction(state.pcsx, fn);
+  const prepared = prepareImportedOpcodeBytes(inputBytes, { mode: 'replace', targetFn: fn, targetPair });
+  replaceFunctionCode(fn, prepared);
+  state.selectedFunc = fn;
+  setTargetFromFunction(fn);
+  return fn;
+}
+function findFunction(query) {
+  const pcsx = state.pcsx;
+  if (!pcsx) return null;
+  const q = (query || '').trim();
+  if (!q) return state.selectedFunc;
+  const literal = parseHashLiteral(q);
+  const all = getAllFunctions(pcsx);
+  if (literal != null) return all.find(f => f.fullHash === literal || f.shortHash === literal) || null;
+  const ql = q.toLowerCase();
+  const computedFull = chuckHash(q);
+  const computedShort = chuckHash(shortFunctionName(q));
+  let fn = all.find(f => f.fullHash === computedFull || f.shortHash === computedFull || f.fullHash === computedShort || f.shortHash === computedShort);
+  if (fn) return fn;
+  fn = all.find(f => (lookupHashMaybe(f.fullHash).toLowerCase() === ql) || (lookupHashMaybe(f.shortHash).toLowerCase() === ql));
+  if (fn) return fn;
+  return all.find(f => (lookupHashMaybe(f.fullHash).toLowerCase().includes(ql)) || (lookupHashMaybe(f.shortHash).toLowerCase().includes(ql)) || hex32(f.fullHash).includes(ql) || hex32(f.shortHash).includes(ql)) || null;
+}
+
+function parseDictionary(text) {
+  const map = new Map();
+  const rev = new Map();
+  let collisions = 0;
+  const lines = text.split(/\r?\n/);
+  for (const line of lines) {
+    const m = line.match(/^\s*(0x[0-9a-fA-F]{1,8})\s+(.+?)\s*$/);
+    if (!m) continue;
+    const h = parseInt(m[1], 16) >>> 0;
+    const s = m[2];
+    if (map.has(h) && map.get(h) !== s) collisions++;
+    if (!map.has(h)) map.set(h, s);
+    const key = s.toLowerCase();
+    if (!rev.has(key)) rev.set(key, h);
+  }
+  state.dict = map;
+  state.dictReverse = rev;
+  state.dictCollisions = collisions;
+  setChip('dictChip', `${map.size.toLocaleString()} hash names`, 'ok');
+  log(`Dictionary loaded: ${map.size.toLocaleString()} hashes${collisions ? ', ' + collisions + ' hash collisions kept first' : ''}.`, 'ok');
+  renderAll();
+}
+
+function renderAll() {
+  renderSummary();
+  renderObjectSelect();
+  renderFunctionsTable();
+  renderPermanentStrings();
+  renderSelected();
+}
+function renderSummary() {
+  const el = $('summary');
+  const pcsx = state.pcsx;
+  if (!pcsx) { el.innerHTML = '<div>Load a PCSX file.</div>'; return; }
+  const globalObj = pcsx.objects[0];
+  const rows = [
+    ['file', pcsx.fileName],
+    ['source PCSX for remap', state.sourcePcsx ? state.sourcePcsx.fileName : '(none)'],
+    ['fixedstring field_0', pcsx.fixedName || '(empty)'],
+    ['generic_mash_header.field_8', `${pcsx.headerFileSize} / actual ${pcsx.bytes.length}`],
+    ['safety_key', `${hex32(pcsx.safety)} ${pcsx.safety === pcsx.expectedSafety ? '<span class="ok">OK</span>' : '<span class="warning">expected ' + hex32(pcsx.expectedSafety) + '</span>'}`],
+    ['sx_exe_image', `offset ${hex32(pcsx.sxStart)}, size ${pcsx.sxImage.length} bytes`],
+    ['sx_exe_image_size', String(pcsx.sxImage.length)],
+    ['total_script_objects', String(pcsx.objects.length)],
+    ['global_script_object', globalObj ? `${objectDisplayName(globalObj)} (${hex32(globalObj.nameHash)})` : `raw ${hex32(pcsx.globalObjectRaw)}`],
+    ['script_objects', `${pcsx.objects.length} objects loaded`],
+    ['script_objects_by_name', pcsx.byNameIndices.join(', ')],
+    ['permanent_string_table', `${pcsx.permanentStrings.length} strings loaded`],
+    ['permanent_string_table_size', String(pcsx.permanentStrings.length)],
+    ['system_string_table', 'not stored as strings in packed PCSX; dictionary resolves hashes'],
+    ['system_string_table_size', String(pcsx.systemStringTableSizeRaw)],
+    ['script_executable.flags', hex32(pcsx.flags)],
+    ['field_54 / field_58 info entries', `${pcsx.infoItems.length} entries, ${pcsx.extraFunctions.length} extra vm_executable blocks`],
+    ['dirty staged changes', pcsx.dirty ? '<span class="warning">yes</span>' : '<span class="ok">no</span>']
+  ];
+  el.innerHTML = rows.map(([k,v]) => `<div><span class="tiny">${escapeHtml(k)}</span><br><span class="mono">${v}</span></div>`).join('');
+}
+function renderObjectSelect() {
+  const sel = $('objectSelect');
+  sel.innerHTML = '';
+  if (!state.pcsx) return;
+  for (const obj of state.pcsx.objects) {
+    const opt = document.createElement('option');
+    opt.value = obj.index;
+    opt.textContent = `${obj.index}: ${objectDisplayName(obj)} (${hex32(obj.nameHash)}) funcs=${obj.functions.length}`;
+    sel.appendChild(opt);
+  }
+  if (state.selectedFunc && state.selectedFunc.ownerObject) sel.value = String(state.selectedFunc.ownerObject.index);
+}
+function renderFunctionsTable() {
+  const table = $('functionsTable');
+  const pcsx = state.pcsx;
+  if (!pcsx) { table.innerHTML = ''; $('functionCount').textContent = ''; return; }
+  const filter = ($('tableFilter').value || '').trim().toLowerCase();
+  const funcs = getAllFunctions(pcsx);
+  const filtered = funcs.filter(fn => {
+    if (!filter) return true;
+    const objName = fn.ownerObject ? objectDisplayName(fn.ownerObject) : 'extra';
+    const hay = [objName, lookupHashMaybe(fn.fullHash), lookupHashMaybe(fn.shortHash), hex32(fn.fullHash), hex32(fn.shortHash), String(fn.index), String(fn.objectIndex)].join(' ').toLowerCase();
+    return hay.includes(filter);
+  });
+  $('functionCount').textContent = `${filtered.length} / ${funcs.length} functions`;
+  let html = '<thead><tr><th>Obj</th><th>Function full hash/name</th><th>Short hash/name</th><th>sx offset</th><th>bytes</th><th>parms</th><th>flags</th><th>Action</th></tr></thead><tbody>';
+  for (const fn of filtered) {
+    const selected = state.selectedFunc === fn ? ' class="selected"' : '';
+    const objText = fn.extra ? `extra#${fn.infoIndex}` : `${fn.objectIndex}: ${escapeHtml(fn.ownerObject ? objectDisplayName(fn.ownerObject) : '(none)')}`;
+    const key = functionKey(fn);
+    html += `<tr${selected} data-key="${key}">` +
+      `<td>${objText}</td>` +
+      `<td class="mono">${hex32(fn.fullHash)}<br>${escapeHtml(lookupHashMaybe(fn.fullHash) || '')}</td>` +
+      `<td class="mono">${hex32(fn.shortHash)}<br>${escapeHtml(lookupHashMaybe(fn.shortHash) || '')}</td>` +
+      `<td class="mono">${hex32(fn.bufferOffset)}</td>` +
+      `<td>${fn.bufferLenWords * 2} <span class="tiny">(${fn.bufferLenWords} words)</span></td>` +
+      `<td>${fn.parmsStackSize}</td>` +
+      `<td class="mono">${hex32(fn.flags)}</td>` +
+      `<td><button type="button" class="loadFunctionBinBtn" data-key="${key}">Load .bin</button></td>` +
+      `</tr>`;
+  }
+  html += '</tbody>';
+  table.innerHTML = html;
+  for (const tr of table.querySelectorAll('tbody tr')) {
+    tr.addEventListener('click', () => {
+      state.selectedFunc = getFunctionByKey(tr.dataset.key) || state.selectedFunc;
+      renderAll();
+      activateTab('selectedPage');
+    });
+  }
+  for (const btn of table.querySelectorAll('.loadFunctionBinBtn')) {
+    btn.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      pendingFunctionBinTargetKey = btn.dataset.key;
+      const fn = getFunctionByKey(pendingFunctionBinTargetKey);
+      if (fn) setTargetFromFunction(fn);
+      $('functionBinFile').value = '';
+      $('functionBinFile').click();
+    });
+  }
+}
+function renderPermanentStrings() {
+  const pcsx = state.pcsx;
+  if (!pcsx) { $('stringsTable').innerHTML = ''; $('pstText').value = ''; return; }
+  $('pstText').value = pcsx.permanentStrings.map(ps => ps.text).join('\n');
+  let html = '<thead><tr><th>#</th><th>Length</th><th>String</th></tr></thead><tbody>';
+  for (const ps of pcsx.permanentStrings) {
+    html += `<tr><td>${ps.index}</td><td>${ps.rawBytes.length}</td><td class="mono">${escapeHtml(ps.text)}</td></tr>`;
+  }
+  html += '</tbody>';
+  $('stringsTable').innerHTML = html;
+}
+function renderSelected() {
+  const fn = state.selectedFunc;
+  const info = $('selectedInfo');
+  if (!state.pcsx || !fn) {
+    info.innerHTML = '<div>Select a function from the table.</div>';
+    $('hexView').textContent = '';
+    $('disasmView').textContent = '';
+    $('selectedBinStatus').textContent = '';
+    return;
+  }
+  const objName = fn.ownerObject ? objectDisplayName(fn.ownerObject) : '(extra/no owner)';
+  const rows = [
+    ['owner script_object', `${objName} ${fn.ownerObject ? '(' + hex32(fn.ownerObject.nameHash) + ')' : ''}`],
+    ['function index', fn.extra ? `extra info #${fn.infoIndex}` : String(fn.index)],
+    ['fullname hash/name', `${hex32(fn.fullHash)} ${lookupHashMaybe(fn.fullHash) || ''}`],
+    ['short hash/name', `${hex32(fn.shortHash)} ${lookupHashMaybe(fn.shortHash) || ''}`],
+    ['sx_exe_image offset', hex32(fn.bufferOffset)],
+    ['buffer_len', `${fn.bufferLenWords} words = ${fn.bufferLenWords * 2} bytes`],
+    ['parms_stacksize', String(fn.parmsStackSize)],
+    ['flags', hex32(fn.flags)]
+  ];
+  info.innerHTML = rows.map(([k,v]) => `<div><span class="tiny">${escapeHtml(k)}</span><br><span class="mono">${escapeHtml(v)}</span></div>`).join('');
+  const bytes = codeBytesFor(fn);
+  $('hexView').textContent = bytesToHex(bytes);
+  $('disasmView').textContent = disassemble(bytes, state.pcsx.permanentStrings, fn.bufferOffset);
+  $('targetInput').value = lookupHashMaybe(fn.fullHash) || hex32(fn.fullHash);
+  $('parmsInput').value = String(fn.parmsStackSize);
+  $('flagsInput').value = hex32(fn.flags);
+  if (fn.ownerObject) $('objectSelect').value = String(fn.ownerObject.index);
+}
+function disassemble(bytes, pst, baseOffset=0) {
+  const lines = [];
+  let off = 0;
+  let guard = 0;
+  while (off < bytes.length && guard++ < 100000) {
+    if (off + 2 > bytes.length) { lines.push(`${hex32(baseOffset + off)}: <trailing byte>`); break; }
+    const instOff = off;
+    const opword = readU16LE(bytes, off); off += 2;
+    const op = opword >>> 8;
+    const arg = opword & 0x7F;
+    const hasDsize = (opword & 0x80) !== 0;
+    const parts = [`${hex32(baseOffset + instOff)}:`, hex16(opword), OP_NAMES[op] || `OP_${op}`, ARG_NAMES[arg] || `ARG_${arg}`];
+    if (hasDsize) {
+      if (off + 2 > bytes.length) { parts.push('dsize=<truncated>'); lines.push(parts.join(' ')); break; }
+      const ds = readU16LE(bytes, off); off += 2;
+      parts.push(`dsize=${ds}`);
+    }
+    const needWord = () => {
+      if (off + 2 > bytes.length) return null;
+      const v = readU16LE(bytes, off); off += 2; return v;
+    };
+    const needPair = () => {
+      const a = needWord(); const b = needWord();
+      if (a == null || b == null) return null;
+      return [a, b];
+    };
+    if (arg === 1 || arg === 2) {
+      const p = needPair();
+      if (!p) parts.push('<truncated>');
+      else parts.push(`imm32=${hex32(((p[0] << 16) | p[1]) >>> 0)} words=[${hex16(p[0])},${hex16(p[1])}]`);
+    } else if (arg === 3) {
+      const p = needPair();
+      if (!p) parts.push('<truncated>');
+      else {
+        const idx = p[0];
+        const s = pst[idx] ? pst[idx].text : '';
+        parts.push(`pst[${idx}]${s ? '=' + JSON.stringify(s) : ''} extra=${hex16(p[1])}`);
+      }
+    } else if ([4,5,6,7].includes(arg)) {
+      const w = needWord();
+      if (w == null) parts.push('<truncated>'); else parts.push(`word=${hex16(w)} signed=${signed16(w)}`);
+    } else if ([8,9,10,11,15,16,17,18,19,20,21,22].includes(arg)) {
+      const p = needPair();
+      if (!p) parts.push('<truncated>');
+      else {
+        let tail = `pair=[${p[0]}, ${p[1]}] words=[${hex16(p[0])},${hex16(p[1])}]`;
+        if (arg === 11 && pst[p[1]]) tail += ` pst[${p[1]}]=${JSON.stringify(pst[p[1]].text)}`;
+        if ((arg === 15 || arg === 16) && pst[p[0]]) tail += ` pst[${p[0]}]=${JSON.stringify(pst[p[0]].text)}`;
+        parts.push(tail);
+      }
+    } else if (arg !== 0) {
+      parts.push('(unknown arg length; stop)');
+      lines.push(parts.join(' '));
+      break;
+    }
+    lines.push(parts.join(' '));
+  }
+  return lines.join('\n');
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+function downloadBytes(name, bytes, mime='application/octet-stream') {
+  const blob = new Blob([bytes], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function manifestFor(pcsx) {
+  const functions = [];
+  for (const fn of getAllFunctions(pcsx)) {
+    const obj = fn.ownerObject;
+    const fullName = lookupHashMaybe(fn.fullHash);
+    const shortName = lookupHashMaybe(fn.shortHash);
+    const binFile = `functions/${String(fn.objectIndex).padStart(3, '0')}_${String(fn.index).padStart(3, '0')}_${sanitizeName(fullName || shortName || hex32(fn.fullHash))}.bin`;
+    functions.push({
+      object_index: fn.objectIndex,
+      object_hash: obj ? hex32(obj.nameHash) : null,
+      object_name: obj ? objectDisplayName(obj) : null,
+      function_index: fn.index,
+      extra_info_index: fn.extra ? fn.infoIndex : null,
+      fullname_hash: hex32(fn.fullHash),
+      fullname_name: fullName,
+      short_hash: hex32(fn.shortHash),
+      short_name: shortName,
+      parms_stacksize: fn.parmsStackSize,
+      flags: hex32(fn.flags),
+      sx_exe_image_offset: fn.bufferOffset,
+      buffer_len_words: fn.bufferLenWords,
+      byte_length: fn.bufferLenWords * 2,
+      bin_file: binFile
+    });
+  }
+  return {
+    file: pcsx.fileName,
+    fixedstring_field_0: pcsx.fixedName,
+    sx_exe_image_size: pcsx.sxImage.length,
+    total_script_objects: pcsx.objects.length,
+    permanent_string_table_size: pcsx.permanentStrings.length,
+    system_string_table_size_raw: pcsx.systemStringTableSizeRaw,
+    global_script_object: pcsx.objects[0] ? { hash: hex32(pcsx.objects[0].nameHash), name: objectDisplayName(pcsx.objects[0]) } : null,
+    script_objects_by_name_indices: pcsx.byNameIndices,
+    functions
+  };
+}
+function exportAllZip() {
+  const pcsx = state.pcsx;
+  if (!pcsx) throw new Error('No PCSX loaded.');
+  const manifest = manifestFor(pcsx);
+  const files = [];
+  files.push({ name: 'manifest.json', data: utf8Encode(JSON.stringify(manifest, null, 2)) });
+  files.push({ name: 'permanent_string_table.txt', data: utf8Encode(pcsx.permanentStrings.map(ps => ps.text).join('\n')) });
+  const used = new Set();
+  for (const fn of getAllFunctions(pcsx)) {
+    const fullName = lookupHashMaybe(fn.fullHash);
+    const shortName = lookupHashMaybe(fn.shortHash);
+    let name = `functions/${String(fn.objectIndex).padStart(3, '0')}_${String(fn.index).padStart(3, '0')}_${sanitizeName(fullName || shortName || hex32(fn.fullHash))}.bin`;
+    let n = 2;
+    while (used.has(name)) name = name.replace(/\.bin$/, `_${n++}.bin`);
+    used.add(name);
+    files.push({ name, data: codeBytesFor(fn, pcsx) });
+  }
+  const zip = makeZip(files);
+  downloadBytes(`${baseName(pcsx.fileName)}_pcsx_extract.zip`, zip, 'application/zip');
+  log(`Exported ${files.length} files to ZIP.`, 'ok');
+}
+
+let crcTable = null;
+function makeCrcTable() {
+  const table = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    table[n] = c >>> 0;
+  }
+  return table;
+}
+function crc32(data) {
+  if (!crcTable) crcTable = makeCrcTable();
+  let c = 0xFFFFFFFF;
+  for (const b of data) c = crcTable[(c ^ b) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+function pushU16(arr, v) { arr.push(v & 0xFF, (v >>> 8) & 0xFF); }
+function pushU32(arr, v) { arr.push(v & 0xFF, (v >>> 8) & 0xFF, (v >>> 16) & 0xFF, (v >>> 24) & 0xFF); }
+function makeZip(files) {
+  const out = [];
+  const central = [];
+  let offset = 0;
+  for (const f of files) {
+    const nameBytes = utf8Encode(f.name);
+    const data = f.data instanceof Uint8Array ? f.data : new Uint8Array(f.data);
+    const crc = crc32(data);
+    const local = [];
+    pushU32(local, 0x04034B50); pushU16(local, 20); pushU16(local, 0x0800); pushU16(local, 0); pushU16(local, 0); pushU16(local, 0);
+    pushU32(local, crc); pushU32(local, data.length); pushU32(local, data.length); pushU16(local, nameBytes.length); pushU16(local, 0);
+    for (const b of nameBytes) local.push(b);
+    central.push({ nameBytes, crc, size: data.length, offset });
+    out.push(...local, ...data);
+    offset += local.length + data.length;
+  }
+  const centralStart = out.length;
+  for (const c of central) {
+    pushU32(out, 0x02014B50); pushU16(out, 20); pushU16(out, 20); pushU16(out, 0x0800); pushU16(out, 0); pushU16(out, 0); pushU16(out, 0);
+    pushU32(out, c.crc); pushU32(out, c.size); pushU32(out, c.size); pushU16(out, c.nameBytes.length); pushU16(out, 0); pushU16(out, 0);
+    pushU16(out, 0); pushU16(out, 0); pushU32(out, 0); pushU32(out, c.offset);
+    for (const b of c.nameBytes) out.push(b);
+  }
+  const centralSize = out.length - centralStart;
+  pushU32(out, 0x06054B50); pushU16(out, 0); pushU16(out, 0); pushU16(out, central.length); pushU16(out, central.length);
+  pushU32(out, centralSize); pushU32(out, centralStart); pushU16(out, 0);
+  return Uint8Array.from(out);
+}
+
+function activateTab(id) {
+  for (const t of document.querySelectorAll('.tab')) t.classList.toggle('active', t.dataset.tab === id);
+  for (const p of document.querySelectorAll('.tabpage')) p.classList.toggle('active', p.id === id);
+}
+for (const t of document.querySelectorAll('.tab')) t.addEventListener('click', () => activateTab(t.dataset.tab));
+
+$('dictFile').addEventListener('change', async (ev) => {
+  const file = ev.target.files[0];
+  if (!file) return;
+  try { parseDictionary(await file.text()); }
+  catch (e) { log(e.message, 'error'); }
+});
+$('pcsxFile').addEventListener('change', async (ev) => {
+  const file = ev.target.files[0];
+  if (!file) return;
+  try {
+    const pcsx = parsePCSX(await file.arrayBuffer(), file.name);
+    state.pcsx = pcsx;
+    state.selectedFunc = getAllFunctions(pcsx)[0] || null;
+    setChip('pcsxChip', `${file.name}: ${file.size.toLocaleString()} bytes`, 'ok');
+    log(`PCSX loaded: ${file.name}. ${pcsx.objects.length} script_objects, ${getAllFunctions(pcsx).length} functions, ${pcsx.permanentStrings.length} permanent strings.`, 'ok');
+    renderAll();
+  } catch (e) {
+    log(e.stack || e.message, 'error');
+  }
+});
+$('sourcePcsxFile').addEventListener('change', async (ev) => {
+  const file = ev.target.files[0];
+  if (!file) return;
+  try {
+    const pcsx = parsePCSX(await file.arrayBuffer(), file.name);
+    state.sourcePcsx = pcsx;
+    setChip('sourcePcsxChip', `source ${file.name}: ${file.size.toLocaleString()} bytes`, 'ok');
+    log(`Source PCSX loaded for function.bin remap: ${file.name}. ${pcsx.objects.length} script_objects, ${getAllFunctions(pcsx).length} functions, ${pcsx.permanentStrings.length} permanent strings.`, 'ok');
+    renderAll();
+  } catch (e) {
+    log(e.stack || e.message, 'error');
+  }
+});
+$('binFile').addEventListener('change', async (ev) => {
+  const file = ev.target.files[0];
+  if (!file) return;
+  try { await loadReplacementBinFromFile(file, 'Replacement BIN'); }
+  catch (e) { log(e.stack || e.message, 'error'); }
+});
+$('selectedBinFile').addEventListener('change', async (ev) => {
+  const file = ev.target.files[0];
+  if (!file) return;
+  try {
+    if (!state.pcsx || !state.selectedFunc) throw new Error('Select a function before loading another function.bin.');
+    setTargetFromFunction(state.selectedFunc);
+    await loadReplacementBinFromFile(file, 'Selected function.bin');
+    renderAll();
+    activateTab('selectedPage');
+  } catch (e) { log(e.stack || e.message, 'error'); }
+});
+$('functionBinFile').addEventListener('change', async (ev) => {
+  const file = ev.target.files[0];
+  if (!file) return;
+  try {
+    const fn = getFunctionByKey(pendingFunctionBinTargetKey);
+    if (!fn) throw new Error('Could not resolve function row for BIN load.');
+    setTargetFromFunction(fn);
+    await loadReplacementBinFromFile(file, `Function-row BIN for ${functionDisplayName(fn)}`);
+    renderAll();
+    activateTab('selectedPage');
+  } catch (e) { log(e.stack || e.message, 'error'); }
+});
+$('stageSelectedBinBtn').addEventListener('click', () => {
+  try {
+    if (!state.pcsx || !state.selectedFunc) throw new Error('Select a function first.');
+    if (!state.replacementBin) throw new Error('Load another function.bin first.');
+    stageReplacementIntoFunction(state.selectedFunc, state.replacementBin);
+    renderAll();
+    activateTab('selectedPage');
+  } catch (e) { log(e.stack || e.message, 'error'); }
+});
+$('findBtn').addEventListener('click', () => {
+  const fn = findFunction($('findInput').value);
+  if (!fn) { log('Function not found: ' + $('findInput').value, 'warning'); return; }
+  state.selectedFunc = fn;
+  log('Selected ' + functionDisplayName(fn) + ' at sx offset ' + hex32(fn.bufferOffset) + '.', 'ok');
+  renderAll();
+  activateTab('selectedPage');
+});
+$('extractSelectedBtn').addEventListener('click', () => {
+  try {
+    if (!state.pcsx || !state.selectedFunc) throw new Error('Select a function first.');
+    const fn = state.selectedFunc;
+    const name = sanitizeName(functionDisplayName(fn));
+    downloadBytes(`${baseName(state.pcsx.fileName)}_${hex32(fn.fullHash)}_${name}.bin`, codeBytesFor(fn));
+    log(`Extracted ${functionDisplayName(fn)} (${fn.bufferLenWords * 2} bytes).`, 'ok');
+  } catch (e) { log(e.message, 'error'); }
+});
+$('exportZipBtn').addEventListener('click', () => { try { exportAllZip(); } catch (e) { log(e.message, 'error'); } });
+$('tableFilter').addEventListener('input', renderFunctionsTable);
+$('reimportBtn').addEventListener('click', () => {
+  try {
+    if (!state.pcsx) throw new Error('Load a PCSX first.');
+    if (!state.replacementBin) throw new Error('Load a replacement opcode .bin first.');
+    const targetText = $('targetInput').value.trim();
+    let fn = targetText ? findFunction(targetText) : state.selectedFunc;
+    if (fn) {
+      stageReplacementIntoFunction(fn, state.replacementBin);
+    } else {
+      if (!$('addIfMissing').checked) throw new Error('Target function not found. Enable “Add as new function if missing” to append a new function.');
+      const obj = state.pcsx.objects[Number($('objectSelect').value)];
+      const fullHashOverride = parseHashLiteral($('fullHashOverride').value);
+      const shortHashOverride = parseHashLiteral($('shortHashOverride').value);
+      const hashes = resolveFunctionHashesInput(targetText, fullHashOverride, shortHashOverride);
+      const parms = parseNumber($('parmsInput').value, 4);
+      const flags = parseNumber($('flagsInput').value, 4) >>> 0;
+      const targetPair = targetPairForNewFunction(state.pcsx, obj);
+      const prepared = prepareImportedOpcodeBytes(state.replacementBin, {
+        mode: 'add',
+        ownerObject: obj,
+        targetPair,
+        pendingFullHash: hashes.fullHash,
+        pendingShortHash: hashes.shortHash
+      });
+      fn = addFunctionToObject(obj, targetText, prepared, parms, flags, fullHashOverride, shortHashOverride);
+      state.selectedFunc = fn;
+    }
+    renderAll();
+    activateTab('selectedPage');
+  } catch (e) { log(e.stack || e.message, 'error'); }
+});
+$('savePcsxBtn').addEventListener('click', () => {
+  try {
+    if (!state.pcsx) throw new Error('No PCSX loaded.');
+    const out = buildPCSX(state.pcsx);
+    const reparsed = parsePCSX(out.buffer.slice(out.byteOffset, out.byteOffset + out.byteLength), state.pcsx.fileName);
+    downloadBytes(`${baseName(state.pcsx.fileName)}_reimported.PCSX`, out);
+    log(`Rebuilt PCSX saved. New size ${out.length} bytes; reparsed ${reparsed.objects.length} objects and ${getAllFunctions(reparsed).length} functions.`, 'ok');
+  } catch (e) { log(e.stack || e.message, 'error'); }
+});
+$('applyPstBtn').addEventListener('click', () => {
+  try {
+    if (!state.pcsx) throw new Error('No PCSX loaded.');
+    const lines = $('pstText').value.split(/\r?\n/);
+    state.pcsx.permanentStrings = lines.map((text, index) => ({ index, text, rawBytes: latin1Encode(text, true), length: text.length + 1 }));
+    state.pcsx.dirty = true;
+    log(`Applied permanent_string_table edits: ${lines.length} strings.`, 'ok');
+    renderAll();
+  } catch (e) { log(e.message, 'error'); }
+});
+$('exportPstBtn').addEventListener('click', () => {
+  try {
+    if (!state.pcsx) throw new Error('No PCSX loaded.');
+    downloadBytes(`${baseName(state.pcsx.fileName)}_permanent_string_table.txt`, utf8Encode(state.pcsx.permanentStrings.map(ps => ps.text).join('\n')), 'text/plain');
+  } catch (e) { log(e.message, 'error'); }
+});
+
+renderAll();
+log('Ready. Load a .PCSX file and string_hash_dictionary.txt.');
+</script>
+</body>
+</html>

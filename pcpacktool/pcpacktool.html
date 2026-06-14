@@ -1,0 +1,1711 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PCPACK / PS2PACK Tool (Ultimate Spider-Man)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{
+  --bg:#15171c; --panel:#1c1f26; --panel2:#23272f; --line:#2c313b;
+  --fg:#d8dde6; --mut:#8a93a3; --accent:#74a8ff; --warn:#e8a44a; --err:#ff6a6a; --ok:#4ade80;
+  --row-alt:#1a1d23; --row-hov:#262b34; --row-sel:#2f4262; --row-repl:#3a2f1a;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:13px system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}
+button,input,select{font:inherit;color:inherit}
+.app{display:grid;grid-template-rows:auto auto 1fr auto;height:100%}
+/* Toolbar */
+.tb{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px;background:var(--panel);border-bottom:1px solid var(--line)}
+.tb h1{margin:0 12px 0 4px;font-size:14px;font-weight:600;letter-spacing:.3px}
+.tb h1 small{color:var(--mut);font-weight:400;margin-left:6px}
+.btn{background:var(--panel2);border:1px solid var(--line);color:var(--fg);padding:6px 10px;border-radius:4px;cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--row-hov);border-color:#3a4151}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.primary{background:#2a4170;border-color:#3a5589}
+.btn.primary:hover{background:#33508a}
+.btn.warn{background:#5a3e1a;border-color:#7a5424}
+.btn.warn:hover{background:#6e4d22}
+.tb .sep{width:1px;height:22px;background:var(--line);margin:0 4px}
+.tb label.file{cursor:pointer}
+.tb input[type=file]{display:none}
+/* Filter row */
+.flt{display:flex;gap:8px;align-items:center;padding:6px 8px;background:var(--panel);border-bottom:1px solid var(--line)}
+.flt input[type=text]{flex:1;min-width:200px;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:5px 8px;outline:none}
+.flt input[type=text]:focus{border-color:var(--accent)}
+.flt select,.flt input[type=number]{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:5px 6px;outline:none}
+.flt .lbl{color:var(--mut);font-size:12px}
+/* Main */
+.main{display:grid;grid-template-columns:1fr 360px;min-height:0}
+.left{display:flex;flex-direction:column;min-width:0;border-right:1px solid var(--line);background:var(--panel)}
+.right{display:flex;flex-direction:column;min-width:0;background:var(--panel)}
+.tabs{display:flex;border-bottom:1px solid var(--line);background:var(--panel2)}
+.tabs .tab{padding:8px 14px;cursor:pointer;color:var(--mut);border-right:1px solid var(--line);user-select:none}
+.tabs .tab.active{color:var(--fg);background:var(--panel)}
+.tabs .tab:hover{color:var(--fg)}
+.tabpane{flex:1;display:none;min-height:0;overflow:auto;padding:8px}
+.tabpane.active{display:block}
+pre.info,pre.log{margin:0;font-family:var(--mono);font-size:12px;white-space:pre;color:#c5cbd6}
+pre.log .ok{color:var(--ok)}
+pre.log .warn{color:var(--warn)}
+pre.log .err{color:var(--err)}
+pre.log .info{color:var(--accent)}
+/* Table */
+.table-wrap{flex:1;overflow:auto;position:relative}
+table.lv{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px}
+table.lv thead{position:sticky;top:0;z-index:2;background:var(--panel2)}
+table.lv th{padding:6px 8px;text-align:left;font-weight:600;border-bottom:1px solid var(--line);cursor:pointer;user-select:none;white-space:nowrap}
+table.lv th:hover{background:var(--row-hov)}
+table.lv th .arr{color:var(--accent);margin-left:4px}
+table.lv td{padding:4px 8px;border-bottom:1px solid #1f2229;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:380px}
+table.lv tr{cursor:default}
+table.lv tr:nth-child(even){background:var(--row-alt)}
+table.lv tr:hover{background:var(--row-hov)}
+table.lv tr.sel{background:var(--row-sel) !important}
+table.lv tr.repl td:first-child::before{content:"●";color:var(--warn);margin-right:6px}
+table.lv tr.repl{background:var(--row-repl)}
+table.lv tr.repl:hover{background:#4a3d24}
+.ext-pill{display:inline-block;padding:1px 6px;border-radius:3px;font-size:11px;color:#000;font-weight:600}
+/* Drop overlay */
+.drop{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:100;pointer-events:none;border:3px dashed var(--accent)}
+.drop.show{display:flex}
+.drop .msg{background:var(--panel);padding:18px 26px;border-radius:6px;border:1px solid var(--accent);font-size:15px}
+/* Status */
+.status{padding:5px 10px;background:var(--panel2);border-top:1px solid var(--line);font-family:var(--mono);font-size:11px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status b{color:var(--fg)}
+/* Modal */
+.modal-back{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:200}
+.modal-back.show{display:flex}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px;min-width:340px;max-width:90vw}
+.modal h3{margin:0 0 10px 0}
+.modal .row{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
+.modal p{margin:6px 0;color:var(--mut);font-size:12px}
+.kbd{font-family:var(--mono);background:var(--bg);padding:1px 5px;border-radius:3px;border:1px solid var(--line);font-size:11px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="tb">
+    <h1>PCPACK / PS2PACK Tool <small>USM resource pack viewer / builder</small></h1>
+    <label class="btn file">Open PCPACK / PS2PACK… <input type="file" id="fOpen" accept=".pcpack,.PCPACK,.ps2pack,.PS2PACK"></label>
+    <label class="btn file">Load Dictionary… <input type="file" id="fDict" accept=".txt"></label>
+    <span class="sep"></span>
+    <button class="btn" id="bExportAll" disabled>Export All (ZIP)…</button>
+    <button class="btn" id="bExportSel" disabled>Export Selected…</button>
+    <span class="sep"></span>
+    <label class="btn file" id="lAddRepl"><span>Add Replacement Files…</span>
+      <input type="file" id="fRepl" multiple>
+    </label>
+    <label class="btn file" id="lAddReplDir"><span>Replacement Folder…</span>
+      <input type="file" id="fReplDir" webkitdirectory directory multiple>
+    </label>
+    <button class="btn primary" id="bBuild" disabled>Build Pack…</button>
+    <span class="sep"></span>
+    <label class="btn file warn" id="lReimport"><span>Reimport (Folder Sync + Reorder) → Build…</span>
+      <input type="file" id="fReimport" webkitdirectory directory multiple>
+    </label>
+    <span class="sep"></span>
+    <button class="btn" id="bClearRepl" disabled>Clear Replacements</button>
+  </div>
+
+  <div class="flt">
+    <span class="lbl">Filter:</span>
+    <input type="text" id="filter" placeholder="hash, filename, or extension…">
+    <span class="lbl">Type:</span>
+    <select id="typeFilter"><option value="-1">All Types</option></select>
+    <span class="lbl">Align:</span>
+    <input type="number" id="align" value="16" min="1" max="4096" style="width:70px">
+    <span class="lbl" id="countLabel" style="margin-left:auto">—</span>
+  </div>
+
+  <div class="main">
+    <div class="left">
+      <div class="table-wrap" id="tableWrap">
+        <table class="lv" id="lv">
+          <thead><tr>
+            <th data-col="0">#<span class="arr"></span></th>
+            <th data-col="1">Filename<span class="arr"></span></th>
+            <th data-col="2">Type<span class="arr"></span></th>
+            <th data-col="3">Hash<span class="arr"></span></th>
+            <th data-col="4">Offset<span class="arr"></span></th>
+            <th data-col="5">Size<span class="arr"></span></th>
+            <th data-col="6">Status<span class="arr"></span></th>
+          </tr></thead>
+          <tbody id="lvBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="right">
+      <div class="tabs">
+        <div class="tab active" data-pane="paneInfo">Pack Info</div>
+        <div class="tab" data-pane="paneLog">Log</div>
+        <div class="tab" data-pane="paneHelp">Help</div>
+      </div>
+      <div class="tabpane active" id="paneInfo"><pre class="info" id="infoText">(no file loaded)</pre></div>
+      <div class="tabpane" id="paneLog"><pre class="log" id="logText"></pre></div>
+      <div class="tabpane" id="paneHelp">
+        <p style="font-size:12px;line-height:1.5;color:var(--fg)">
+          <b>Open PCPACK / PS2PACK</b> — parse a <code>.PCPACK</code> (PC) or <code>.PS2PACK</code> (PlayStation 2) file. Format is auto-detected from extension. PS2PACK uses <code>.PS2*</code> / <code>.TM2</code> naming, and the field at directory+0x70 (file offset 0xB4 with the default <code>directory_offset=0x30</code>) is parsed as a 12-byte-per-entry table of extra texture data and preserved verbatim on rebuild.<br>
+          <b>Load Dictionary</b> — text file with lines of <code>0xHHHHHHHH name</code> for hash → name resolution.<br>
+          <b>Add Replacement Files</b> — pick files whose names match displayed filenames (e.g. <code>0x12345678.DDS</code> or <code>hero_body_diff.DDS</code>); they queue as replacements at the same index.<br>
+          <b>Build</b> — repack with replacements at their original indices (mirrors <code>do_import</code>).<br>
+          <b>Reimport</b> — pick a folder; existing entries are updated by hash+type, new entries are added, list is sorted by (type, hash), TL entries for textures/meshes/skeletons/etc are added or remapped, PCANIM clips are re-parsed and <code>anim_locations</code> is rebuilt (mirrors <code>do_reimport_from_folder</code>).<br>
+          You can also drag &amp; drop <code>.PCPACK</code>, <code>.TXT</code> dictionary, or replacement files onto the window.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="status" id="status"> No file loaded. Drop a .PCPACK or .PS2PACK file to begin.</div>
+</div>
+
+<div class="drop" id="drop"><div class="msg">Drop PCPACK / PS2PACK, dictionary <span class="kbd">.txt</span>, or replacement files here</div></div>
+
+<div class="modal-back" id="modal">
+  <div class="modal">
+    <h3 id="mTitle">Confirm</h3>
+    <p id="mBody"></p>
+    <div class="row">
+      <button class="btn" id="mCancel">Cancel</button>
+      <button class="btn primary" id="mOK">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+// =====================================================================
+//  Constants - resource type extension table (mirror C++ resource_type_ext)
+// =====================================================================
+const RESOURCE_TYPE_EXT_PC = [
+  ".NONE",".PCANIM",".PCSKEL",".ALS",".ENT",".ENTEXT",".DDS",".DDSMP",
+  ".IFL",".DESC",".ENS",".SPL",".AB",".QP",".TRIG",".PCSX",".INST",
+  ".FDF",".PANEL",".TXT",".ICN",".PCMESH",".PCMORPH",".PCMAT",".COLL",
+  ".PCPACK",".PCSANIM",".MSN",".MARKER",".HH",".WAV",".WBK",".M2V",
+  "M2V",".PFX",".CSV",".CLE",".LIT",".GRD",".GLS",".LOD",".SIN",
+  ".GV",".SV",".TOKENS",".DSG",".PATH",".PTRL",".LANG",".SLF",
+  ".VISEME",".PCMESHDEF",".PCMORPHDEF",".PCMATDEF",".MUT",".ASG",
+  ".BAI",".CUT",".INTERACT",".CSV",".CSV","._ENTID_","._ANIMID_",
+  "._REGIONID_","._AI_GENERIC_ID_","._RADIOMSG_","._GOAL_",
+  "._IFC_ATTRIBUTE_","._SIGNAL_","._PACKGROUP_"
+];
+// PS2 mirror: same type IDs, but PC* prefixes become PS2*,
+// and texture types 6/7 (.DDS/.DDSMP on PC) become PS2 native TIM2/TM2M.
+const RESOURCE_TYPE_EXT_PS2 = [
+  ".NONE",".PS2ANIM",".PS2SKEL",".ALS",".ENT",".ENTEXT",".TM2",".TM2M",
+  ".IFL",".DESC",".ENS",".SPL",".AB",".QP",".TRIG",".PS2SX",".INST",
+  ".FDF",".PANEL",".TXT",".ICN",".PS2MESH",".PS2MORPH",".PS2MAT",".COLL",
+  ".PS2PACK",".PS2SANIM",".MSN",".MARKER",".HH",".WAV",".WBK",".M2V",
+  "M2V",".PFX",".CSV",".CLE",".LIT",".GRD",".GLS",".LOD",".SIN",
+  ".GV",".SV",".TOKENS",".DSG",".PATH",".PTRL",".LANG",".SLF",
+  ".VISEME",".PS2MESHDEF",".PS2MORPHDEF",".PS2MATDEF",".MUT",".ASG",
+  ".BAI",".CUT",".INTERACT",".CSV",".CSV","._ENTID_","._ANIMID_",
+  "._REGIONID_","._AI_GENERIC_ID_","._RADIOMSG_","._GOAL_",
+  "._IFC_ATTRIBUTE_","._SIGNAL_","._PACKGROUP_"
+];
+const NUM_RESOURCE_TYPES = RESOURCE_TYPE_EXT_PC.length;
+function extTable(format){ return format === "ps2pack" ? RESOURCE_TYPE_EXT_PS2 : RESOURCE_TYPE_EXT_PC; }
+// PS2 field_70 entries are 12 bytes each. PCPACK normally has 0 of these.
+function field70EntrySize(format){ return format === "ps2pack" ? 12 : 4; }
+function field68EntrySize(format){ return 4; } // int32 in both formats
+
+const TL_TYPE_TEXTURE = 1, TL_TYPE_MESH_FILE = 2, TL_TYPE_MESH = 3;
+const TL_TYPE_MORPH_FILE = 4, TL_TYPE_MORPH = 5;
+const TL_TYPE_MATERIAL_FILE = 6, TL_TYPE_MATERIAL = 7;
+const TL_TYPE_ANIM_FILE = 8, TL_TYPE_ANIM = 9;
+const TL_TYPE_SCENE_ANIM = 10, TL_TYPE_SKELETON = 11;
+
+function getTypeColor(ext){
+  switch(ext){
+    case ".DDS": case ".DDSMP": case ".TM2": case ".TM2M": return "#e8a44a";
+    case ".PCMESH": case ".PCMESHDEF": case ".PS2MESH": case ".PS2MESHDEF": return "#4ae88a";
+    case ".PCMAT": case ".PCMATDEF": case ".PS2MAT": case ".PS2MATDEF": return "#8a4ae8";
+    case ".PCANIM": case ".PCSANIM": case ".PS2ANIM": case ".PS2SANIM": return "#e84a6a";
+    case ".PCSKEL": case ".PS2SKEL": return "#4a8ae8";
+    case ".PCMORPH": case ".PCMORPHDEF": case ".PS2MORPH": case ".PS2MORPHDEF": return "#e84ae8";
+    case ".WAV": case ".WBK": return "#4ae8e8";
+    case ".PCSX": case ".PS2SX": return "#e8e84a";
+    case ".ALS": return "#ff8855";
+    case ".ENT": case ".ENTEXT": return "#55ff88";
+    default: return "#a0a0aa";
+  }
+}
+
+// =====================================================================
+//  Helpers
+// =====================================================================
+const enc = new TextEncoder();
+const dec = new TextDecoder("latin1");
+
+function fmtHex(v){ return "0x" + (v >>> 0).toString(16).toUpperCase().padStart(8,"0"); }
+function detectFormat(filename){
+  const u = (filename||"").toUpperCase();
+  return u.endsWith(".PS2PACK") ? "ps2pack" : "pcpack";
+}
+function fmtSize(b){
+  if (b < 1024) return b + " B";
+  if (b < 1048576) return (b/1024).toFixed(1) + " KB";
+  return (b/1048576).toFixed(2) + " MB";
+}
+function alignUp(x, a){ if (a<=1) return x; const m = x%a; return m? x+(a-m): x; }
+function sanitizeFilename(s){
+  return s.replace(/[\x00-\x1f:\*\?"<>\|\/\\]/g, "_");
+}
+function getExt(t, format){ const T = extTable(format); return (t>>>0) < NUM_RESOURCE_TYPES ? T[t>>>0] : ".UNK"; }
+function typeFromExtCI(ext, format){
+  const u = ext.toUpperCase();
+  const T = extTable(format);
+  for (let i=0;i<NUM_RESOURCE_TYPES;i++){
+    if (T[i].toUpperCase() === u) return i;
+  }
+  // Fallback: also try the OTHER table so users can drop e.g. a .PCMESH into a ps2pack rebuild
+  const Tother = (format === "ps2pack") ? RESOURCE_TYPE_EXT_PC : RESOURCE_TYPE_EXT_PS2;
+  for (let i=0;i<NUM_RESOURCE_TYPES;i++){
+    if (Tother[i].toUpperCase() === u) return i;
+  }
+  return -1;
+}
+function readCStr(arr, off, max){
+  let s = "";
+  for (let i=0;i<max;i++){
+    const b = arr[off+i]; if (b===0) break;
+    s += String.fromCharCode(b);
+  }
+  return s;
+}
+function makeKey(hash, type){ return ((type>>>0).toString(16).padStart(8,"0")) + ":" + ((hash>>>0).toString(16).padStart(8,"0")); }
+
+// CRC32 (for ZIP)
+const CRC32_TABLE = (()=>{
+  const t = new Uint32Array(256);
+  for (let n=0;n<256;n++){
+    let c = n;
+    for (let k=0;k<8;k++) c = (c&1)? (0xEDB88320 ^ (c>>>1)) : (c>>>1);
+    t[n] = c>>>0;
+  }
+  return t;
+})();
+function crc32(buf){
+  let c = 0xFFFFFFFF;
+  for (let i=0;i<buf.length;i++) c = CRC32_TABLE[(c ^ buf[i]) & 0xFF] ^ (c>>>8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+
+// =====================================================================
+//  Stored-only ZIP writer (no compression)
+// =====================================================================
+function buildZip(entries){
+  // entries: [{name, data: Uint8Array}]
+  const enc = new TextEncoder();
+  const locals = [];
+  const cdirs = [];
+  let offset = 0;
+  for (const e of entries){
+    const nameBytes = enc.encode(e.name);
+    const data = e.data;
+    const c = crc32(data);
+    // Local file header (30 + nameLen)
+    const lh = new Uint8Array(30 + nameBytes.length);
+    const lv = new DataView(lh.buffer);
+    lv.setUint32(0, 0x04034b50, true);
+    lv.setUint16(4, 20, true);   // version needed
+    lv.setUint16(6, 0, true);    // flags
+    lv.setUint16(8, 0, true);    // method = 0 (stored)
+    lv.setUint16(10, 0, true);   // mod time
+    lv.setUint16(12, 0, true);   // mod date
+    lv.setUint32(14, c, true);
+    lv.setUint32(18, data.length, true);
+    lv.setUint32(22, data.length, true);
+    lv.setUint16(26, nameBytes.length, true);
+    lv.setUint16(28, 0, true);
+    lh.set(nameBytes, 30);
+
+    locals.push(lh, data);
+
+    // Central directory file header (46 + nameLen)
+    const ch = new Uint8Array(46 + nameBytes.length);
+    const cv = new DataView(ch.buffer);
+    cv.setUint32(0, 0x02014b50, true);
+    cv.setUint16(4, 20, true);  // version made by
+    cv.setUint16(6, 20, true);  // version needed
+    cv.setUint16(8, 0, true);
+    cv.setUint16(10, 0, true);
+    cv.setUint16(12, 0, true);
+    cv.setUint16(14, 0, true);
+    cv.setUint32(16, c, true);
+    cv.setUint32(20, data.length, true);
+    cv.setUint32(24, data.length, true);
+    cv.setUint16(28, nameBytes.length, true);
+    cv.setUint16(30, 0, true);
+    cv.setUint16(32, 0, true);
+    cv.setUint16(34, 0, true);
+    cv.setUint16(36, 0, true);
+    cv.setUint32(38, 0, true);
+    cv.setUint32(42, offset, true);
+    ch.set(nameBytes, 46);
+    cdirs.push(ch);
+
+    offset += lh.length + data.length;
+  }
+  const cdStart = offset;
+  let cdSize = 0;
+  for (const c of cdirs) cdSize += c.length;
+
+  const eocd = new Uint8Array(22);
+  const ev = new DataView(eocd.buffer);
+  ev.setUint32(0, 0x06054b50, true);
+  ev.setUint16(4, 0, true);
+  ev.setUint16(6, 0, true);
+  ev.setUint16(8, entries.length, true);
+  ev.setUint16(10, entries.length, true);
+  ev.setUint32(12, cdSize, true);
+  ev.setUint32(16, cdStart, true);
+  ev.setUint16(20, 0, true);
+
+  // concat
+  let total = cdStart + cdSize + 22;
+  const out = new Uint8Array(total);
+  let p = 0;
+  for (const b of locals){ out.set(b, p); p += b.length; }
+  for (const c of cdirs){ out.set(c, p); p += c.length; }
+  out.set(eocd, p);
+  return out;
+}
+
+// =====================================================================
+//  Download helper
+// =====================================================================
+function downloadBlob(name, data, mime){
+  const blob = (data instanceof Blob) ? data : new Blob([data], {type: mime||"application/octet-stream"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+}
+
+// =====================================================================
+//  Hash dictionary
+// =====================================================================
+const g_hashDict = new Map();      // hash -> name
+const g_nameToHash = new Map();    // name (case-insensitive key) -> hash
+
+function loadHashDictText(text){
+  g_hashDict.clear(); g_nameToHash.clear();
+  const lines = text.split(/\r?\n/);
+  for (const line of lines){
+    if (!line.trim()) continue;
+    const parts = line.split(/\s+/);
+    if (parts.length < 2) continue;
+    const hexStr = parts[0], name = parts.slice(1).join(" ");
+    if (!/^0x[0-9a-fA-F]+$/.test(hexStr)) continue;
+    const v = parseInt(hexStr, 16) >>> 0;
+    g_hashDict.set(v, name);
+    g_nameToHash.set(name, v);
+    g_nameToHash.set(name.toLowerCase(), v);
+  }
+}
+function getFilename(hash, type, format){
+  const base = g_hashDict.get(hash>>>0) ?? fmtHex(hash);
+  return base + getExt(type, format);
+}
+
+// Folder filename -> {hash,type} (mirror parse_folder_filename)
+function parseFolderFilename(filename, format){
+  const dot = filename.lastIndexOf(".");
+  if (dot < 0) return null;
+  const stem = filename.slice(0, dot);
+  const ext  = filename.slice(dot);
+  const t = typeFromExtCI(ext, format);
+  if (t < 0) return null;
+  if (/^0x[0-9a-fA-F]+$/.test(stem)){
+    return { hash: parseInt(stem,16)>>>0, type: t };
+  }
+  if (g_nameToHash.has(stem)) return { hash: g_nameToHash.get(stem)>>>0, type: t };
+  const lower = stem.toLowerCase();
+  if (g_nameToHash.has(lower)) return { hash: g_nameToHash.get(lower)>>>0, type: t };
+  return null;
+}
+
+// =====================================================================
+//  PCPACK structures and parsing
+// =====================================================================
+// resource_pack_header (0x2C bytes)
+//   field_0[5]  : 5 u32      0x00..0x14
+//   field_14    : u32        0x14
+//   directory_offset: u32    0x18
+//   res_dir_mash_size: u32   0x1C  (== payload base)
+//   field_20,24,28 : u32     0x20,0x24,0x28
+// generic_mash_header (0x10):
+//   safety_key, field_4, field_8 : u32 (well, i32)   0x00,0x04,0x08
+//   class_id : i16, field_E: i16                     0x0C,0x0E
+// resource_directory (0x2BC):
+//   15 mashable_vector_t (each 8 bytes; +0 data u32, +4 m_size u16, +6 m_shared u8, +7 field_7 u8)
+//     parents, resource_locations, texture_locations, mesh_file_locations, mesh_locations,
+//     morph_file_locations, morph_locations, material_file_locations, material_locations,
+//     anim_file_locations, anim_locations, scene_anim_locations, skeleton_locations,
+//     field_68, field_70                                                  0x00..0x78
+//   pack_slot,base,field_80,field_84,field_88 : i32 (5)                   0x78..0x8C
+//   type_start_idxs[70] : i32                                             0x8C..0x1A4
+//   type_end_idxs[70]   : i32                                             0x1A4..0x2BC
+//
+// resource_location (0x10): hash u32, type u32, m_offset u32, m_size u32
+// tlresource_location (0x0C): hash u32, type u8, pad[3], offset u32
+
+// Offsets of mashable_vector m_size within the directory blob
+const DIR_VEC_OFFS = {
+  parents:               0x00,
+  resource_locations:    0x08,
+  texture_locations:     0x10,
+  mesh_file_locations:   0x18,
+  mesh_locations:        0x20,
+  morph_file_locations:  0x28,
+  morph_locations:       0x30,
+  material_file_locations:0x38,
+  material_locations:    0x40,
+  anim_file_locations:   0x48,
+  anim_locations:        0x50,
+  scene_anim_locations:  0x58,
+  skeleton_locations:    0x60,
+  field_68:              0x68,
+  field_70:              0x70,
+};
+const DIR_PACK_SLOT = 0x78;
+const DIR_BASE      = 0x7C;
+const DIR_FIELD_80  = 0x80;
+const DIR_FIELD_84  = 0x84;
+const DIR_FIELD_88  = 0x88;
+const DIR_TYPE_START_IDXS = 0x8C;
+const DIR_TYPE_END_IDXS   = 0x1A4;
+const DIR_SIZE = 0x2BC;
+const MASH_HEADER_SIZE = 0x10;
+const PACK_HEADER_SIZE = 0x2C;
+
+function ParsedPack(){
+  this.raw = null;            // Uint8Array
+  this.source_name = "";
+  this.format = "pcpack";     // "pcpack" or "ps2pack"
+  this.header = null;
+  this.mashHeader = null;
+  this.dirBytes = null;       // Uint8Array (0x2BC)
+  this.parents = [];
+  this.res_locs = [];         // [{hash,type,offset,size}]
+  this.textures = []; this.mesh_files = []; this.meshes = [];
+  this.morph_files = []; this.morphs = [];
+  this.material_files = []; this.materials = [];
+  this.anim_files = []; this.anims = [];
+  this.scene_anims = []; this.skeletons = [];
+  this.field_68_raw = new Uint8Array(0);  // opaque (4-byte entries; usually empty)
+  this.field_70_raw = new Uint8Array(0);  // opaque (12-byte entries in PS2PACK = extra texture data)
+  this.entries = [];
+}
+Object.defineProperty(ParsedPack.prototype, "base", {
+  get(){ return this.header.res_dir_mash_size; }
+});
+
+function readVecMSize(dv, off){ return dv.getUint16(off+4, true); }
+
+function parsePCPACK(buf, format){
+  const P = new ParsedPack();
+  P.format = (format === "ps2pack") ? "ps2pack" : "pcpack";
+  P.raw = (buf instanceof Uint8Array) ? buf : new Uint8Array(buf);
+  if (P.raw.length < PACK_HEADER_SIZE) throw new Error("File too small");
+
+  const dvAll = new DataView(P.raw.buffer, P.raw.byteOffset, P.raw.byteLength);
+
+  // Header
+  P.header = {
+    field_0: [dvAll.getUint32(0,true), dvAll.getUint32(4,true), dvAll.getUint32(8,true), dvAll.getUint32(12,true), dvAll.getUint32(16,true)],
+    field_14: dvAll.getUint32(20,true),
+    directory_offset: dvAll.getUint32(24,true),
+    res_dir_mash_size: dvAll.getUint32(28,true),
+    field_20: dvAll.getUint32(32,true),
+    field_24: dvAll.getUint32(36,true),
+    field_28: dvAll.getUint32(40,true),
+  };
+
+  const dirOff = P.header.directory_offset;
+  if (dirOff + MASH_HEADER_SIZE + DIR_SIZE > P.raw.length) throw new Error("Invalid directory offset");
+
+  // Mash header
+  P.mashHeader = {
+    safety_key: dvAll.getInt32(dirOff+0,true),
+    field_4: dvAll.getInt32(dirOff+4,true),
+    field_8: dvAll.getInt32(dirOff+8,true),
+    class_id: dvAll.getInt16(dirOff+12,true),
+    field_E: dvAll.getInt16(dirOff+14,true),
+  };
+
+  // Directory blob
+  const dirStart = dirOff + MASH_HEADER_SIZE;
+  P.dirBytes = P.raw.slice(dirStart, dirStart + DIR_SIZE);
+  const dv = new DataView(P.dirBytes.buffer, P.dirBytes.byteOffset, P.dirBytes.byteLength);
+
+  const get_m_size = name => readVecMSize(dv, DIR_VEC_OFFS[name]);
+
+  // Read packed vectors after the directory
+  let pos = dirStart + DIR_SIZE;
+  const ra = () => { pos = alignUp(pos, 8); pos = alignUp(pos, 4); };
+
+  function ri32(n){
+    ra();
+    const out = new Array(n);
+    for (let i=0;i<n;i++) out[i] = dvAll.getInt32(pos + i*4, true);
+    pos += n*4;
+    pos = alignUp(pos, 4);
+    return out;
+  }
+  function rrl(n){
+    ra();
+    const out = new Array(n);
+    for (let i=0;i<n;i++){
+      const o = pos + i*0x10;
+      out[i] = {
+        hash:   dvAll.getUint32(o+0, true),
+        type:   dvAll.getUint32(o+4, true),
+        offset: dvAll.getUint32(o+8, true),
+        size:   dvAll.getUint32(o+12,true),
+      };
+    }
+    pos += n*0x10;
+    pos = alignUp(pos, 4);
+    return out;
+  }
+  function rtl(n){
+    ra();
+    const out = new Array(n);
+    for (let i=0;i<n;i++){
+      const o = pos + i*0x0C;
+      out[i] = {
+        hash:  dvAll.getUint32(o+0,true),
+        type:  P.raw[o+4],
+        // pad 3
+        offset: dvAll.getUint32(o+8,true),
+      };
+    }
+    pos += n*0x0C;
+    pos = alignUp(pos, 4);
+    return out;
+  }
+
+  P.parents        = ri32(get_m_size("parents"));
+  P.res_locs       = rrl(get_m_size("resource_locations"));
+  P.textures       = rtl(get_m_size("texture_locations"));
+  P.mesh_files     = rtl(get_m_size("mesh_file_locations"));
+  P.meshes         = rtl(get_m_size("mesh_locations"));
+  P.morph_files    = rtl(get_m_size("morph_file_locations"));
+  P.morphs         = rtl(get_m_size("morph_locations"));
+  P.material_files = rtl(get_m_size("material_file_locations"));
+  P.materials      = rtl(get_m_size("material_locations"));
+  P.anim_files     = rtl(get_m_size("anim_file_locations"));
+  P.anims          = rtl(get_m_size("anim_locations"));
+  P.scene_anims    = rtl(get_m_size("scene_anim_locations"));
+  P.skeletons      = rtl(get_m_size("skeleton_locations"));
+
+  // field_68: opaque (assumed int32 entries per C++ struct; usually empty)
+  // field_70: opaque. PS2PACK uses 12-byte entries (extra texture data table) here.
+  function rraw(n, entrySize){
+    ra();
+    const total = n * entrySize;
+    const out = P.raw.slice(pos, pos + total);
+    pos += total;
+    pos = alignUp(pos, 4);
+    return out;
+  }
+  P.field_68_raw = rraw(get_m_size("field_68"), field68EntrySize(P.format));
+  P.field_70_raw = rraw(get_m_size("field_70"), field70EntrySize(P.format));
+
+  // Build user-facing entries (format-aware extension mapping)
+  P.entries = P.res_locs.map((rl, i) => ({
+    index: i, hash: rl.hash, type: rl.type,
+    offset: rl.offset, size: rl.size,
+    filename: sanitizeFilename(getFilename(rl.hash, rl.type, P.format)),
+    ext: getExt(rl.type, P.format),
+  }));
+
+  return P;
+}
+
+// =====================================================================
+//  PCANIM clip parsing (mirror parse_pcanim_clips)
+// =====================================================================
+function parsePcanimClips(data){
+  const out = [];
+  if (data.length < 0x48) return out;
+  const dv = new DataView(data.buffer, data.byteOffset, data.byteLength);
+  const numSkels = dv.getUint32(0x0C, true);
+  let afterSkel = 0x48 + numSkels*32;
+  if (afterSkel + 8 > data.length) return out;
+  let pos = afterSkel + 8; // padding
+  while (pos + 36 <= data.length){
+    const skelRef = dv.getUint32(pos, true);
+    const entrySize = dv.getUint32(pos+4, true);
+    const animHash = dv.getUint32(pos+8, true);
+    const clip = {
+      internal_offset: pos>>>0,
+      anim_hash: animHash>>>0,
+      name: readCStr(data, pos+12, 24),
+    };
+    if (entrySize === 0){
+      clip.clip_size = data.length - pos;
+      out.push(clip); break;
+    }
+    if (entrySize > data.length - pos) break;
+    clip.clip_size = entrySize;
+    out.push(clip);
+    pos += entrySize;
+  }
+  return out;
+}
+
+// =====================================================================
+//  Export
+// =====================================================================
+function extractEntry(P, idx){
+  const rl = P.res_locs[idx];
+  const start = (P.base>>>0) + (rl.offset>>>0);
+  if (start + rl.size > P.raw.length) throw new Error("Resource out of bounds at index "+idx);
+  return P.raw.slice(start, start + rl.size);
+}
+
+function buildExportZip(P){
+  const entries = [];
+  let manifest = "# PCPACK Manifest\n# base=" + P.base + "\n# resources=" + P.res_locs.length + "\n\n";
+  for (let i=0;i<P.res_locs.length;i++){
+    const rl = P.res_locs[i];
+    let data;
+    try { data = extractEntry(P, i); } catch(e){ continue; }
+    const fn = P.entries[i].filename;
+    entries.push({ name: fn, data });
+    manifest += i + " " + fmtHex(rl.hash) + " " + rl.type
+             + " " + fmtHex(rl.offset) + " " + fmtHex(rl.size)
+             + " " + fn + "\n";
+  }
+  entries.unshift({ name:"_manifest.txt", data: enc.encode(manifest) });
+  return buildZip(entries);
+}
+
+// =====================================================================
+//  Build with index-keyed replacements (mirror do_import)
+// =====================================================================
+function doImport(P, replacements /* Map<index, Uint8Array> */, alignVal){
+  const n = P.res_locs.length;
+  const nres = new Array(n);
+  let cursor = 0;
+  for (let i=0;i<n;i++){
+    const rl = P.res_locs[i];
+    let data;
+    if (replacements.has(i)){
+      data = replacements.get(i);
+    } else {
+      const s = P.base + rl.offset;
+      data = P.raw.slice(s, s + rl.size);
+    }
+    cursor = alignUp(cursor, alignVal);
+    nres[i] = { new_offset: cursor, new_size: data.length, data };
+    cursor += data.length;
+  }
+
+  // Remap TL offsets using OLD ranges -> NEW
+  function utl(oldOff){
+    for (let i=0;i<n;i++){
+      const rs = P.res_locs[i].offset, re = rs + P.res_locs[i].size;
+      if (oldOff >= rs && oldOff < re) return nres[i].new_offset + (oldOff - rs);
+    }
+    return oldOff;
+  }
+  const uv = v => { for (const t of v) t.offset = utl(t.offset); };
+  uv(P.textures); uv(P.mesh_files); uv(P.meshes);
+  uv(P.morph_files); uv(P.morphs);
+  uv(P.material_files); uv(P.materials);
+  uv(P.anim_files); uv(P.anims);
+  uv(P.scene_anims); uv(P.skeletons);
+
+  // Patch res_locs
+  for (let i=0;i<n;i++){
+    P.res_locs[i].offset = nres[i].new_offset;
+    P.res_locs[i].size   = nres[i].new_size;
+  }
+
+  // Serialize
+  return serializePack(P, nres);
+}
+
+// Common serializer used by both build paths.
+// `nres` is array {new_offset, new_size, data} aligned with P.res_locs.
+function serializePack(P, nres, newBase){
+  // Patch directory blob m_size fields
+  patchDirSizes(P);
+
+  const chunks = []; // we'll write everything into a growing Uint8Array
+  let outSize = PACK_HEADER_SIZE;
+  // We'll first compute size, then write; simpler: build with growable buffer style.
+  let buf = new Uint8Array(1<<20);
+  let len = 0;
+  function ensure(n){
+    if (len + n <= buf.length) return;
+    let nl = buf.length;
+    while (nl < len + n) nl *= 2;
+    const nb = new Uint8Array(nl);
+    nb.set(buf.subarray(0, len));
+    buf = nb;
+  }
+  function writeBytes(b){
+    ensure(b.length);
+    buf.set(b, len);
+    len += b.length;
+  }
+  function writeAlign(a, fill=0xE3){
+    const w = alignUp(len, a);
+    if (w > len){
+      ensure(w - len);
+      for (let i=len;i<w;i++) buf[i] = fill;
+      len = w;
+    }
+  }
+  function writePadTo(target, fill=0){
+    if (len < target){
+      ensure(target - len);
+      for (let i=len;i<target;i++) buf[i] = fill;
+      len = target;
+    }
+  }
+
+  // Header (placeholder)
+  const headerBytes = encodePackHeader(P.header);
+  writeBytes(headerBytes);
+  // Pad to directory_offset
+  if (P.header.directory_offset < PACK_HEADER_SIZE){
+    P.header.directory_offset = PACK_HEADER_SIZE;
+  }
+  writePadTo(P.header.directory_offset, 0);
+
+  // Mash header + dir blob
+  writeBytes(encodeMashHeader(P.mashHeader));
+  writeBytes(P.dirBytes);
+
+  // Vector payloads in same order as parse
+  writeI32Array(P.parents, writeBytes, writeAlign);
+  writeRLArray(P.res_locs, writeBytes, writeAlign);
+  writeTLArray(P.textures, writeBytes, writeAlign);
+  writeTLArray(P.mesh_files, writeBytes, writeAlign);
+  writeTLArray(P.meshes, writeBytes, writeAlign);
+  writeTLArray(P.morph_files, writeBytes, writeAlign);
+  writeTLArray(P.morphs, writeBytes, writeAlign);
+  writeTLArray(P.material_files, writeBytes, writeAlign);
+  writeTLArray(P.materials, writeBytes, writeAlign);
+  writeTLArray(P.anim_files, writeBytes, writeAlign);
+  writeTLArray(P.anims, writeBytes, writeAlign);
+  writeTLArray(P.scene_anims, writeBytes, writeAlign);
+  writeTLArray(P.skeletons, writeBytes, writeAlign);
+  // PS2PACK extras: field_68 (usually empty) and field_70 (extra texture data, 12 bytes/entry)
+  writeRawVec(P.field_68_raw, writeBytes, writeAlign);
+  writeRawVec(P.field_70_raw, writeBytes, writeAlign);
+
+  // Decide base
+  let base;
+  if (newBase != null){
+    base = newBase;
+  } else {
+    base = P.base;
+  }
+  // pad to base
+  if (len > base){
+    // Original do_import expects base unchanged. If we overflowed it (shouldn't for simple replace), bump.
+    base = alignUp(len, 16);
+  }
+  writePadTo(base, 0xE3);
+
+  // Payload
+  for (let i=0;i<nres.length;i++){
+    const off = base + nres[i].new_offset;
+    ensure(off + nres[i].new_size - len);
+    // pad with zeros up to off if there's a gap
+    if (off > len){
+      // fill with zero
+      ensure(off - len);
+      for (let k=len;k<off;k++) buf[k]=0;
+      len = off;
+    }
+    if (nres[i].new_size){
+      ensure(nres[i].new_size);
+      buf.set(nres[i].data, off);
+      const end = off + nres[i].new_size;
+      if (end > len) len = end;
+    }
+  }
+
+  // Patch header res_dir_mash_size
+  P.header.res_dir_mash_size = base;
+  // Re-write header at start
+  const hb = encodePackHeader(P.header);
+  buf.set(hb, 0);
+
+  return buf.slice(0, len);
+}
+
+function encodePackHeader(h){
+  const out = new Uint8Array(PACK_HEADER_SIZE);
+  const dv = new DataView(out.buffer);
+  for (let i=0;i<5;i++) dv.setUint32(i*4, h.field_0[i]>>>0, true);
+  dv.setUint32(20, h.field_14>>>0, true);
+  dv.setUint32(24, h.directory_offset>>>0, true);
+  dv.setUint32(28, h.res_dir_mash_size>>>0, true);
+  dv.setUint32(32, h.field_20>>>0, true);
+  dv.setUint32(36, h.field_24>>>0, true);
+  dv.setUint32(40, h.field_28>>>0, true);
+  return out;
+}
+function encodeMashHeader(h){
+  const out = new Uint8Array(MASH_HEADER_SIZE);
+  const dv = new DataView(out.buffer);
+  dv.setInt32(0, h.safety_key|0, true);
+  dv.setInt32(4, h.field_4|0, true);
+  dv.setInt32(8, h.field_8|0, true);
+  dv.setInt16(12, h.class_id|0, true);
+  dv.setInt16(14, h.field_E|0, true);
+  return out;
+}
+
+function writeI32Array(arr, wb, wa){
+  wa(8); wa(4);
+  if (arr.length){
+    const out = new Uint8Array(arr.length*4);
+    const dv = new DataView(out.buffer);
+    for (let i=0;i<arr.length;i++) dv.setInt32(i*4, arr[i]|0, true);
+    wb(out);
+  }
+  wa(4);
+}
+function writeRLArray(arr, wb, wa){
+  wa(8); wa(4);
+  if (arr.length){
+    const out = new Uint8Array(arr.length*0x10);
+    const dv = new DataView(out.buffer);
+    for (let i=0;i<arr.length;i++){
+      const r = arr[i];
+      dv.setUint32(i*0x10+0,  r.hash>>>0, true);
+      dv.setUint32(i*0x10+4,  r.type>>>0, true);
+      dv.setUint32(i*0x10+8,  r.offset>>>0, true);
+      dv.setUint32(i*0x10+12, r.size>>>0, true);
+    }
+    wb(out);
+  }
+  wa(4);
+}
+function writeTLArray(arr, wb, wa){
+  wa(8); wa(4);
+  if (arr.length){
+    const out = new Uint8Array(arr.length*0x0C);
+    const dv = new DataView(out.buffer);
+    for (let i=0;i<arr.length;i++){
+      const r = arr[i];
+      dv.setUint32(i*0x0C+0, r.hash>>>0, true);
+      out[i*0x0C+4] = r.type & 0xFF;
+      out[i*0x0C+5] = 0; out[i*0x0C+6] = 0; out[i*0x0C+7] = 0;
+      dv.setUint32(i*0x0C+8, r.offset>>>0, true);
+    }
+    wb(out);
+  }
+  wa(4);
+}
+// Write an opaque byte vector with the same align(8)/align(4)/data/align(4) framing
+function writeRawVec(bytes, wb, wa){
+  wa(8); wa(4);
+  if (bytes && bytes.length) wb(bytes);
+  wa(4);
+}
+
+function patchDirSizes(P){
+  const dv = new DataView(P.dirBytes.buffer, P.dirBytes.byteOffset, P.dirBytes.byteLength);
+  dv.setUint16(DIR_VEC_OFFS.parents+4,                P.parents.length, true);
+  dv.setUint16(DIR_VEC_OFFS.resource_locations+4,     P.res_locs.length, true);
+  dv.setUint16(DIR_VEC_OFFS.texture_locations+4,      P.textures.length, true);
+  dv.setUint16(DIR_VEC_OFFS.mesh_file_locations+4,    P.mesh_files.length, true);
+  dv.setUint16(DIR_VEC_OFFS.mesh_locations+4,         P.meshes.length, true);
+  dv.setUint16(DIR_VEC_OFFS.morph_file_locations+4,   P.morph_files.length, true);
+  dv.setUint16(DIR_VEC_OFFS.morph_locations+4,        P.morphs.length, true);
+  dv.setUint16(DIR_VEC_OFFS.material_file_locations+4,P.material_files.length, true);
+  dv.setUint16(DIR_VEC_OFFS.material_locations+4,     P.materials.length, true);
+  dv.setUint16(DIR_VEC_OFFS.anim_file_locations+4,    P.anim_files.length, true);
+  dv.setUint16(DIR_VEC_OFFS.anim_locations+4,         P.anims.length, true);
+  dv.setUint16(DIR_VEC_OFFS.scene_anim_locations+4,   P.scene_anims.length, true);
+  dv.setUint16(DIR_VEC_OFFS.skeleton_locations+4,     P.skeletons.length, true);
+  // PS2PACK: field_70 holds the extra-texture-data count at directory+0x74
+  // (file offset 0xB4 with default directory_offset=0x30). Update it from
+  // the preserved raw bytes so the count stays consistent across rebuilds.
+  const f68_es = field68EntrySize(P.format);
+  const f70_es = field70EntrySize(P.format);
+  dv.setUint16(DIR_VEC_OFFS.field_68+4, (P.field_68_raw.length / f68_es) | 0, true);
+  dv.setUint16(DIR_VEC_OFFS.field_70+4, (P.field_70_raw.length / f70_es) | 0, true);
+}
+
+// =====================================================================
+//  Reimport from folder (mirror do_reimport_from_folder)
+//  files: Array<{name, data: Uint8Array}>
+// =====================================================================
+function doReimportFromFolder(P, files, alignVal, logFn){
+  // 1. Index existing entries by (hash, type)
+  const keyToIndex = new Map();
+  for (let i=0;i<P.res_locs.length;i++){
+    keyToIndex.set(makeKey(P.res_locs[i].hash, P.res_locs[i].type), i);
+  }
+
+  // 2. Build items[] seeded from old pack (preserve old_off/old_size for remap)
+  const items = [];
+  for (let i=0;i<P.res_locs.length;i++){
+    const r = P.res_locs[i];
+    const s = P.base + r.offset, e = s + r.size;
+    if (e > P.raw.length) throw new Error("Corrupted pack: resource out of bounds.");
+    items.push({
+      hash: r.hash, type: r.type,
+      data: P.raw.slice(s, e),
+      has_old: true, old_off: r.offset, old_size: r.size,
+    });
+  }
+
+  let updated=0, added=0, skipped=0;
+  for (const f of files){
+    const pn = parseFolderFilename(f.name, P.format);
+    if (!pn){ skipped++; continue; }
+    const key = makeKey(pn.hash, pn.type);
+    if (keyToIndex.has(key)){
+      const idx = keyToIndex.get(key);
+      items[idx].data = f.data;
+      updated++;
+    } else {
+      items.push({ hash: pn.hash, type: pn.type, data: f.data, has_old: false, old_off:0, old_size:0 });
+      keyToIndex.set(key, items.length-1);
+      added++;
+    }
+  }
+  logFn("Updated: "+updated+", Added: "+added+", Skipped: "+skipped);
+
+  // 3. Sort by (type, hash) — strict per do_reimport_from_folder
+  items.sort((a,b)=> (a.type - b.type) || (a.hash - b.hash));
+
+  // 4. Rebuild res_locs (offsets assigned later)
+  P.res_locs = items.map(it => ({
+    hash: it.hash, type: it.type, offset: 0, size: it.data.length
+  }));
+
+  // 5. Update type_start_idxs / type_end_idxs (note: end is a COUNT, not index)
+  const dv = new DataView(P.dirBytes.buffer, P.dirBytes.byteOffset, P.dirBytes.byteLength);
+  for (let t=0;t<70;t++){
+    dv.setInt32(DIR_TYPE_START_IDXS + t*4, 0, true);
+    dv.setInt32(DIR_TYPE_END_IDXS   + t*4, 0, true);
+  }
+  for (let i=0;i<P.res_locs.length;i++){
+    const t = P.res_locs[i].type;
+    if (t >= 70) continue;
+    const startOff = DIR_TYPE_START_IDXS + t*4;
+    const endOff   = DIR_TYPE_END_IDXS   + t*4;
+    const count = dv.getInt32(endOff, true);
+    if (count === 0) dv.setInt32(startOff, i, true);
+    dv.setInt32(endOff, count+1, true);
+  }
+
+  // 6. Assign payload offsets
+  let cursor = 0;
+  for (let i=0;i<items.length;i++){
+    cursor = alignUp(cursor, alignVal);
+    P.res_locs[i].offset = cursor;
+    cursor += items[i].data.length;
+  }
+
+  // 7. Add TL entries for new non-PCANIM items
+  function tlHas(v, h, t8){ return v.some(x => x.hash===h && x.type===t8); }
+  function tlVectorFor(rtype){
+    const ext = getExt(rtype, P.format);
+    // Accept either PC or PS2 names (TL routing is type-ID based, ext is just nomenclature)
+    switch(ext){
+      case ".DDS": case ".DDSMP":
+      case ".TM2": case ".TM2M":                 return [P.textures,       TL_TYPE_TEXTURE];
+      case ".PCMESHDEF": case ".PS2MESHDEF":     return [P.mesh_files,     TL_TYPE_MESH_FILE];
+      case ".PCMESH":    case ".PS2MESH":        return [P.meshes,         TL_TYPE_MESH];
+      case ".PCMORPHDEF":case ".PS2MORPHDEF":    return [P.morph_files,    TL_TYPE_MORPH_FILE];
+      case ".PCMORPH":   case ".PS2MORPH":       return [P.morphs,         TL_TYPE_MORPH];
+      case ".PCMATDEF":  case ".PS2MATDEF":      return [P.material_files, TL_TYPE_MATERIAL_FILE];
+      case ".PCMAT":     case ".PS2MAT":         return [P.materials,      TL_TYPE_MATERIAL];
+      case ".PCSANIM":   case ".PS2SANIM":       return [P.scene_anims,    TL_TYPE_SCENE_ANIM];
+      case ".PCSKEL":    case ".PS2SKEL":        return [P.skeletons,      TL_TYPE_SKELETON];
+    }
+    return [null, 0];
+  }
+  for (let i=0;i<items.length;i++){
+    if (items[i].has_old) continue;
+    if (getExt(items[i].type, P.format) === (P.format === "ps2pack" ? ".PS2ANIM" : ".PCANIM")) continue;
+    const [vec, t8] = tlVectorFor(items[i].type);
+    if (!vec) continue;
+    if (tlHas(vec, items[i].hash, t8)) continue;
+    vec.push({ hash: items[i].hash, type: t8, offset: P.res_locs[i].offset });
+  }
+
+  // 8. PCANIM: rebuild anim_locations from clips in every PCANIM resource.
+  //    Deduplicate by clip hash: the same anim_hash must not appear twice in
+  //    the TL anim_locations table (first occurrence wins).
+  P.anims = [];
+  const seenAnimHashes = new Set();
+  let totalClips = 0, dupClips = 0;
+  for (let i=0;i<items.length;i++){
+    if (getExt(items[i].type, P.format) !== (P.format === "ps2pack" ? ".PS2ANIM" : ".PCANIM")) continue;
+    const clips = parsePcanimClips(items[i].data);
+    const resOff = P.res_locs[i].offset;
+    let added = 0, skipped = 0;
+    for (const c of clips){
+      const h = c.anim_hash >>> 0;
+      if (seenAnimHashes.has(h)){ skipped++; dupClips++; continue; }
+      seenAnimHashes.add(h);
+      P.anims.push({ hash: h, type: TL_TYPE_ANIM, offset: resOff + c.internal_offset });
+      added++;
+    }
+    totalClips += clips.length;
+    let msg = (P.format === "ps2pack" ? "PS2ANIM " : "PCANIM ") + fmtHex(items[i].hash) + ": " + clips.length + " anim clips extracted";
+    if (skipped) msg += " (" + added + " added, " + skipped + " duplicate hash skipped)";
+    logFn(msg);
+  }
+  logFn("Total anim clips in TL: " + P.anims.length +
+        (dupClips ? " (" + dupClips + " duplicate hash skipped)" : ""));
+
+  // 9. Sort all TL vectors by hash ASC
+  const tlSort = v => v.sort((a,b)=> (a.hash>>>0) - (b.hash>>>0));
+  tlSort(P.textures); tlSort(P.mesh_files); tlSort(P.meshes);
+  tlSort(P.morph_files); tlSort(P.morphs);
+  tlSort(P.material_files); tlSort(P.materials);
+  tlSort(P.anim_files); tlSort(P.anims);
+  tlSort(P.scene_anims); tlSort(P.skeletons);
+
+  // 10. Remap old TL offsets for non-PCANIM vectors
+  function oldToNew(oldOff){
+    for (let i=0;i<items.length;i++){
+      if (!items[i].has_old) continue;
+      const rs = items[i].old_off, re = rs + items[i].old_size;
+      if (oldOff >= rs && oldOff < re){
+        const h = items[i].hash, t = items[i].type;
+        for (let j=0;j<P.res_locs.length;j++){
+          if (P.res_locs[j].hash === h && P.res_locs[j].type === t){
+            return P.res_locs[j].offset + (oldOff - rs);
+          }
+        }
+        return oldOff;
+      }
+    }
+    return oldOff;
+  }
+  const remap = v => { for (const t of v) t.offset = oldToNew(t.offset); };
+  remap(P.textures); remap(P.mesh_files); remap(P.meshes);
+  remap(P.morph_files); remap(P.morphs);
+  remap(P.material_files); remap(P.materials);
+  remap(P.anim_files);
+  // P.anims NOT remapped — rebuilt from scratch
+  remap(P.scene_anims); remap(P.skeletons);
+
+  // 11. Build new pack (we need to recompute base)
+  // Strategy: assemble header + dir + vectors and align(16) for new base
+  // We re-run serializer in "discover base" mode: write a probe to know how big the prefix is
+  patchDirSizes(P);
+
+  // First pass: compute prefix size
+  const probeLen = computePrefixLength(P);
+  let newBase = alignUp(probeLen, 16);
+  // Update dir.base too
+  dv.setInt32(DIR_BASE, newBase, true);
+
+  // Build nres for serializer
+  const nres = items.map((it, i) => ({
+    new_offset: P.res_locs[i].offset,
+    new_size: it.data.length,
+    data: it.data,
+  }));
+
+  // safety: directory_offset must be >= header size
+  if (P.header.directory_offset < PACK_HEADER_SIZE){
+    P.header.directory_offset = PACK_HEADER_SIZE;
+  }
+
+  return serializePack(P, nres, newBase);
+}
+
+function computePrefixLength(P){
+  // Same writes as serializePack up to (not including) base padding
+  let len = PACK_HEADER_SIZE;
+  if (P.header.directory_offset > len) len = P.header.directory_offset;
+  len += MASH_HEADER_SIZE + DIR_SIZE;
+  function wa(a){ const w = alignUp(len, a); len = w; }
+  function wi32(n){ wa(8); wa(4); len += n*4; wa(4); }
+  function wrl(n){ wa(8); wa(4); len += n*0x10; wa(4); }
+  function wtl(n){ wa(8); wa(4); len += n*0x0C; wa(4); }
+  wi32(P.parents.length);
+  wrl(P.res_locs.length);
+  wtl(P.textures.length); wtl(P.mesh_files.length); wtl(P.meshes.length);
+  wtl(P.morph_files.length); wtl(P.morphs.length);
+  wtl(P.material_files.length); wtl(P.materials.length);
+  wtl(P.anim_files.length); wtl(P.anims.length);
+  wtl(P.scene_anims.length); wtl(P.skeletons.length);
+  function wraw(n){ wa(8); wa(4); len += n; wa(4); }
+  wraw(P.field_68_raw.length);
+  wraw(P.field_70_raw.length);
+  return len;
+}
+
+// =====================================================================
+//  UI
+// =====================================================================
+const $ = id => document.getElementById(id);
+
+const state = {
+  pack: null,           // ParsedPack
+  filtered: [],         // indices into pack.entries
+  filterText: "",
+  typeFilter: -1,
+  sortCol: 0,
+  sortAsc: true,
+  selected: new Set(),  // indices into pack.entries
+  lastClickRow: -1,     // for shift-click ranges
+  replacements: new Map(), // Map<index, Uint8Array>
+  alignVal: 16,
+};
+
+function log(level, msg){
+  const ts = new Date().toLocaleTimeString();
+  const span = document.createElement("span");
+  span.className = level;
+  span.textContent = `[${level.toUpperCase()}] ${msg}\n`;
+  $("logText").appendChild(span);
+  $("logText").scrollTop = $("logText").scrollHeight;
+  // Also print plain in console
+  if (level === "err") console.error(msg);
+  else console.log("[%s] %s", level, msg);
+}
+
+function populateTypeFilter(){
+  const sel = $("typeFilter");
+  sel.innerHTML = '<option value="-1">All Types</option>';
+  if (!state.pack) return;
+  const seen = new Map();
+  for (const e of state.pack.entries){
+    if (!seen.has(e.type)) seen.set(e.type, 0);
+    seen.set(e.type, seen.get(e.type)+1);
+  }
+  const types = [...seen.keys()].sort((a,b)=>a-b);
+  for (const t of types){
+    const opt = document.createElement("option");
+    opt.value = t;
+    opt.textContent = getExt(t) + " (" + seen.get(t) + ")";
+    sel.appendChild(opt);
+  }
+}
+
+function rebuildFiltered(){
+  state.filtered = [];
+  if (!state.pack) return;
+  const ft = state.filterText.toLowerCase();
+  for (const e of state.pack.entries){
+    if (state.typeFilter >= 0 && e.type !== state.typeFilter) continue;
+    if (ft){
+      const fn = e.filename.toLowerCase();
+      const hx = fmtHex(e.hash).toLowerCase();
+      if (!fn.includes(ft) && !hx.includes(ft)) continue;
+    }
+    state.filtered.push(e.index);
+  }
+  const entries = state.pack.entries;
+  const sc = state.sortCol, asc = state.sortAsc;
+  state.filtered.sort((a,b)=>{
+    const ea = entries[a], eb = entries[b];
+    let c = 0;
+    switch(sc){
+      case 0: c = ea.index - eb.index; break;
+      case 1: c = ea.filename.localeCompare(eb.filename); break;
+      case 2: c = ea.ext.localeCompare(eb.ext); break;
+      case 3: c = (ea.hash>>>0) - (eb.hash>>>0); break;
+      case 4: c = ea.offset - eb.offset; break;
+      case 5: c = ea.size - eb.size; break;
+      case 6: {
+        const ra = state.replacements.has(a) ? 1 : 0;
+        const rb = state.replacements.has(b) ? 1 : 0;
+        c = rb - ra; // replaced first
+        if (c===0) c = ea.index - eb.index;
+        break;
+      }
+      default: c = ea.index - eb.index;
+    }
+    return asc ? c : -c;
+  });
+}
+
+function renderTable(){
+  const body = $("lvBody");
+  body.innerHTML = "";
+  if (!state.pack) {
+    $("countLabel").textContent = "—";
+    return;
+  }
+  const entries = state.pack.entries;
+  const frag = document.createDocumentFragment();
+  // Cap render to 5000 rows for perf; show note if exceeded
+  const MAX = 8000;
+  const showCount = Math.min(state.filtered.length, MAX);
+  for (let r=0;r<showCount;r++){
+    const idx = state.filtered[r];
+    const e = entries[idx];
+    const tr = document.createElement("tr");
+    tr.dataset.idx = idx;
+    tr.dataset.row = r;
+    if (state.selected.has(idx)) tr.classList.add("sel");
+    if (state.replacements.has(idx)) tr.classList.add("repl");
+    const color = getTypeColor(e.ext);
+    const repBytes = state.replacements.get(idx);
+    const status = repBytes
+      ? `REPL · ${fmtSize(repBytes.length)}`
+      : "";
+    tr.innerHTML = `
+      <td>${e.index}</td>
+      <td title="${e.filename}">${e.filename}</td>
+      <td><span class="ext-pill" style="background:${color}">${e.ext}</span></td>
+      <td>${fmtHex(e.hash)}</td>
+      <td>${fmtHex(e.offset)}</td>
+      <td>${fmtSize(e.size)}</td>
+      <td>${status}</td>`;
+    frag.appendChild(tr);
+  }
+  body.appendChild(frag);
+
+  let lbl = `${state.filtered.length} shown / ${entries.length} total`;
+  if (state.filtered.length > MAX) lbl += ` (rendering first ${MAX})`;
+  if (state.replacements.size > 0) lbl += ` · ${state.replacements.size} queued`;
+  $("countLabel").textContent = lbl;
+
+  // Sort indicators
+  for (const th of document.querySelectorAll("th[data-col]")){
+    const arr = th.querySelector(".arr");
+    if (parseInt(th.dataset.col) === state.sortCol){
+      arr.textContent = state.sortAsc ? "▲" : "▼";
+    } else arr.textContent = "";
+  }
+}
+
+function updateInfo(){
+  if (!state.pack){ $("infoText").textContent = "(no file loaded)"; return; }
+  const P = state.pack;
+  const h = P.header, m = P.mashHeader;
+  const dv = new DataView(P.dirBytes.buffer, P.dirBytes.byteOffset, P.dirBytes.byteLength);
+  const get_size = name => dv.getUint16(DIR_VEC_OFFS[name]+4, true);
+  let s = "";
+  s += "=== FORMAT ===\n";
+  s += "Detected: " + P.format.toUpperCase() + "\n\n";
+  s += "=== RESOURCE PACK HEADER ===\n";
+  s += "Versions: " + h.field_0.map(fmtHex).join(", ") + "\n";
+  s += "field_14:          " + fmtHex(h.field_14) + "\n";
+  s += "directory_offset:  " + fmtHex(h.directory_offset) + "\n";
+  s += "base (payload):    " + fmtHex(h.res_dir_mash_size) + "\n";
+  s += "field_20:          " + fmtHex(h.field_20) + "\n";
+  s += "field_24:          " + fmtHex(h.field_24) + "\n";
+  s += "field_28:          " + fmtHex(h.field_28) + "\n\n";
+  s += "=== MASH HEADER ===\n";
+  s += "safety_key:  " + fmtHex(m.safety_key>>>0) + "\n";
+  s += "field_4:     " + fmtHex(m.field_4>>>0) + "\n";
+  s += "field_8:     " + fmtHex(m.field_8>>>0) + "\n";
+  s += "class_id:    " + m.class_id + "\n\n";
+  s += "=== DIRECTORY VECTOR COUNTS ===\n";
+  s += "Parents:        " + get_size("parents") + "\n";
+  s += "Resources:      " + get_size("resource_locations") + "\n";
+  s += "Textures:       " + get_size("texture_locations") + "\n";
+  s += "Mesh Files:     " + get_size("mesh_file_locations") + "\n";
+  s += "Meshes:         " + get_size("mesh_locations") + "\n";
+  s += "Morph Files:    " + get_size("morph_file_locations") + "\n";
+  s += "Morphs:         " + get_size("morph_locations") + "\n";
+  s += "Material Files: " + get_size("material_file_locations") + "\n";
+  s += "Materials:      " + get_size("material_locations") + "\n";
+  s += "Anim Files:     " + get_size("anim_file_locations") + "\n";
+  s += "Anims:          " + get_size("anim_locations") + "\n";
+  s += "Scene Anims:    " + get_size("scene_anim_locations") + "\n";
+  s += "Skeletons:      " + get_size("skeleton_locations") + "\n\n";
+  s += "=== DIRECTORY META ===\n";
+  s += "pack_slot:  " + dv.getInt32(DIR_PACK_SLOT, true) + "\n";
+  s += "base:       " + fmtHex(dv.getInt32(DIR_BASE, true)) + "\n";
+  s += "field_80:   " + fmtHex(dv.getInt32(DIR_FIELD_80, true)) + "\n";
+  s += "field_84:   " + fmtHex(dv.getInt32(DIR_FIELD_84, true)) + "\n";
+  s += "field_88:   " + fmtHex(dv.getInt32(DIR_FIELD_88, true)) + "\n";
+  // field_68 / field_70 counts (PS2PACK extra texture data lives in field_70)
+  const f68_es = field68EntrySize(P.format);
+  const f70_es = field70EntrySize(P.format);
+  s += "\n=== EXTRA VECTORS ===\n";
+  s += "field_68:  count=" + ((P.field_68_raw.length / f68_es)|0) + " (" + P.field_68_raw.length + " bytes @ " + f68_es + "/entry)\n";
+  s += "field_70:  count=" + ((P.field_70_raw.length / f70_es)|0) + " (" + P.field_70_raw.length + " bytes @ " + f70_es + "/entry)";
+  if (P.format === "ps2pack" && P.field_70_raw.length){
+    s += "  [PS2 extra texture data — preserved on rebuild]";
+  }
+  s += "\n";
+  $("infoText").textContent = s;
+}
+
+function updateStatus(){
+  let s;
+  if (state.pack){
+    s = ` ${state.pack.source_name} [${state.pack.format}]  |  ${state.pack.entries.length} resources  |  Base: ${fmtHex(state.pack.base)}  |  Size: ${fmtSize(state.pack.raw.length)}  |  Dict: ${g_hashDict.size}  |  Replacements: ${state.replacements.size}`;
+  } else {
+    s = " No file loaded. Use Open PCPACK / PS2PACK, drag-and-drop, or Load Dictionary.";
+  }
+  $("status").innerHTML = s.replace(/\s\|\s/g, (m)=>m); // keep simple
+}
+
+function updateButtons(){
+  const loaded = !!state.pack;
+  $("bExportAll").disabled = !loaded;
+  $("bExportSel").disabled = !loaded || state.selected.size===0;
+  $("bBuild").disabled = !loaded || state.replacements.size===0;
+  $("bClearRepl").disabled = !loaded || state.replacements.size===0;
+}
+
+function refreshAll(){
+  rebuildFiltered();
+  renderTable();
+  updateInfo();
+  updateStatus();
+  updateButtons();
+}
+
+// =====================================================================
+//  File reading helpers
+// =====================================================================
+function readFileAsBuffer(file){
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onerror = () => reject(r.error || new Error("read error"));
+    r.onload = () => resolve(new Uint8Array(r.result));
+    r.readAsArrayBuffer(file);
+  });
+}
+function readFileAsText(file){
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onerror = () => reject(r.error || new Error("read error"));
+    r.onload = () => resolve(r.result);
+    r.readAsText(file);
+  });
+}
+
+// =====================================================================
+//  Actions
+// =====================================================================
+async function openPCPACK(file){
+  try{
+    const buf = await readFileAsBuffer(file);
+    const fmt = detectFormat(file.name);
+    const P = parsePCPACK(buf, fmt);
+    P.source_name = file.name;
+    state.pack = P;
+    state.replacements.clear();
+    state.selected.clear();
+    state.lastClickRow = -1;
+    state.typeFilter = -1; $("typeFilter").value = "-1";
+    populateTypeFilter();
+    log("ok", `Loaded ${file.name} [${P.format}] (${P.entries.length} resources, base ${fmtHex(P.base)})`);
+    refreshAll();
+  } catch(e){
+    log("err", `Load failed: ${e.message}`);
+    alert("Load failed: " + e.message);
+  }
+}
+
+async function loadDictionary(file){
+  try{
+    const txt = await readFileAsText(file);
+    loadHashDictText(txt);
+    log("ok", `Loaded ${g_hashDict.size} hash entries from ${file.name}`);
+    // re-resolve filenames if a pack is loaded
+    if (state.pack){
+      const fmt = state.pack.format;
+      for (const e of state.pack.entries){
+        e.filename = sanitizeFilename(getFilename(e.hash, e.type, fmt));
+      }
+      refreshAll();
+    } else {
+      updateStatus();
+    }
+  } catch(e){
+    log("err", "Dictionary load failed: " + e.message);
+  }
+}
+
+async function exportAllZip(){
+  if (!state.pack) return;
+  try{
+    const t0 = performance.now();
+    const zip = buildExportZip(state.pack);
+    const t1 = performance.now();
+    const baseName = state.pack.source_name.replace(/\.pcpack$/i, "");
+    downloadBlob(baseName + "_extracted.zip", zip, "application/zip");
+    log("ok", `Exported ${state.pack.entries.length} resources as ZIP (${fmtSize(zip.length)}, ${(t1-t0).toFixed(0)} ms)`);
+  } catch(e){
+    log("err", "Export failed: " + e.message);
+  }
+}
+
+async function exportSelected(){
+  if (!state.pack || state.selected.size === 0) return;
+  const sels = [...state.selected].sort((a,b)=>a-b);
+  if (sels.length === 1){
+    const idx = sels[0];
+    try {
+      const data = extractEntry(state.pack, idx);
+      downloadBlob(state.pack.entries[idx].filename, data);
+      log("ok", "Exported " + state.pack.entries[idx].filename);
+    } catch(e){ log("err", e.message); }
+    return;
+  }
+  // Multi-select -> ZIP
+  const entries = [];
+  for (const idx of sels){
+    try {
+      entries.push({ name: state.pack.entries[idx].filename, data: extractEntry(state.pack, idx) });
+    } catch(e){}
+  }
+  const zip = buildZip(entries);
+  downloadBlob("selected_" + sels.length + "_resources.zip", zip, "application/zip");
+  log("ok", `Exported ${sels.length} selected as ZIP (${fmtSize(zip.length)})`);
+}
+
+async function addReplacementFiles(files){
+  if (!state.pack) return;
+  if (!files || !files.length) return;
+  // Build name -> index map once
+  const nameToIdx = new Map();
+  for (const e of state.pack.entries) nameToIdx.set(e.filename, e.index);
+  let matched=0, missed=0;
+  for (const f of files){
+    // For folder picks, file.name is just the basename; webkitRelativePath gives full
+    const baseName = f.name;
+    if (nameToIdx.has(baseName)){
+      const idx = nameToIdx.get(baseName);
+      try {
+        const buf = await readFileAsBuffer(f);
+        state.replacements.set(idx, buf);
+        matched++;
+      } catch(e){ log("err", "Read fail: "+baseName); }
+    } else {
+      missed++;
+    }
+  }
+  log("ok", `Queued ${matched} replacement(s)` + (missed ? `, ${missed} unmatched` : ""));
+  refreshAll();
+}
+
+function clearReplacements(){
+  state.replacements.clear();
+  log("info", "Cleared all replacements");
+  refreshAll();
+}
+
+async function buildPack(){
+  if (!state.pack || state.replacements.size === 0) return;
+  try{
+    const fmt = state.pack.format;
+    const fresh = parsePCPACK(state.pack.raw, fmt);
+    fresh.source_name = state.pack.source_name;
+    const t0 = performance.now();
+    const out = doImport(fresh, state.replacements, state.alignVal);
+    const t1 = performance.now();
+    const outExt = fmt === "ps2pack" ? ".PS2PACK" : ".PCPACK";
+    const name = state.pack.source_name.replace(/(\.(pcpack|ps2pack))?$/i, "_rebuilt" + outExt);
+    downloadBlob(name, out);
+    log("ok", `Built ${name} [${fmt}] (${fmtSize(out.length)}, ${state.replacements.size} replacements, ${(t1-t0).toFixed(0)} ms)`);
+  } catch(e){
+    log("err", "Build failed: " + e.message);
+    alert("Build failed: " + e.message);
+  }
+}
+
+async function reimportBuild(files){
+  if (!state.pack) return;
+  if (!files || !files.length) return;
+  try {
+    const fmt = state.pack.format;
+    const fresh = parsePCPACK(state.pack.raw, fmt);
+    fresh.source_name = state.pack.source_name;
+
+    // Pre-read all files
+    log("info", `Reading ${files.length} files from folder…`);
+    const fileBufs = [];
+    for (const f of files){
+      try {
+        const data = await readFileAsBuffer(f);
+        fileBufs.push({ name: f.name, data });
+      } catch(e){
+        log("warn", "Read fail: "+f.name);
+      }
+    }
+
+    const t0 = performance.now();
+    const out = doReimportFromFolder(fresh, fileBufs, state.alignVal, (s)=>log("info", s));
+    const t1 = performance.now();
+    const outExt = state.pack.format === "ps2pack" ? ".PS2PACK" : ".PCPACK";
+    const name = state.pack.source_name.replace(/(\.(pcpack|ps2pack))?$/i, "_reimport" + outExt);
+    downloadBlob(name, out);
+    log("ok", `Reimport build OK: ${name} (${fmtSize(out.length)}, ${(t1-t0).toFixed(0)} ms)`);
+  } catch(e){
+    log("err", "Reimport build failed: " + e.message);
+    alert("Reimport build failed: " + e.message);
+  }
+}
+
+// =====================================================================
+//  Event wiring
+// =====================================================================
+$("fOpen").addEventListener("change", e=>{
+  const f = e.target.files[0]; e.target.value="";
+  if (f) openPCPACK(f);
+});
+$("fDict").addEventListener("change", e=>{
+  const f = e.target.files[0]; e.target.value="";
+  if (f) loadDictionary(f);
+});
+$("fRepl").addEventListener("change", e=>{
+  const fs = [...e.target.files]; e.target.value="";
+  if (fs.length) addReplacementFiles(fs);
+});
+$("fReplDir").addEventListener("change", e=>{
+  const fs = [...e.target.files]; e.target.value="";
+  if (fs.length) addReplacementFiles(fs);
+});
+$("fReimport").addEventListener("change", e=>{
+  const fs = [...e.target.files]; e.target.value="";
+  if (fs.length) reimportBuild(fs);
+});
+$("bExportAll").addEventListener("click", exportAllZip);
+$("bExportSel").addEventListener("click", exportSelected);
+$("bBuild").addEventListener("click", buildPack);
+$("bClearRepl").addEventListener("click", clearReplacements);
+
+$("filter").addEventListener("input", e=>{
+  state.filterText = e.target.value;
+  refreshAll();
+});
+$("typeFilter").addEventListener("change", e=>{
+  state.typeFilter = parseInt(e.target.value);
+  refreshAll();
+});
+$("align").addEventListener("input", e=>{
+  const v = parseInt(e.target.value);
+  if (v >= 1 && v <= 4096) state.alignVal = v;
+});
+
+// Sort
+document.querySelector("thead").addEventListener("click", e=>{
+  const th = e.target.closest("th[data-col]");
+  if (!th) return;
+  const col = parseInt(th.dataset.col);
+  if (state.sortCol === col) state.sortAsc = !state.sortAsc;
+  else { state.sortCol = col; state.sortAsc = true; }
+  refreshAll();
+});
+
+// Selection (single, shift-range, ctrl-toggle)
+$("lvBody").addEventListener("click", e=>{
+  const tr = e.target.closest("tr[data-idx]");
+  if (!tr) return;
+  const idx = parseInt(tr.dataset.idx);
+  const row = parseInt(tr.dataset.row);
+  if (e.shiftKey && state.lastClickRow >= 0){
+    const a = Math.min(state.lastClickRow, row);
+    const b = Math.max(state.lastClickRow, row);
+    if (!e.ctrlKey && !e.metaKey) state.selected.clear();
+    for (let r=a;r<=b;r++){
+      if (r < state.filtered.length) state.selected.add(state.filtered[r]);
+    }
+  } else if (e.ctrlKey || e.metaKey){
+    if (state.selected.has(idx)) state.selected.delete(idx);
+    else state.selected.add(idx);
+    state.lastClickRow = row;
+  } else {
+    state.selected.clear();
+    state.selected.add(idx);
+    state.lastClickRow = row;
+  }
+  renderTable();
+  updateButtons();
+});
+
+// Tabs
+document.querySelector(".tabs").addEventListener("click", e=>{
+  const t = e.target.closest(".tab");
+  if (!t) return;
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".tabpane").forEach(x=>x.classList.remove("active"));
+  t.classList.add("active");
+  $(t.dataset.pane).classList.add("active");
+});
+
+// Drag-and-drop
+const dropEl = $("drop");
+let dragCount = 0;
+window.addEventListener("dragenter", e=>{
+  if (e.dataTransfer && e.dataTransfer.types && [...e.dataTransfer.types].includes("Files")){
+    e.preventDefault();
+    dragCount++;
+    dropEl.classList.add("show");
+  }
+});
+window.addEventListener("dragover", e=>{
+  if (e.dataTransfer && [...e.dataTransfer.types].includes("Files")){
+    e.preventDefault();
+  }
+});
+window.addEventListener("dragleave", e=>{
+  dragCount--;
+  if (dragCount<=0){ dragCount=0; dropEl.classList.remove("show"); }
+});
+window.addEventListener("drop", async e=>{
+  e.preventDefault();
+  dragCount = 0;
+  dropEl.classList.remove("show");
+  const files = [...(e.dataTransfer?.files || [])];
+  if (!files.length) return;
+
+  // Categorize: .PCPACK, .TXT, others (replacements)
+  const reps = [];
+  for (const f of files){
+    const up = f.name.toUpperCase();
+    if (up.endsWith(".PCPACK") || up.endsWith(".PS2PACK")) {
+      await openPCPACK(f);
+    } else if (up.endsWith(".TXT")) {
+      await loadDictionary(f);
+    } else {
+      reps.push(f);
+    }
+  }
+  if (reps.length && state.pack){
+    await addReplacementFiles(reps);
+  }
+});
+
+// Keyboard shortcuts
+window.addEventListener("keydown", e=>{
+  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+  if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="o"){
+    e.preventDefault(); $("fOpen").click();
+  } else if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="d"){
+    e.preventDefault(); $("fDict").click();
+  } else if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="b"){
+    e.preventDefault(); if (!$("bBuild").disabled) buildPack();
+  } else if (e.key === "Delete" && state.selected.size && state.pack){
+    // Remove replacements for selected
+    let n = 0;
+    for (const idx of state.selected){ if (state.replacements.delete(idx)) n++; }
+    if (n){ log("info", `Removed ${n} replacement(s)`); refreshAll(); }
+  } else if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="a" && state.pack){
+    e.preventDefault();
+    state.selected = new Set(state.filtered);
+    renderTable();
+    updateButtons();
+  }
+});
+
+// Init
+log("info", "PCPACK / PS2PACK Tool ready. Open a .PCPACK or .PS2PACK file (and optionally a dictionary .TXT) to begin.");
+refreshAll();
+</script>
+</body>
+</html>
