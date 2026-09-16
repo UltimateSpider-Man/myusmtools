@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' blob:; style-src 'unsafe-inline'; worker-src blob:; connect-src 'none'; img-src data:; font-src 'none';"><title>SX Reference Lab · XBSX ⇄ PCSX Batch Converter v2</title>
+<style>:root{color-scheme:dark;--bg:#0c1119;--card:#141d29;--soft:#192535;--line:#2b394b;--text:#edf4fd;--muted:#a0b1c8;--teal:#68e0c8;--blue:#9bb9ff;--amber:#f4cb83;--red:#ffadad}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.6 system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.4;cursor:not-allowed}button,input,select,summary{touch-action:manipulation}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--teal);outline-offset:3px}button{background:var(--soft);color:var(--text);border:1px solid var(--line);border-radius:9px;padding:9px 14px;font-weight:600}button:hover:not(:disabled){border-color:#5c7189;background:#233347}button.primary{background:var(--teal);color:#102d2a;border-color:var(--teal)}button.reverse{background:#a8bfff;color:#152540;border-color:#a8bfff}button.small{font-size:12px;padding:5px 9px}input[type=checkbox]{accent-color:var(--teal);width:17px;height:17px;flex-shrink:0;margin:4px 0 0}input[type=search],select{background:#101822;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:9px 11px;max-width:100%}input[type=search]{min-width:160px;flex:1}h1,h2,h3,p{margin:0}h2{font-size:17px;font-weight:650}h3{font-size:15px}code,.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}code{overflow-wrap:anywhere}.wrap{width:min(1290px,calc(100% - 64px));margin:0 auto}.nav{display:flex;justify-content:space-between;align-items:center;height:80px;border-bottom:1px solid var(--line)}.brand{display:flex;gap:12px;align-items:center;font-weight:650}.mark{display:grid;place-items:center;color:var(--teal);background:#193c39;width:37px;height:37px;border-radius:10px;font:bold 16px ui-monospace,monospace}.subtle,.muted,small{color:var(--muted)}.nav-tags{display:flex;gap:15px;font-size:12px;align-items:center}.badge{border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-size:11px}.online{color:var(--teal)}.hero{display:flex;justify-content:space-between;gap:28px;align-items:center;padding:40px 0 27px}.eyebrow{text-transform:uppercase;letter-spacing:.16em;font-size:11px;font-weight:700;color:var(--teal)}h1{font-size:41px;letter-spacing:-.04em;line-height:1.14;font-weight:680;margin:10px 0 15px}.lead{max-width:715px;color:var(--muted);font-size:15px}.formats{display:flex;gap:17px;align-items:center;border:1px solid var(--line);background:var(--card);border-radius:13px;padding:19px;white-space:nowrap}.formats strong{font:600 18px ui-monospace,monospace}.formats small{display:block;font-size:10px}.formats .arrow{font-size:25px;color:var(--teal)}.notice{border:1px solid #695334;background:#251f16;border-radius:11px;padding:13px 17px;color:#e5cea9;font-size:13px}.notice strong{color:var(--amber)}.heading{display:flex;justify-content:space-between;gap:20px;align-items:center;margin:28px 0 12px}.step{display:inline-grid;place-items:center;font:11px ui-monospace,monospace;border:1px solid var(--line);border-radius:6px;width:23px;height:23px;margin-right:9px;color:var(--muted)}.heading small{font-size:12px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:17px}.card{border:1px solid var(--line);border-radius:15px;background:var(--card);padding:21px;min-width:0}.card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;gap:12px}.pill{background:#193e38;color:var(--teal);font:11px ui-monospace,monospace;padding:4px 8px;border-radius:5px}.pill.pc{background:#263758;color:var(--blue)}.drop{width:100%;background:#101923;border:1px dashed #40556c;border-radius:11px;min-height:119px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:18px;text-align:center}.drop strong{font-size:14px;font-weight:580;overflow-wrap:anywhere}.drop small{font-size:12px;font-weight:400}.drop.drag{background:#1a3632;border-color:var(--teal)}.drop.loaded{border-style:solid;border-color:#3a7770;background:#152d2b}.card-tools{display:flex;justify-content:space-between;margin-top:12px;gap:10px;align-items:center;flex-wrap:wrap}.collection-list{margin-top:12px;font-size:12px}.collection-list ul{margin:7px 0 0;padding:0;list-style:none;max-height:200px;overflow:auto;color:var(--muted)}.collection-list li{padding:2px 0;overflow-wrap:anywhere}.policy{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px}.check{display:flex;align-items:flex-start;gap:10px;cursor:pointer}.check b{font-size:13px;font-weight:600}.check small{display:block;font-size:12px;line-height:1.5;margin-top:4px}.warning b{color:var(--amber)}.toolbar{display:flex;justify-content:space-between;gap:18px;margin-top:18px;flex-wrap:wrap}.buttons{display:flex;gap:9px;flex-wrap:wrap}.statusbox{display:flex;justify-content:space-between;gap:14px;align-items:center;margin:17px 0;min-height:28px}.status{color:var(--muted);font-size:13px;overflow-wrap:anywhere}.status.good{color:var(--teal)}.status.warn{color:var(--amber)}.error{border:1px solid #745051;background:#2b1d22;padding:12px 15px;color:var(--red);border-radius:10px;overflow-wrap:anywhere;white-space:pre-wrap;font-size:12px;margin:12px 0}.loader{height:3px;overflow:hidden;background:#1c2b39;border-radius:4px;margin-top:12px}.loader:after{content:'';display:block;height:3px;width:26%;background:var(--teal);animation:load 1.3s infinite alternate ease-in-out}@keyframes load{to{transform:translateX(290%)}}.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:20px 0}.stat{padding:15px 17px;background:var(--card);border:1px solid var(--line);border-radius:11px}.stat strong{display:block;font-size:25px;letter-spacing:-.03em;font-weight:620}.stat small{font-size:11px}.evidence-text{display:flex;gap:20px;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px;flex-wrap:wrap}.conflicts{font-size:12px;margin-top:14px;border-top:1px solid var(--line);padding-top:12px}.conflicts ul{max-height:180px;overflow:auto;margin:8px 0;padding-left:18px;color:var(--amber)}summary{cursor:pointer}#results{margin-top:26px}.result-header{display:flex;justify-content:space-between;gap:18px;align-items:center;margin-bottom:13px;flex-wrap:wrap}.filters{display:flex;gap:9px;margin:14px 0;flex-wrap:wrap}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}table{border-collapse:collapse;text-align:left;width:100%;font-size:12px}th{background:#192535;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:650;white-space:nowrap}td,th{padding:12px 13px;border-bottom:1px solid #253345}tbody tr:last-child td{border-bottom:0}td.num{text-align:right;font-variant-numeric:tabular-nums}td.name{max-width:330px;overflow-wrap:anywhere;min-width:170px}td.name small{display:block;font-size:10px;margin-top:3px}tr.selected{background:#1a302f}.tag{display:inline-block;padding:3px 7px;border-radius:5px;white-space:nowrap;font-size:10px;background:#1a3b34;color:var(--teal)}.tag.unknown{background:#403221;color:var(--amber)}.tag.blocked{background:#40292f;color:var(--red)}.pager{display:flex;justify-content:space-between;gap:16px;align-items:center;font-size:12px;color:var(--muted);margin:12px 0}.empty{padding:45px 16px;border:1px dashed var(--line);border-radius:14px;text-align:center;color:var(--muted);margin:28px 0}.empty strong{display:block;color:#cedbea;font-size:16px;margin-bottom:7px}.detail{margin:22px 0}.detail .title{font:600 16px ui-monospace,monospace;overflow-wrap:anywhere}.detail .sub{color:var(--muted);font-size:12px;margin:7px 0 15px}.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.detail-note{background:#101822;border:1px solid var(--line);border-radius:9px;padding:12px;font-size:12px;overflow-wrap:anywhere}.detail-note b{display:block;margin-bottom:4px}.detail details{margin-top:14px;font-size:12px}.detail pre{overflow:auto;max-height:360px;white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.7 ui-monospace,monospace;background:#101822;border:1px solid var(--line);border-radius:9px;padding:14px}.scope{margin:29px 0;padding-top:22px;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:28px;color:var(--muted);font-size:12px}.scope strong{display:block;font-size:13px;color:var(--text);margin-bottom:6px}.recovery{margin:26px 0;font-size:13px}.recovery p{color:var(--muted);font-size:12px;max-width:840px;margin:9px 0 15px}.recovery label{display:block;font-size:12px;color:var(--muted);margin-bottom:10px}.recovery input[type=file]{display:block;width:100%;padding:9px;margin-top:5px;border:1px solid var(--line);border-radius:8px;background:#101822;font-size:12px}.footer{display:flex;justify-content:space-between;gap:16px;border-top:1px solid var(--line);padding:20px 0 30px;color:#8b9db6;font-size:11px}.filesummary{color:var(--muted);font-size:12px} [hidden]{display:none!important}@media(max-width:900px){.wrap{width:calc(100% - 36px)}.hero{gap:18px}.formats{display:none}.policy{grid-template-columns:1fr;gap:17px}h1{font-size:35px}.stats{grid-template-columns:repeat(3,1fr)}.heading small{max-width:50%;text-align:right}.detail-grid{grid-template-columns:1fr}}@media(max-width:580px){.wrap{width:calc(100% - 28px)}.nav{height:66px}.nav-tags .private{display:none}.hero{padding:27px 0 23px}h1{font-size:33px}.grid2{grid-template-columns:1fr;gap:12px}.card{padding:17px}.heading{align-items:flex-start;gap:10px}.heading small{font-size:10px}.lead{font-size:14px}.toolbar,.toolbar .buttons{display:grid;grid-template-columns:1fr;width:100%}.toolbar button{width:100%}.stats{grid-template-columns:1fr 1fr;gap:8px}.stat{padding:12px}.stat strong{font-size:23px}.result-header{align-items:flex-start}.scope{grid-template-columns:1fr;gap:19px}.footer{flex-direction:column;gap:4px}.notice{padding:12px;font-size:12px}.result-header .buttons{width:100%}.filters select{flex:1}#cancel{width:auto}.card-head h3{font-size:14px}}
+</style></head><body>
+<div class="wrap">
+<header class="nav"><div class="brand"><span class="mark">SX</span><span>Reference Lab <span class="muted">/ Scripts</span></span></div><div class="nav-tags"><span class="private"><span class="online">●</span> Local processing</span><span class="badge">v2.0 · Batch</span></div></header>
+<section class="hero"><div><div class="eyebrow">Ultimate Spider-Man · Binary tools</div><h1>Script conversion,<br>in both directions.</h1><p class="lead">Read the destination files. Learn identifier correspondences from matching scripts. Rebuild XBSX and PCSX without an imported byte map.</p></div><div class="formats"><div><strong>XBSX</strong><small>40-byte VM · 0x70 code</small></div><span class="arrow">⇄</span><div><strong>PCSX</strong><small>36-byte VM · 0x6C code</small></div></div></section>
+<div class="notice"><strong>Structural conversion is not a verified runtime port.</strong> Missing native-call or variable identities can make a script fail or call the wrong function. Strict mode blocks unresolved operands; experimental retention requires explicit approval.</div>
+<section><div class="heading"><h2><span class="step">01</span>Load both collections</h2><small>Files, folders or ZIP · extract .7z first</small></div><div class="grid2">
+<div class="card"><div class="card-head"><h3>Xbox source / reference</h3><span class="pill">.XBSX</span></div><button class="drop" id="xboxDrop" type="button"><strong id="xboxLabel">Choose XBSX files or a ZIP</strong><small>Drop files here, or click to browse</small></button><input id="xboxInput" type="file" multiple accept=".xbsx,.zip,.7z" hidden><input id="xboxFolder" type="file" multiple webkitdirectory hidden><div class="card-tools"><span id="xboxSize" class="filesummary">No files loaded</span><div class="buttons"><button id="xboxFolderButton" class="small">Choose folder</button><button id="xboxClear" class="small" disabled>Clear</button></div></div><details id="xboxFiles" class="collection-list" hidden><summary>Selected files</summary><ul id="xboxList"></ul></details></div>
+<div class="card"><div class="card-head"><h3>Final PC source / reference</h3><span class="pill pc">.PCSX</span></div><button class="drop" id="pcDrop" type="button"><strong id="pcLabel">Choose PCSX files or a ZIP</strong><small>Drop files here, or click to browse</small></button><input id="pcInput" type="file" multiple accept=".pcsx,.zip,.7z" hidden><input id="pcFolder" type="file" multiple webkitdirectory hidden><div class="card-tools"><span id="pcSize" class="filesummary">No files loaded</span><div class="buttons"><button id="pcFolderButton" class="small">Choose folder</button><button id="pcClear" class="small" disabled>Clear</button></div></div><details id="pcFiles" class="collection-list" hidden><summary>Selected files</summary><ul id="pcList"></ul></details></div>
+</div></section>
+<section><div class="heading"><h2><span class="step">02</span>Conversion policy</h2><small>Source records preserved · no target-code fallback</small></div><div class="card policy">
+<label class="check"><input id="allowContext" type="checkbox"><span><b>Include instruction-context inferences</b><small>Allow unique context matches in addition to whole-function evidence. Both remain reference-derived, not engine-symbol verified.</small></span></label>
+<label class="check warning"><input id="allowUnresolved" type="checkbox"><span><b>Experimental: retain unresolved operands</b><small>Keep unknown runtime numbers unchanged and report every occurrence. The destination may interpret those numbers differently.</small></span></label>
+<label class="check"><input id="allowUnpaired" type="checkbox"><span><b>Allow scripts without a matching reference</b><small>Use the loaded destination layout and collection-wide IDs when no same-script file exists. Missing engine or asset support is not supplied.</small></span></label>
+</div><div class="toolbar"><div class="buttons"><button id="analyzeButton" disabled>Analyze collections</button></div><div class="buttons"><button id="forwardButton" class="primary" disabled>Convert XBSX → PCSX</button><button id="reverseButton" class="reverse" disabled>Convert PCSX → XBSX</button></div></div><div class="loader" id="progress" hidden></div><div class="statusbox"><div id="status" class="status" role="status" aria-live="polite">Load Xbox and PC collections to begin.</div><button id="cancel" class="small" hidden>Cancel</button></div><div id="error" class="error" role="alert" hidden></div></section>
+<section id="evidence" hidden><div class="stats"><div class="stat"><strong id="statX">—</strong><small>XBSX inputs parsed</small></div><div class="stat"><strong id="statP">—</strong><small>PCSX inputs parsed</small></div><div class="stat"><strong id="statPairs">—</strong><small>Matched script pairs</small></div><div class="stat"><strong id="statIds">—</strong><small>Accepted ID pairs</small></div><div class="stat"><strong id="statConflicts">—</strong><small>Conflicts excluded</small></div></div><div class="card"><div class="evidence-text"><p id="evidenceSummary"></p><button id="downloadEvidence" class="small">Download evidence JSON</button></div><details class="conflicts" id="conflicts"><summary>Conflicting candidates are never majority-voted</summary><ul id="conflictList"></ul></details></div></section>
+<div id="empty" class="empty"><strong>Two collections. One reference-based rebuild.</strong><p>Start with a single script pair or load a full collection.<br>Analysis matches embedded script identities, including files named by a hash.</p></div>
+<section id="results" hidden><div class="result-header"><div><h2 id="resultTitle">Conversion results</h2><div id="resultSummary" class="muted filesummary"></div></div><div class="buttons"><button id="downloadManifest">Manifest JSON</button><button id="downloadZip" class="primary">Download batch ZIP</button></div></div><div class="filters"><input id="search" type="search" placeholder="Find a filename or embedded script name…" aria-label="Search conversion results"><select id="statusFilter" aria-label="Filter results"><option value="all">All results</option><option value="experimental-unresolved">Unresolved operands</option><option value="reference-inferred">Reference-inferred only</option><option value="blocked">Blocked files</option></select></div><div class="table-wrap"><table><thead><tr><th>Source file / script identity</th><th>Reference</th><th>Edits</th><th>Unresolved</th><th>Result</th><th>Inspect</th></tr></thead><tbody id="resultBody"></tbody></table></div><div class="pager"><span id="pageInfo"></span><div class="buttons"><button id="prevPage" class="small">Previous</button><button id="nextPage" class="small">Next</button></div></div></section>
+<section id="detail" class="card detail" hidden><div class="result-header"><div><div id="detailTitle" class="title"></div><div id="detailSub" class="sub"></div></div><div class="buttons"><button id="downloadFile" class="primary small">Converted script</button><button id="downloadReport" class="small">JSON + recovery</button><button id="downloadText" class="small">Text report</button></div></div><div class="detail-grid"><div class="detail-note"><b>Preservation and layout</b><p id="detailLayout"></p></div><div class="detail-note"><b>Runtime evidence</b><p id="detailRisk"></p></div></div><details><summary>Unresolved operands and function decisions</summary><pre id="detailUnresolved"></pre></details><details><summary>Operand changes (first 200; full list in the report)</summary><pre id="detailPatches"></pre></details><details><summary>Checksums and structural validation</summary><pre id="detailValidation"></pre></details></section>
+<details class="card recovery"><summary><strong>Restore the exact original from a recovery report</strong></summary><p>This is separate from PCSX → XBSX conversion. A generated JSON report stores the original source bytes. Recovery checks the converted and original SHA-256 hashes before exporting.</p><div class="grid2"><label>Converted script<input id="recoveryFile" type="file" accept=".pcsx,.xbsx"></label><label>Matching JSON report<input id="recoveryReport" type="file" accept=".json"></label></div><button id="restoreButton">Verify and restore original</button><p id="recoveryStatus" role="status"></p></details>
+<div class="scope"><div><strong>What this version reads</strong><p>The unlinked, little-endian generic-mash layouts found in the supplied Xbox and PC archives: multi-object scripts, initializer functions, permanent strings, static data, branches, event references and array instructions. Unknown or malformed layouts are rejected.</p></div><div><strong>What it does not invent</strong><p>No manual identifier table, arithmetic ID extrapolation, target-script replacement or missing game-code implementation. Contradictory candidates stay unresolved. Keep the reports and test copies before installing scripts.</p></div></div>
+<footer class="footer"><span>SX Reference Lab · Offline HTML · No scripts are executed</span><span>One file ≤ 32 MiB · Collection ≤ 128 MiB · Up to 2,000 ZIP entries</span></footer>
+</div>
+
+<script id="sx-core" type="text/javascript">
+/* SX Reference Converter. Offline, table-free reference inference.
+ * Supported format: observed unlinked little-endian generic-mash SX layouts.
+ * Runtime identifier correspondences are learned; format field sizes are not ID maps.
+ * No reference bytecode is executed. All reads are bounded.
+ */
+(function(root){'use strict';
+// The array and debug opcodes (56..65) are decoded by the same operand grammar.
+// Engine reference: openusm src/chuck/vm/vm_thread.cpp, commit 66672ec3.
+const VALID_OPS=new Set([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,37,38,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65]);
+const VERSION='2.0.0', MAX_FILE=32*1024*1024, MAX_INSTRUCTIONS=250000;
+const align=(n,a)=>Math.ceil(n/a)*a;
+const hex=(n,w=8)=>(n>>>0).toString(16).padStart(w,'0').toUpperCase();
+const eq=(a,b)=>a.length===b.length&&a.every((v,i)=>v===b[i]);
+const key=a=>a.join(':');
+const fail=m=>{throw new Error(m);};
+const asBytes=b=>b.constructor===Uint8Array?b:new Uint8Array(b);
+const utf8=s=>new TextEncoder().encode(s);
+const ascii=b=>{let s='';for(let i=0;i<b.length;i+=8192)s+=String.fromCharCode(...b.subarray(i,i+8192));return s;};
+class Reader{
+ constructor(data){this.b=asBytes(data);this.v=new DataView(this.b.buffer,this.b.byteOffset,this.b.byteLength);this.p=0;}
+ need(p,n){if(!Number.isSafeInteger(p)||!Number.isSafeInteger(n)||p<0||n<0||p+n>this.b.length)fail('Out-of-bounds read at 0x'+hex(p)+' ('+n+' bytes).');}
+ u16(p){this.need(p,2);return this.v.getUint16(p,true);}
+ u32(p){this.need(p,4);return this.v.getUint32(p,true);}
+ words(p,n){this.need(p,n*4);return Array.from({length:n},(_,i)=>this.u32(p+i*4));}
+ take(n){this.need(this.p,n);const o=this.b.slice(this.p,this.p+n);this.p+=n;return o;}
+ pad(a){return this.take(align(this.p,a)-this.p);}
+}
+function strRead(raw){if(raw.length===0||raw[raw.length-1]!==0)fail('Unterminated permanent string.');if(raw.slice(0,-1).includes(0))fail('Embedded NUL in permanent string.');return ascii(raw.slice(0,-1));}
+function parseAt(data,name,profile){
+ const r=new Reader(data),len=r.b.length;if(len<112||len>MAX_FILE)fail('File size outside supported range.');
+ if(r.u32(8)!==len)fail('Header file size does not match the actual size.');
+ if(r.u32(4)!==0||r.u32(12)!==0xffff)fail('Unsupported generic-mash flags or data buffers.');
+ const seed=(r.u32(0)-r.u32(8))>>>0;if(seed!==0x7baeba5c)fail('Unsupported generic-mash checksum signature.');
+ const rootBytes=r.b.slice(16,108),rootWords=r.words(16,23);
+ const codeSize=r.u32(0x34),nobj=r.u32(0x40),nstr=r.u32(0x4c),ninfo=r.u32(0x68);
+ if(codeSize<2||codeSize%2||nobj<1||nobj>4096||nstr>65535||ninfo>65535)fail('Invalid script counts or code size.');
+ if(r.u32(0x60)!==2)fail('Only packed, unlinked SX files are supported (root flags must be 2).');
+ const nameRaw=r.b.slice(16,48),nameEnd=nameRaw.indexOf(0);if(nameEnd<1)fail('Invalid script name.');
+ const scriptName=ascii(nameRaw.slice(0,nameEnd));if(!/^[\x20-\x7e]+$/.test(scriptName))fail('Non-ASCII script name.');
+ r.need(profile.codeStart,codeSize);const headerExtra=r.b.slice(108,profile.codeStart),code=r.b.slice(profile.codeStart,profile.codeStart+codeSize);
+ if(profile.vmSize===40&&headerExtra.some(v=>v!==0xa1))fail('Unsupported XBSX root extension.');
+ r.p=profile.codeStart+codeSize;const codePad=r.pad(4),objectPointers=r.take(nobj*4),objects=[];
+ function vm(){const offset=r.p,raw=r.words(offset,profile.vmSize/4);r.take(profile.vmSize);
+  const w=profile.vmSize===40?[...raw.slice(0,7),...raw.slice(8)]:raw.slice();
+  if(w[0]!==0||w[6]!==0||(w[7]!==4&&w[7]!==5))fail('Unsupported VM record/debug/link flags at 0x'+hex(offset));
+  if(profile.vmSize===40&&raw[7]!==0)fail('Nonzero XBSX VM extension cannot be translated safely.');
+  if(w[4]%2||w[5]<1||w[4]+w[5]*2>codeSize||w[3]>65536||w[3]%4)fail('Invalid function range or parameter size at 0x'+hex(offset));
+  return {offset,raw,w,fullname:w[1],shortname:w[2],parms:w[3],flags:w[7],codeOffset:w[4],codeLength:w[5]*2,code:code.slice(w[4],w[4]+w[5]*2)};
+ }
+ for(let i=0;i<nobj;i++){
+  const pad=r.pad(8),offset=r.p,w=r.words(offset,13);r.take(52);
+  if(w[4]>MAX_FILE||w[9]>65535||w[7]>MAX_FILE||w[3]!==0||w[6]!==1||(w[12]&~7)!==0)fail('Unsupported object header at 0x'+hex(offset));
+  const staticData=r.take(w[4]),staticPad=r.pad(4),ptrs=r.take(w[9]*4),funcs=[];
+  for(let j=0;j<w[9];j++){r.pad(4);const f=vm();f.objectIndex=i;f.functionIndex=j;f.objectName=w[0];f.id=hex(w[0])+':'+hex(f.fullname);funcs.push(f);}
+  if(new Set(funcs.map(f=>f.fullname)).size!==funcs.length)fail('Ambiguous duplicate function identities within one object.');
+  objects.push({index:i,offset,pad,w,name:w[0],staticData,staticPad,ptrs,funcs});
+ }
+ if(new Set(objects.map(o=>o.name)).size!==objects.length)fail('Duplicate script object identities.');
+ const bynamePad=r.pad(4),byname=r.words(r.p,nobj);r.take(4*nobj);
+ if(!eq([...byname].sort((a,b)=>a-b),Array.from({length:nobj},(_,i)=>i)))fail('Invalid object-by-name permutation.');
+ for(let i=1;i<nobj;i++)if(objects[byname[i-1]].name>objects[byname[i]].name)fail('Object-by-name table is not sorted by hash.');
+ const strPointers=r.take(nstr*4),strings=[],stringEntries=[];
+ for(let i=0;i<nstr;i++){const pad=r.pad(4),sz=r.u32(r.p);r.take(4);if(sz<1||sz>1024*1024)fail('Invalid string size.');const raw=r.take(sz);strings.push(strRead(raw));stringEntries.push({pad,raw});}
+ const infoPad=r.pad(4),infoOffset=r.p,infos=[];
+ for(let i=0;i<ninfo;i++){const offset=r.p,w=r.words(r.p,7);r.take(28);if(w[1]||w[2]||w[6]>=nobj)fail('Unsupported linked/debug initializer.');infos.push({offset,w});}
+ for(let i=0;i<infos.length;i++){const info=infos[i];if(info.w[4]===0xffffffff){r.pad(4);info.vm=vm();const oi=byname[info.w[6]];info.vm.objectIndex=oi;info.vm.objectName=objects[oi].name;info.vm.id='init:'+i;}}
+ const end=r.p,tail=r.take(len-r.p);if(len!==align(end,16)||tail.some(v=>v!==0xe3))fail('Unknown trailer or unparsed structural data.');
+ const allFunctions=objects.flatMap(o=>o.funcs).concat(infos.filter(i=>i.vm).map(i=>i.vm));
+ const sorted=[...allFunctions].sort((a,b)=>a.codeOffset-b.codeOffset);let cursor=0;
+ for(const f of sorted){if(f.codeOffset!==cursor)fail('Overlapping, shared or unowned bytecode ranges are unsupported.');cursor+=f.codeLength;}
+ if(cursor!==codeSize)fail('Bytecode not completely accounted for by function records.');
+ const d={name,scriptName,bytes:r.b.slice(),header:r.b.slice(0,16),rootBytes,rootWords,checksumSeed:seed,profile:{...profile},headerExtra,code,codePad,objectPointers,objects,byname,bynamePad,strPointers,strings,stringEntries,infoPad,infos,infoOffset,end,tail,allFunctions,codeSize};
+ let ic=0;for(const f of allFunctions){f.ins=decode(f.code);ic+=f.ins.length;if(ic>MAX_INSTRUCTIONS)fail('Instruction count limit exceeded.');validateInstructions(d,f);}
+ d.instructionCount=ic;return d;
+}
+function parse(data,name='input.sx'){
+ data=asBytes(data);if(data.length>MAX_FILE)fail('File exceeds 32 MiB limit.');
+ const profiles=[{kind:'PCSX',codeStart:108,vmSize:36},{kind:'XBSX',codeStart:112,vmSize:40}],ok=[],errors=[];
+ for(const p of profiles){try{ok.push(parseAt(data,name,p));}catch(e){errors.push(p.kind+': '+e.message);}}
+ if(ok.length!==1)fail(ok.length?'Ambiguous SX layout.':'Unsupported/corrupt SX file. '+errors.join(' | '));return ok[0];
+}
+function decode(code){const r=new Reader(code),out=[];while(r.p<code.length){const pos=r.p,word=r.u16(r.p);r.p+=2;const arg=word&127,op=word>>>8;let ds=4;
+ if(word&128){ds=r.u16(r.p);r.p+=2;if(ds<1||ds>4096)fail('Invalid operand data size.');}
+ const n=arg===0?0:[4,5,6,7].includes(arg)?1:[1,2,3,8,9,10,11,15,16,17].includes(arg)?2:-1;
+ if(n<0||!VALID_OPS.has(op))fail('Unsupported bytecode word 0x'+hex(word,4)+' at +0x'+hex(pos));if(op>=56&&op<=60&&arg!==4)fail('Array operation requires a word operand.');const operandOffset=r.p,args=[];
+ for(let i=0;i<n;i++){args.push(r.u16(r.p));r.p+=2;}out.push({pos,word,arg,op,ds,args,operandOffset,size:r.p-pos});}
+ return out;
+}
+function validateInstructions(d,f){const boundaries=new Set(f.ins.map(i=>i.pos));boundaries.add(f.code.length);
+ for(const i of f.ins){const a=i.args;
+ if([3,15,16].includes(i.arg)){if(a[0]>=d.strings.length||a[1]!==0)fail('Invalid string/signal index in '+f.id);}
+ if(i.arg===11&&a[1]>=d.strings.length)fail('Invalid class-value string index.');
+ if(i.arg===8||i.arg===9){if(a[0]>=d.byname.length)fail('Invalid object index in '+f.id);const o=d.objects[d.byname[a[0]]];if(i.arg===9&&a[1]>=o.funcs.length)fail('Invalid script-function index.');if(i.arg===8&&a[1]+i.ds>o.staticData.length)fail('Invalid static-data access.');}
+ if(i.arg===5){const signed=a[0]>32767?a[0]-65536:a[0],dest=i.pos+i.size+signed;if(!boundaries.has(dest))fail('Branch target is not a function-local instruction boundary.');}
+ if(i.arg===17&&a[1]>1)fail('Unsupported shared/game variable bank.');
+ }
+}
+function functionPairs(a,b){const bm=new Map(b.objects.flatMap(o=>o.funcs).map(f=>[f.id,f]));return a.objects.flatMap(o=>o.funcs).filter(f=>bm.has(f.id)&&f.parms===bm.get(f.id).parms&&f.flags===bm.get(f.id).flags).map(f=>[f,bm.get(f.id)]);}
+function refKey(d,i){const a=i.args;switch(i.arg){case 10:return ['native',key(a)];case 17:return ['variable',key(a)];case 11:return ['class',String(a[0])];case 8:return ['static',hex(d.objects[d.byname[a[0]]].name)+':'+a[1]];default:return null;}}
+function token(d,i,known=null,source=false){const a=i.args;const t=[i.word,i.ds];const rk=refKey(d,i);
+ if(rk){const m=known?.[rk[0]];if(known){if(source&&m?.has(rk[1]))t.push('resolved',m.get(rk[1]).target);else if(!source&&[...(m?.values()||[])].some(v=>v.target===rk[1]))t.push('resolved',rk[1]);else t.push('unknown',rk[0]);}else t.push('ref',rk[0]);
+  if(i.arg===8)t.push(hex(d.objects[d.byname[a[0]]].name));if(i.arg===11)t.push(d.strings[a[1]]);
+ }else if([3,15,16].includes(i.arg))t.push(d.strings[a[0]]);
+ else if(i.arg===9){const o=d.objects[d.byname[a[0]]];t.push(hex(o.name),hex(o.funcs[a[1]].fullname));}
+ else if(i.arg!==5)t.push(...a);
+ return JSON.stringify(t);
+}
+function lcsBlocks(a,b){if((a.length+1)*(b.length+1)>6000000)return [];
+ const n=a.length,m=b.length,dp=new Uint32Array((n+1)*(m+1)),stride=m+1;
+ for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)dp[i*stride+j]=a[i]===b[j]?dp[(i+1)*stride+j+1]+1:Math.max(dp[(i+1)*stride+j],dp[i*stride+j+1]);
+ const pairs=[];let i=0,j=0;while(i<n&&j<m){if(a[i]===b[j]){pairs.push([i++,j++]);}else if(dp[(i+1)*stride+j]>=dp[i*stride+j+1])i++;else j++;}
+ const blocks=[];for(const p of pairs){const last=blocks[blocks.length-1];if(last&&last.a+last.n===p[0]&&last.b+last.n===p[1])last.n++;else blocks.push({a:p[0],b:p[1],n:1});}return blocks;
+}
+function branchShape(f){const indexes=new Map(f.ins.map((i,n)=>[i.pos,n]));indexes.set(f.code.length,f.ins.length);return f.ins.map(i=>i.arg===5?indexes.get(i.pos+i.size+(i.args[0]>32767?i.args[0]-65536:i.args[0])):null);}
+function learnForward(source,target){const pairs=functionPairs(source,target),kinds=['native','variable','class','static'];const candidates=Object.fromEntries(kinds.map(k=>[k,new Map()]));
+ function add(kind,from,to,fa,ia,fb,ib,tier,block){let row=candidates[kind].get(from);if(!row)candidates[kind].set(from,row=new Map());let c=row.get(to);if(!c)row.set(to,c={target:to,from,kind,evidence:[]});const sig=fa.id+':'+ia.pos+':'+ib.pos;const prior=c.evidence.find(e=>e.sig===sig);if(prior){prior.block=Math.max(prior.block,block);if(tier==='unique-context')prior.unique=true;}else c.evidence.push({sig,function:fa.id,sourceOffset:source.profile.codeStart+fa.codeOffset+ia.operandOffset,targetOffset:target.profile.codeStart+fb.codeOffset+ib.operandOffset,tier,block,unique:tier==='unique-context'});}
+ function addPair(fa,ia,fb,ib,tier,block){const ra=refKey(source,ia),rb=refKey(target,ib);if(!ra||!rb||ra[0]!==rb[0])return;add(ra[0],ra[1],rb[1],fa,ia,fb,ib,tier,block);if(ia.arg===10)add('class',String(ia.args[0]),String(ib.args[0]),fa,ia,fb,ib,tier,block);}
+ for(const [a,b] of pairs){const ta=a.ins.map(i=>token(source,i)),tb=b.ins.map(i=>token(target,i));if(eq(ta,tb)&&eq(branchShape(a),branchShape(b)))for(let j=0;j<a.ins.length;j++)addPair(a,a.ins[j],b,b.ins[j],'whole-function',a.ins.length);}
+ function resolve(){const maps=Object.fromEntries(kinds.map(k=>[k,new Map()]));
+  for(const kind of kinds)for(const [from,row] of candidates[kind]){
+   const opts=[...row.values()].map(c=>{const whole=c.evidence.filter(e=>e.tier==='whole-function').length,owners=new Set(c.evidence.map(e=>e.function)).size,longest=Math.max(...c.evidence.map(e=>e.block)),score=whole*10000+c.evidence.reduce((s,e)=>s+Math.min(e.block,100),0);return {...c,whole,owners,longest,score};}).sort((a,b)=>b.score-a.score);
+   const c=opts[0],second=opts[1];let accepted=false;
+   if(c.whole&&(!second||!second.whole))accepted=true;
+   else if(!c.whole&&c.longest>=8&&(!second||c.score>=second.score*3)&& (c.owners>=2||c.longest>=20||(c.longest>=12&&c.evidence.length>=2)))accepted=true;
+   else if(!c.whole&&!second&&c.evidence.some(e=>e.unique&&e.block>=5))accepted=true;
+   if(accepted)maps[kind].set(from,{...c,confidence:c.whole?'whole-function':'context',alternatives:opts.slice(1).map(o=>({target:o.target,score:o.score}))});
+  }
+  // A translated identifier must not have two different source identities in this pair.
+  for(const kind of kinds){const rev=new Map();for(const [from,c] of maps[kind]){if(!rev.has(c.target))rev.set(c.target,[]);rev.get(c.target).push(from);}for(const fs of rev.values())if(fs.length>1){const strong=fs.filter(f=>maps[kind].get(f).whole>0);if(strong.length===1){for(const f of fs)if(f!==strong[0])maps[kind].delete(f);}else for(const f of fs)maps[kind].delete(f);}}
+  return maps;
+ }
+ let maps=resolve();
+ for(let iter=0;iter<3;iter++){
+  for(const [a,b] of pairs){const ta=a.ins.map(i=>token(source,i,maps,true)),tb=b.ins.map(i=>token(target,i,maps,false));for(const bl of lcsBlocks(ta,tb)){
+   if(bl.n<5)continue;const anchor=a.ins.slice(bl.a,bl.a+bl.n).some(i=>!refKey(source,i)&&![0,5,6,7].includes(i.arg));if(!anchor)continue;
+   for(let j=0;j<bl.n;j++){const ia=a.ins[bl.a+j],ib=b.ins[bl.b+j];if(ia.arg===10){const c=maps.class.get(String(ia.args[0]));if(c&&c.target!==String(ib.args[0]))continue;}addPair(a,ia,b,ib,'context',bl.n);}
+  }
+   // Unique five-instruction contexts, constrained by independently learned class identity.
+   for(let left=0;left<=4;left++){
+    const iaMap=new Map(),ibMap=new Map();
+    for(let n=left;n+4-left<ta.length;n++){const sig=ta.slice(n-left,n+5-left).join('|');if(!iaMap.has(sig))iaMap.set(sig,[]);iaMap.get(sig).push(n);}
+    for(let n=left;n+4-left<tb.length;n++){const sig=tb.slice(n-left,n+5-left).join('|');if(!ibMap.has(sig))ibMap.set(sig,[]);ibMap.get(sig).push(n);}
+    for(const [sig,positions] of iaMap){const js=ibMap.get(sig);if(positions.length!==1||!js||js.length!==1)continue;const ai=positions[0],bi=js[0],ia=a.ins[ai],ib=b.ins[bi];
+     if(!refKey(source,ia)||ia.arg!==ib.arg)continue;
+     if(ia.arg===10){const cls=maps.class.get(String(ia.args[0]));if(!cls||cls.target!==String(ib.args[0]))continue;}
+     const context=a.ins.slice(ai-left,ai+5-left);const strongAnchor=context.some(t=>[3,8,9,11,15,16].includes(t.arg)|| (refKey(source,t)&&maps[refKey(source,t)[0]].has(refKey(source,t)[1])));
+     if(strongAnchor)addPair(a,ia,b,ib,'unique-context',5);
+    }
+   }
+  }maps=resolve();
+ }
+ const unresolved={};for(const kind of kinds){unresolved[kind]=[];const all=new Map();for(const f of source.allFunctions)for(const i of f.ins){const rk=refKey(source,i);if(rk?.[0]===kind){all.set(rk[1],(all.get(rk[1])||0)+1);}}for(const [from,count] of all)if(!maps[kind].has(from))unresolved[kind].push({from,count,candidates:[...(candidates[kind].get(from)?.values()||[])].map(c=>({target:c.target,evidence:c.evidence.length}))});}
+ return {maps,unresolved,pairedFunctions:pairs.length,sourceFunctions:source.allFunctions.length,targetFunctions:target.allFunctions.length};
+}
+function learn(source,target){
+ if(source.profile.kind==='XBSX')return learnForward(source,target);
+ const f=learnForward(target,source),maps=Object.fromEntries(Object.keys(f.maps).map(k=>[k,new Map()]));
+ for(const [kind,m] of Object.entries(f.maps))for(const [from,c] of m)maps[kind].set(c.target,{...c,from:c.target,target:from,evidence:c.evidence.map(e=>({...e,sourceOffset:e.targetOffset,targetOffset:e.sourceOffset})),alternatives:[]});
+ const unresolved={};for(const kind of Object.keys(maps)){unresolved[kind]=[];const counts=new Map();for(const fn of source.allFunctions)for(const i of fn.ins){const rk=refKey(source,i);if(rk?.[0]===kind)counts.set(rk[1],(counts.get(rk[1])||0)+1);}for(const [from,count] of counts)if(!maps[kind].has(from))unresolved[kind].push({from,count,candidates:[]});}
+ return {maps,unresolved,pairedFunctions:f.pairedFunctions,sourceFunctions:source.allFunctions.length,targetFunctions:target.allFunctions.length};
+}
+class Writer{
+ constructor(){this.chunks=[];this.length=0;}
+ add(b){b=asBytes(b);this.chunks.push(b);this.length+=b.length;}
+ u32(v){const b=new Uint8Array(4);new DataView(b.buffer).setUint32(0,v>>>0,true);this.add(b);}
+ words(v){v.forEach(n=>this.u32(n));}
+ pad(a,original,fill=0xe3){const n=align(this.length,a)-this.length;this.add(original&&original.length===n?original:new Uint8Array(n).fill(fill));}
+ finish(){const b=new Uint8Array(this.length);let p=0;for(const c of this.chunks){b.set(c,p);p+=c.length;}return b;}
+}
+function serialize(model,profile,codeOverrides=new Map(),extraStrings=[]){const w=new Writer();w.add(model.header);w.add(model.rootBytes);if(profile.codeStart>108)w.add(new Uint8Array(profile.codeStart-108).fill(0xa1));
+ const offsets=new Map(),codes=[...model.allFunctions].sort((a,b)=>a.codeOffset-b.codeOffset);let codeLen=0;
+ for(const f of codes){const c=codeOverrides.get(f.id)||f.code;offsets.set(f.id,{offset:codeLen,length:c.length});w.add(c);codeLen+=c.length;}
+ w.pad(4,model.codePad);w.add(model.objectPointers);
+ const vmLocations=[];
+ function emitVM(f){const words=f.w.slice(),c=offsets.get(f.id);words[4]=c.offset;words[5]=c.length/2;vmLocations.push({id:f.id,offset:w.length});w.words(profile.vmSize===40?[...words.slice(0,7),0,...words.slice(7)]:words);}
+ for(const o of model.objects){w.pad(8,o.pad);w.words(o.w);w.add(o.staticData);w.pad(4,o.staticPad);w.add(o.ptrs);for(const f of o.funcs){w.pad(4);emitVM(f);}}
+ w.pad(4,model.bynamePad);w.words(model.byname);w.add(model.strPointers);for(const s of extraStrings)w.u32(0);
+ for(const s of model.stringEntries){w.pad(4,s.pad);w.u32(s.raw.length);w.add(s.raw);}
+ for(const s of extraStrings){const raw=new Uint8Array(s.length+1);for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);if(c>255)fail('String is not byte-encodable.');raw[i]=c;}w.pad(4);w.u32(raw.length);w.add(raw);}
+ w.pad(4,model.infoPad);for(const i of model.infos)w.words(i.w);for(const i of model.infos)if(i.vm){w.pad(4);emitVM(i.vm);}w.pad(16,model.tail);
+ const out=w.finish(),v=new DataView(out.buffer);v.setUint32(8,out.length,true);v.setUint32(0,(model.checksumSeed+out.length)>>>0,true);v.setUint32(0x34,codeLen,true);v.setUint32(0x4c,model.strings.length+extraStrings.length,true);
+ return {bytes:out,vmLocations};
+}
+function mapRows(learned){return Object.entries(learned.maps).flatMap(([kind,m])=>[...m].map(([from,c])=>({kind,from,to:c.target,confidence:c.confidence,evidence:c.evidence,alternatives:c.alternatives})));}
+function migrate(source,target,opts={},collectionEvidence=null){
+ const options={mode:'preserve-source',allowFallback:false,allowContext:false,allowUnresolved:false,allowUnpaired:false,...opts};if(source.profile.kind===target.profile.kind)fail('Load one XBSX and one PCSX file.');const sameScript=source.scriptName.toUpperCase()===target.scriptName.toUpperCase();if(!sameScript&&!(options.allowUnpaired&&options.mode==='preserve-source'&&collectionEvidence?.collection))fail('Script names differ; a same-script target reference or approved collection evidence is required.');
+ if(!['target-template','preserve-source'].includes(options.mode))fail('Unknown migration mode.');
+ const learned=collectionEvidence||learn(source,target),model=options.mode==='preserve-source'?source:target;
+ const overrides=new Map(),functions=[],patches=[],unresolvedOperands=[],extraStrings=[],stringIndex=new Map(model.strings.map((s,i)=>[s,i]));
+ const sourceFuncs=new Map(source.objects.flatMap(o=>o.funcs).map(f=>[f.id,f]));const targetByName=new Map(model.objects.map(o=>[o.name,o]));
+ const literal=(s,added)=>{if(stringIndex.has(s))return stringIndex.get(s);const local=added.indexOf(s);return model.strings.length+extraStrings.length+(local>=0?local:(added.push(s)-1));};
+ const learnValue=(kind,from)=>{const c=learned.maps[kind].get(from);if(!c)fail('Unresolved '+kind+' reference '+from);if(c.confidence==='context'&&!options.allowContext)fail('Context-derived '+kind+' correspondence not approved: '+from);return c;};
+ function translate(sf,tf){const ownerS=source.objects[sf.objectIndex],ownerT=model.objects[tf.objectIndex];
+  const layoutDiff=options.mode==='target-template'&&ownerS.w[7]!==ownerT.w[7];
+  const out=sf.code.slice(),v=new DataView(out.buffer),localPatches=[],localUnresolved=[],added=[];
+  function lookup(kind,from,i){try{return learnValue(kind,from);}catch(e){if(options.mode!=='preserve-source')throw e;localUnresolved.push({function:sf.id,sourceOffset:source.profile.codeStart+sf.codeOffset+i.operandOffset,functionOffset:i.operandOffset,word:hex(i.word,4),kind,retained:i.args.slice(),reason:e.message});return null;}}
+  for(const i of sf.ins){const a=i.args.slice();let mapped=a.slice(),why='';
+   if(i.arg===10){const c=lookup('native',key(a),i);if(c){mapped=c.target.split(':').map(Number);why=c.confidence+' native-call correspondence';}}
+   else if(i.arg===17){const c=lookup('variable',key(a),i);if(c){mapped=c.target.split(':').map(Number);why=c.confidence+' shared/game-variable correspondence';}}
+   else if(i.arg===11){const c=lookup('class',String(a[0]),i);mapped=[c?+c.target:a[0],options.mode==='preserve-source'?a[1]:literal(source.strings[a[1]],added)];why=(c?.confidence||'unresolved')+' class ID; string matched by value';}
+   else if([3,15,16].includes(i.arg)){mapped=[options.mode==='preserve-source'?a[0]:literal(source.strings[a[0]],added),0];why='permanent string matched by exact bytes';}
+   else if(i.arg===8||i.arg===9){const so=source.objects[source.byname[a[0]]],to=targetByName.get(so.name);if(!to)fail('Referenced script object is missing in output.');const oi=model.byname.indexOf(to.index);
+    if(i.arg===9){const fn=so.funcs[a[1]],fi=to.funcs.findIndex(f=>f.fullname===fn.fullname&&f.parms===fn.parms&&f.flags===fn.flags);if(fi<0)fail('Referenced script function is absent or has a different signature: '+fn.id);mapped=[oi,fi];why='object and function hash identity';}
+    else {let off=a[1];if(options.mode==='target-template'&&!eq(so.staticData,to.staticData)){const c=learnValue('static',hex(so.name)+':'+a[1]);const [hash,ofs]=c.target.split(':');if(hash!==hex(to.name))fail('Static object identity changed.');off=+ofs;why=c.confidence+' static-field offset';}else why='preserved static-data layout';if(off+i.ds>to.staticData.length)fail('Translated static-data field is out of bounds.');mapped=[oi,off];}
+   }
+   if(!eq(a,mapped)){mapped.forEach((n,j)=>{if(!Number.isInteger(n)||n<0||n>65535)fail('Translated operand does not fit in 16 bits.');v.setUint16(i.operandOffset+j*2,n,true);});localPatches.push({function:sf.id,sourceOffset:source.profile.codeStart+sf.codeOffset+i.operandOffset,functionOffset:i.operandOffset,word:hex(i.word,4),argType:i.arg,before:a,after:mapped,reason:why});}
+  }
+  if(layoutDiff&&!eq(out,tf.code))fail('Object instance layout differs ('+ownerS.w[7]+' vs '+ownerT.w[7]+' bytes).');
+  for(const s of added){stringIndex.set(s,model.strings.length+extraStrings.length);extraStrings.push(s);}return {bytes:out,patches:localPatches,unresolved:localUnresolved};
+ }
+ for(const tf of model.allFunctions){const sf=options.mode==='preserve-source'?tf:sourceFuncs.get(tf.id);let result={id:tf.id,objectHash:hex(tf.objectName),functionHash:hex(tf.fullname),targetBytes:tf.codeLength,sourceBytes:sf?.codeLength??null};
+  if(!sf){result.status='target-only';result.reason='No same-identity source function.';}
+  else if(sf.parms!==tf.parms||sf.flags!==tf.flags){result.status='fallback';result.reason='Function signature or flags differ.';}
+  else try{const c=translate(sf,tf);overrides.set(tf.id,c.bytes);patches.push(...c.patches);unresolvedOperands.push(...c.unresolved);result.status=c.unresolved.length?'unresolved':eq(c.bytes,tf.code)?'equivalent':'migrated';result.patches=c.patches.length;result.unresolved=c.unresolved.length;}catch(e){result.status='fallback';result.reason=e.message;}
+  functions.push(result);
+ }
+ const sourceOnly=source.allFunctions.filter(f=>!model.allFunctions.some(t=>t.id===f.id)).map(f=>({id:f.id,codeBytes:f.codeLength}));
+ const blocked=functions.filter(f=>f.status==='fallback');const lossy=blocked.length>0||sourceOnly.length>0;
+ const summary={direction:source.profile.kind+' → '+target.profile.kind,mode:options.mode,sourceFunctions:source.allFunctions.length,outputFunctions:model.allFunctions.length,matchedFunctions:learned.pairedFunctions,migrated:functions.filter(f=>f.status==='migrated').length,equivalent:functions.filter(f=>f.status==='equivalent').length,referenceFallbacks:blocked.length,targetOnly:functions.filter(f=>f.status==='target-only').length,sourceOnlyExcluded:sourceOnly.length,operandPatches:patches.length,unresolvedOperandOccurrences:unresolvedOperands.length,functionsWithUnresolvedOperands:functions.filter(f=>f.status==='unresolved').length,addedStrings:extraStrings.length,sourceSize:source.bytes.length,targetReferenceSize:target.bytes.length,outputSize:null,completeSourceMigration:!lossy&&!unresolvedOperands.length&&options.mode==='preserve-source',runtimeTested:false};
+ const report={tool:'SX Reference Converter',version:VERSION,summary,options,source:{name:source.name,kind:source.profile.kind,script:source.scriptName},reference:{name:target.name,kind:target.profile.kind,script:target.scriptName,role:sameScript?'same-script reference':'layout-only reference; runtime evidence comes from collection'},collection:learned.collection||null,functions,sourceOnly,patches,unresolvedOperands,learned:mapRows(learned),unresolved:learned.unresolved,addedStrings:extraStrings,warnings:['Native and variable identities are inferred from instruction structure, not resolved against an engine symbol table.','No game runtime has been used to validate the result.',options.mode==='target-template'?'Target-template migration retains reference object data and functions that cannot be translated; it is not a full port of the source.':'Source-preserving rebuild retains all source objects, function bytecode structure, string-table slots, static data and initializers. Unresolved runtime operands, when explicitly approved, are retained numerically and remain incompatible or unverified.'],validation:[]};
+ if(options.mode==='preserve-source'&&(blocked.length||(unresolvedOperands.length&&!options.allowUnresolved))){report.blockReason=blocked.length?blocked.length+' functions could not be translated safely.':unresolvedOperands.length+' unresolved or unapproved runtime operands. Experimental retention is not enabled.';return {bytes:null,report,source,target,learned};}
+ if(options.mode==='target-template'&&lossy&&!options.allowFallback){report.blockReason='Approve target fallbacks and source-only exclusions to build this partial migration.';return {bytes:null,report,source,target,learned};}
+ const serialized=serialize(model,target.profile,overrides,extraStrings),out=parse(serialized.bytes,source.scriptName+'.'+target.profile.kind);summary.outputSize=out.bytes.length;
+ function test(label,condition){if(!condition)fail('Internal validation failed: '+label);report.validation.push({check:label,passed:true});}
+ test('Target platform layout',out.profile.kind===target.profile.kind&&out.profile.vmSize===target.profile.vmSize&&out.profile.codeStart===target.profile.codeStart);
+ test('Object identities and order retained from selected model',eq(out.objects.map(o=>o.name),model.objects.map(o=>o.name)));
+ test('Object-by-name permutation retained',eq(out.byname,model.byname));
+ test('Initializer records retained',eq(out.infos.flatMap(i=>i.w),model.infos.flatMap(i=>i.w)));
+ test('Original string table preserved as prefix',eq(out.strings.slice(0,model.strings.length),model.strings));
+ test('Added strings equal planned additions',eq(out.strings.slice(model.strings.length),extraStrings));
+ test('Static-data bytes retained',out.objects.every((o,i)=>eq(o.staticData,model.objects[i].staticData)));
+ test('Function identities and signatures retained',out.allFunctions.every((f,i)=>f.id===model.allFunctions[i].id&&f.parms===model.allFunctions[i].parms&&f.flags===model.allFunctions[i].flags));
+ test('All function bytecode exactly matches migration plan',out.allFunctions.every(f=>eq(f.code,overrides.get(f.id)||model.allFunctions.find(g=>g.id===f.id).code)));
+ test('Rebuilt output serializes byte-exactly',eq(serialize(out,out.profile).bytes,out.bytes));
+ test('Header checksum and total size valid',out.checksumSeed===target.checksumSeed&&new DataView(out.bytes.buffer).getUint32(8,true)===out.bytes.length);
+ test('Every bytecode byte belongs to a validated function',out.allFunctions.reduce((s,f)=>s+f.codeLength,0)===out.codeSize);
+ test('Source opcodes, branches and non-runtime operands preserved',options.mode!=='preserve-source'||out.allFunctions.every((f,n)=>f.ins.every((i,j)=>{const a=source.allFunctions[n].ins[j];return i.word===a.word&&i.ds===a.ds&&i.pos===a.pos&&([10,11,17].includes(i.arg)||eq(i.args,a.args));})));
+ const of=new Map(out.allFunctions.map(f=>[f.id,f]));for(const p of [...patches,...unresolvedOperands])p.outputOffset=out.profile.codeStart+of.get(p.function).codeOffset+p.functionOffset;
+ return {bytes:out.bytes,report,source,target,learned,output:out};
+}
+function reportText(r){const s=r.summary;let lines=['SX REFERENCE CONVERTER '+r.version,'',s.direction+' | '+s.mode,'Source: '+r.source.name,'Reference: '+r.reference.name+' ('+(r.reference.role||'same-script reference')+')','',...Object.entries(s).map(([k,v])=>k+': '+v),'',r.blockReason?'BLOCKED: '+r.blockReason:'EXPERIMENTAL OUTPUT — NOT GAME-TESTED','',...r.warnings,'','FUNCTION DECISIONS'];for(const f of r.functions)lines.push(f.id+' | '+f.status+' | '+(f.reason||f.patches+' operand edits'));lines.push('','SOURCE-ONLY EXCLUSIONS');for(const f of r.sourceOnly)lines.push(f.id+' | '+f.codeBytes+' bytes');lines.push('','PATCHES');for(const p of r.patches)lines.push('source 0x'+hex(p.sourceOffset)+' → output '+(p.outputOffset!==undefined?'0x'+hex(p.outputOffset):'not built')+' | '+p.word+' | '+key(p.before)+' → '+key(p.after)+' | '+p.reason);lines.push('','UNRESOLVED OPERANDS — RETAINED, NOT TRANSLATED');for(const p of r.unresolvedOperands||[])lines.push('source 0x'+hex(p.sourceOffset)+' → output '+(p.outputOffset!==undefined?'0x'+hex(p.outputOffset):'not built')+' | '+p.kind+' | '+key(p.retained)+' | '+p.reason);lines.push('','LEARNED CORRESPONDENCES');for(const x of r.learned)lines.push(x.kind+' '+x.from+' → '+x.to+' | '+x.confidence+' | '+x.evidence.length+' evidence rows');lines.push('','CHECKS');for(const c of r.validation)lines.push((c.passed?'PASS':'FAIL')+' '+c.check);return lines.join('\n');}
+const API={VERSION,parse,decode,learn,migrate,serialize,reportText,hex,eq,MAX_FILE,refKey,functionPairs};if(typeof module!=='undefined'&&module.exports)module.exports=API;root.SX=API;
+})(typeof globalThis!=='undefined'?globalThis:this);
+
+</script>
+<script id="sx-util" type="text/javascript">
+/* Local hashing, ZIP storage and exact report-assisted recovery. No dependencies. */
+(function(root){'use strict';
+const K=new Uint32Array([0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2]);
+const rr=(x,n)=>(x>>>n)|(x<<(32-n));
+function sha256(data){const input=data instanceof Uint8Array?data:new Uint8Array(data),len=Math.ceil((input.length+9)/64)*64,b=new Uint8Array(len);b.set(input);b[input.length]=128;const v=new DataView(b.buffer);v.setUint32(len-8,Math.floor(input.length/0x20000000),false);v.setUint32(len-4,(input.length*8)>>>0,false);
+ const h=new Uint32Array([0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19]),w=new Uint32Array(64);
+ for(let off=0;off<len;off+=64){for(let i=0;i<16;i++)w[i]=v.getUint32(off+i*4,false);for(let i=16;i<64;i++){const x=w[i-15],y=w[i-2];w[i]=(w[i-16]+(rr(x,7)^rr(x,18)^(x>>>3))+w[i-7]+(rr(y,17)^rr(y,19)^(y>>>10)))>>>0;}
+ let [a,c,d,e,f,g,j,k]=h;for(let i=0;i<64;i++){const t1=(k+(rr(f,6)^rr(f,11)^rr(f,25))+((f&g)^(~f&j))+K[i]+w[i])>>>0,t2=((rr(a,2)^rr(a,13)^rr(a,22))+((a&c)^(a&d)^(c&d)))>>>0;k=j;j=g;g=f;f=(e+t1)>>>0;e=d;d=c;c=a;a=(t1+t2)>>>0;}const z=[a,c,d,e,f,g,j,k];for(let i=0;i<8;i++)h[i]=(h[i]+z[i])>>>0;}
+ return [...h].map(n=>n.toString(16).padStart(8,'0')).join('');
+}
+function base64(b){let s='';for(let i=0;i<b.length;i+=8192)s+=String.fromCharCode(...b.subarray(i,i+8192));return btoa(s);}
+function from64(s){if(typeof s!=='string'||s.length>48*1024*1024||!/^[A-Za-z0-9+/]*={0,2}$/.test(s))throw Error('Invalid recovery payload.');const t=atob(s);return Uint8Array.from(t,c=>c.charCodeAt(0));}
+function enrich(result){const r=result.report;r.hashes={source:sha256(result.source.bytes),reference:sha256(result.target.bytes),output:result.bytes?sha256(result.bytes):null};if(result.bytes)r.recovery={scheme:'sx-recovery-v1',sourceName:result.source.name,sourceBytes:result.source.bytes.length,sourceSha256:r.hashes.source,outputSha256:r.hashes.output,sourceBase64:base64(result.source.bytes)};return r;}
+function recover(report,converted){const r=report?.recovery;if(r?.scheme!=='sx-recovery-v1')throw Error('This is not an SX recovery report.');if(sha256(converted)!==r.outputSha256)throw Error('Converted file does not match this report (SHA-256 mismatch).');const original=from64(r.sourceBase64);if(original.length!==r.sourceBytes||sha256(original)!==r.sourceSha256)throw Error('Original recovery payload is damaged.');return {bytes:original,name:r.sourceName};}
+const crcTable=Uint32Array.from({length:256},(_,n)=>{for(let i=0;i<8;i++)n=(n&1)?0xedb88320^(n>>>1):n>>>1;return n>>>0;});
+function crc32(b){let c=0xffffffff;for(const x of b)c=crcTable[(c^x)&255]^(c>>>8);return (c^0xffffffff)>>>0;}
+function zip(entries){const enc=new TextEncoder(),parts=[],central=[];let off=0;for(const e of entries){const name=enc.encode(e.name),data=typeof e.data==='string'?enc.encode(e.data):e.data,crc=crc32(data);if(name.length>65535||data.length>0xffffffff||/[\\]|(^|\/)\.\.(\/|$)/.test(e.name))throw Error('Unsupported ZIP entry.');const local=new Uint8Array(30+name.length),v=new DataView(local.buffer);v.setUint32(0,0x04034b50,true);v.setUint16(4,20,true);v.setUint16(6,0x800,true);v.setUint16(12,0x21,true);v.setUint32(14,crc,true);v.setUint32(18,data.length,true);v.setUint32(22,data.length,true);v.setUint16(26,name.length,true);local.set(name,30);parts.push(local,data);
+ const c=new Uint8Array(46+name.length),cv=new DataView(c.buffer);cv.setUint32(0,0x02014b50,true);cv.setUint16(4,20,true);cv.setUint16(6,20,true);cv.setUint16(8,0x800,true);cv.setUint16(14,0x21,true);cv.setUint32(16,crc,true);cv.setUint32(20,data.length,true);cv.setUint32(24,data.length,true);cv.setUint16(28,name.length,true);cv.setUint32(42,off,true);c.set(name,46);central.push(c);off+=local.length+data.length;}
+ const size=central.reduce((s,p)=>s+p.length,0),end=new Uint8Array(22),v=new DataView(end.buffer);v.setUint32(0,0x06054b50,true);v.setUint16(8,entries.length,true);v.setUint16(10,entries.length,true);v.setUint32(12,size,true);v.setUint32(16,off,true);const all=parts.concat(central,[end]),out=new Uint8Array(off+size+22);let p=0;for(const a of all){out.set(a,p);p+=a.length;}return out;}
+const safeName=name=>String(name).split(/[\\/]/).pop().replace(/[^a-zA-Z0-9._() -]/g,'_')||'script.bin';
+const API={sha256,base64,from64,enrich,recover,crc32,zip,safeName};if(typeof module!=='undefined'&&module.exports)module.exports=API;root.SXUtil=API;
+})(typeof globalThis!=='undefined'?globalThis:this);
+
+</script>
+<script id="sx-batch" type="text/javascript">
+/* Batch reference inference. No baked-in platform identifier translation tables.
+ * Only parsed, matched input scripts contribute evidence. Conflicting candidates,
+ * inverse collisions, class conflicts and variable bank changes are quarantined.
+ * Native calls, global/shared variables and classes are collection-wide domains;
+ * source-local objects, function indices and static data are preserved in place.
+ */
+(function(root){'use strict';
+const SX=typeof module!=='undefined'&&module.exports?require('./sx_core.js'):root.SX;
+const U=typeof module!=='undefined'&&module.exports?require('./sx_util.js'):root.SXUtil;
+const KINDS=['native','variable','class'];
+const blank=()=>Object.fromEntries([...KINDS,'static'].map(k=>[k,new Map()]));
+const normalized=d=>d.scriptName.toUpperCase();
+function index(docs,kind){const result=new Map();for(const d of docs){if(d.profile.kind!==kind)throw Error('Incorrect collection: '+d.name+' is '+d.profile.kind+', not '+kind);const k=normalized(d);if(result.has(k))throw Error('Ambiguous duplicate script identity '+k+' in '+kind+'. Remove one copy before learning.');result.set(k,d);}return result;}
+function createLibrary(xbox,pc,onProgress=()=>{}){
+ if(!xbox.length||!pc.length)throw Error('Load at least one XBSX and one PCSX reference.');
+ const xi=index(xbox,'XBSX'),pi=index(pc,'PCSX'),candidates=blank(),pairs=[];
+ for(const [name,x] of xi){const p=pi.get(name);if(!p)continue;
+  const l=SX.learn(x,p);pairs.push({script:name,xbox:x.name,pc:p.name,xboxHash:U.sha256(x.bytes),pcHash:U.sha256(p.bytes),matchedFunctions:l.pairedFunctions});
+  for(const kind of KINDS)for(const [from,row] of l.maps[kind]){
+   let options=candidates[kind].get(from);if(!options)candidates[kind].set(from,options=new Map());
+   let c=options.get(row.target);if(!c)options.set(row.target,c={kind,from,target:row.target,confidence:'context',evidence:[],scripts:new Set(),alternatives:[]});
+   if(row.confidence==='whole-function')c.confidence='whole-function';c.scripts.add(name);
+   for(const e of row.evidence)c.evidence.push({...e,sourceFile:x.name,targetFile:p.name,script:name});
+  }
+  onProgress({done:pairs.length,script:name});
+ }
+ const maps=blank(),conflicts=[];
+ for(const kind of KINDS)for(const [from,options] of candidates[kind]){
+  if(options.size!==1){conflicts.push({kind,from,reason:'Contradictory accepted candidates across script pairs',candidates:[...options.values()].map(c=>({to:c.target,confidence:c.confidence,scripts:[...c.scripts],evidenceCount:c.evidence.length}))});continue;}
+  const c=[...options.values()][0];c.scripts=[...c.scripts].sort();c.evidenceCount=c.evidence.length;
+  if(kind==='variable'&&from.split(':')[1]!==c.target.split(':')[1]){conflicts.push({kind,from,reason:'Variable bank differs',candidates:[{to:c.target}]});continue;}
+  maps[kind].set(from,c);
+ }
+ // Require an unambiguous inverse. Do not guess which alias is meant.
+ for(const kind of KINDS){const reverse=new Map();for(const [from,c] of maps[kind]){if(!reverse.has(c.target))reverse.set(c.target,[]);reverse.get(c.target).push(from);}for(const [to,froms] of reverse)if(froms.length>1)for(const from of froms){conflicts.push({kind,from,reason:'Several source IDs lead to one destination ID',candidates:[{to,collidingSources:froms}]});maps[kind].delete(from);}}
+ for(const [from,c] of [...maps.native]){const cls=maps.class.get(from.split(':')[0]);if(cls&&cls.target!==c.target.split(':')[0]){conflicts.push({kind:'native',from,reason:'Native-call class conflicts with learned class correspondence',candidates:[{to:c.target}]});maps.native.delete(from);}}
+ const inverse=blank();for(const kind of KINDS)for(const [from,c] of maps[kind])inverse[kind].set(c.target,{...c,from:c.target,target:from,evidence:c.evidence.map(e=>({...e,sourceFile:e.targetFile,targetFile:e.sourceFile,sourceOffset:e.targetOffset,targetOffset:e.sourceOffset}))});
+ const usedX=new Set(pairs.map(p=>p.script));const summary={tool:'SX Batch Reference Converter',version:SX.VERSION,matchedScriptPairs:pairs.length,matchedFunctions:pairs.reduce((n,p)=>n+p.matchedFunctions,0),xboxFiles:xbox.length,pcFiles:pc.length,unpairedXbox:[...xi].filter(([k])=>!usedX.has(k)).map(([,d])=>({name:d.name,script:d.scriptName})),unpairedPC:[...pi].filter(([k])=>!usedX.has(k)).map(([,d])=>({name:d.name,script:d.scriptName})),learned:Object.fromEntries(KINDS.map(k=>[k,maps[k].size])),conflictCount:conflicts.length,conflicts,pairs,method:'Matched object/function hashes and normalized bytecode; whole-function branch topology checked; unique instruction contexts optional; no manual ID map; contradictory collection candidates excluded.',runtimeVerified:false};
+ const digestData=JSON.stringify({pairs,ids:KINDS.flatMap(k=>[...maps[k]].map(([from,c])=>[k,from,c.target,c.confidence])),conflicts});summary.evidenceSha256=U.sha256(new TextEncoder().encode(digestData));
+ return {maps,inverse,summary,xbox,pc,xi,pi};
+}
+function evidenceFor(library,source,target){
+ const global=source.profile.kind==='XBSX'?library.maps:library.inverse,maps=blank(),unresolved={},counts=blank();
+ for(const f of source.allFunctions)for(const i of f.ins){const r=SX.refKey(source,i);if(r&&KINDS.includes(r[0]))counts[r[0]].set(r[1],(counts[r[0]].get(r[1])||0)+1);}
+ for(const k of [...KINDS,'static']){unresolved[k]=[];for(const [from,count] of counts[k]){const c=global[k].get(from);if(c){const evidence=[...c.evidence].sort((a,b)=>(a.tier==='whole-function'?0:1)-(b.tier==='whole-function'?0:1));maps[k].set(from,{...c,evidence:evidence.slice(0,4),evidenceCount:evidence.length});}else unresolved[k].push({from,count,candidates:[]});}}
+ const same=normalized(source)===normalized(target),pair=library.summary.pairs.find(p=>p.script===normalized(source));
+ return {maps,unresolved,pairedFunctions:pair?.matchedFunctions||0,sourceFunctions:source.allFunctions.length,targetFunctions:target.allFunctions.length,collection:{evidenceSha256:library.summary.evidenceSha256,matchedScriptPairs:library.summary.matchedScriptPairs,sameScriptReference:same,conflictCount:library.summary.conflictCount,method:library.summary.method}};
+}
+function convertOne(library,source,opts={}){
+ const targets=source.profile.kind==='XBSX'?library.pc:library.xbox,idx=source.profile.kind==='XBSX'?library.pi:library.xi;
+ const target=idx.get(normalized(source))||[...targets].sort((a,b)=>a.name.localeCompare(b.name))[0];
+ if(!target)throw Error('Destination layout reference is missing.');
+ if(normalized(source)!==normalized(target)&&!opts.allowUnpaired)return {name:source.name,script:source.scriptName,status:'blocked',reason:'No same-script reference. Enable collection-only conversion explicitly to use the observed destination layout.',source:source,report:null,bytes:null};
+ const ev=evidenceFor(library,source,target),r=SX.migrate(source,target,{...opts,mode:'preserve-source'},ev);U.enrich(r);
+ r.report.warnings.push('Collection-derived numeric identities are not engine symbol-table verification. Contradictory candidates are excluded, not majority-voted.');
+ if(!r.report.collection.sameScriptReference)r.report.warnings.push('No same-script destination reference exists. Only the destination record layout and learned collection-wide runtime identities are used; destination engine support for this source script is unknown.');
+ return {...r,name:source.name,script:source.scriptName,status:!r.bytes?'blocked':r.report.summary.unresolvedOperandOccurrences?'experimental-unresolved':'reference-inferred',reason:r.report.blockReason||null};
+}
+function outputName(source){const base=U.safeName(source.name).replace(/\.(pcsx|xbsx)$/i,'');return base+'.'+(source.profile.kind==='XBSX'?'PCSX':'XBSX');}
+function manifest(library,results,direction,options){return {tool:'SX Batch Reference Converter',version:SX.VERSION,direction,options,notice:'EXPERIMENTAL: source-preserving structural conversions; runtime compatibility is not certified. Retained unresolved numeric references can call the wrong function or access the wrong variable.',evidenceSha256:library.summary.evidenceSha256,matchedScriptPairs:library.summary.matchedScriptPairs,summary:{inputs:results.length,converted:results.filter(r=>r.bytes).length,blocked:results.filter(r=>!r.bytes).length,referenceInferred:results.filter(r=>r.status==='reference-inferred').length,experimentalUnresolved:results.filter(r=>r.status==='experimental-unresolved').length,operandEdits:results.reduce((n,r)=>n+(r.report?.summary.operandPatches||0),0),unresolvedOccurrences:results.reduce((n,r)=>n+(r.report?.summary.unresolvedOperandOccurrences||0),0),unpaired:results.filter(r=>r.report?.collection&&!r.report.collection.sameScriptReference).length,runtimeTested:false},files:results.map(r=>({input:r.name,script:r.script,status:r.status,output:r.bytes?'scripts/'+outputName(r.source):null,report:r.report?'reports/'+outputName(r.source)+'.report.json':null,reason:r.reason,summary:r.report?.summary||null,hashes:r.report?.hashes||null,sameScriptReference:r.report?.collection?.sameScriptReference??null}))};}
+function packageEntries(library,results,direction,options){
+ const entries=[],names=new Set();for(const r of results){const name=outputName(r.source);if(names.has(name.toUpperCase()))throw Error('Output filename collision: '+name+'. Rename the duplicate before exporting.');names.add(name.toUpperCase());
+ if(r.bytes)entries.push({name:'scripts/'+name,data:r.bytes});if(r.report){entries.push({name:'reports/'+name+'.report.json',data:JSON.stringify(r.report,null,2)});entries.push({name:'reports/'+name+'.report.txt',data:SX.reportText(r.report)});}}
+ entries.push({name:'MANIFEST.json',data:JSON.stringify(manifest(library,results,direction,options),null,2)});
+ entries.push({name:'REFERENCE_EVIDENCE.json',data:JSON.stringify(library.summary,null,2)});
+ entries.push({name:'READ_ME_FIRST.txt',data:'SX Batch Reference Converter '+SX.VERSION+'\n\nEXPERIMENTAL. Not tested in a game.\n\nThe scripts/ folder contains source-preserving destination-layout rebuilds. Inspect MANIFEST.json and each reports/*.report.txt before installing. Unresolved runtime operands remain numerically unchanged only when that option was explicitly enabled. A wrong retained value can call a different function or use a different variable. A reference-inferred status is NOT a runtime guarantee. No target script fallback, native-ID arithmetic extrapolation or raw byte replacement is used.\n\nKeep each JSON report: it contains a SHA-256-checked copy of the source for exact recovery. Reverse platform conversion is not the same as restoring the original.\n'});return entries;
+}
+function libraryReport(library){return {...library.summary,correspondences:KINDS.flatMap(k=>[...library.maps[k]].map(([from,c])=>({kind:k,from,to:c.target,confidence:c.confidence,scripts:c.scripts,evidenceCount:c.evidence.length,evidence:c.evidence})))};}
+const API={createLibrary,evidenceFor,convertOne,manifest,packageEntries,outputName,libraryReport};if(typeof module!=='undefined'&&module.exports)module.exports=API;root.SXBatch=API;
+})(typeof globalThis!=='undefined'?globalThis:this);
+
+</script>
+<script id="sx-zip" type="text/javascript">
+function createSXZipIO() {
+  'use strict';
+  const MAX_TOTAL=128*1024*1024,MAX_ENTRIES=2000,MAX_FILE=32*1024*1024;
+  function fail(message){throw new Error(message);}
+  const crcTable=Uint32Array.from({length:256},(_,n)=>{let c=n;for(let k=0;k<8;k++)c=c&1?0xedb88320^(c>>>1):c>>>1;return c>>>0;});
+  function crc32(a){let c=0xffffffff;for(const v of a)c=crcTable[(c^v)&255]^(c>>>8);return (c^0xffffffff)>>>0;}
+  function safePath(name){
+    name=String(name).replace(/\\/g,'/');
+    if(!name||name.startsWith('/')||/^[A-Za-z]:/.test(name)||/[\x00-\x1F\x7F]/.test(name)||name.split('/').some(p=>p==='..'))fail('Unsafe archive path: '+name);
+    return name.split('/').filter(x=>x&&x!=='.').join('/');
+  }
+  async function inflateBounded(bytes,size){
+    if(typeof DecompressionStream==='undefined')fail('This browser cannot read deflated ZIPs. Extract the ZIP and select the folder, or use a current browser.');
+    let ds;try{ds=new DecompressionStream('deflate-raw');}catch(e){fail('Raw DEFLATE is unavailable. Extract this ZIP and use the folder picker.');}
+    const reader=new Blob([bytes]).stream().pipeThrough(ds).getReader();const parts=[];let total=0;
+    try{for(;;){const {done,value}=await reader.read();if(done)break;total+=value.length;if(total>size||total>MAX_FILE){await reader.cancel();fail('ZIP entry exceeds its declared/supported size.');}parts.push(value);}}finally{reader.releaseLock();}
+    if(total!==size)fail('ZIP decompressed size mismatch.');const out=new Uint8Array(total);let p=0;for(const a of parts){out.set(a,p);p+=a.length;}return out;
+  }
+  async function readZIP(data){
+    const b=data instanceof Uint8Array?data:new Uint8Array(data);if(b.length>MAX_TOTAL)fail('Archive exceeds the 128 MiB input limit.');
+    const v=new DataView(b.buffer,b.byteOffset,b.byteLength),u16=p=>v.getUint16(p,true),u32=p=>v.getUint32(p,true);let end=-1;
+    if(b.length<22)fail('Truncated ZIP.');
+    for(let p=b.length-22;p>=Math.max(0,b.length-65557);p--)if(u32(p)===0x06054b50&&p+22+u16(p+20)===b.length){end=p;break;}
+    if(end<0)fail('ZIP end record not found. Select a standard non-ZIP64 ZIP or an extracted folder.');
+    if(u16(end+4)||u16(end+6)||u16(end+8)!==u16(end+10))fail('Split/multi-disk ZIPs are not supported.');
+    const n=u16(end+10),cdSize=u32(end+12),cd=u32(end+16);if(n>MAX_ENTRIES||n===65535||cdSize===0xffffffff||cd===0xffffffff)fail('ZIP64 or more than 2000 entries is not supported.');
+    if(cd+cdSize>end)fail('Invalid ZIP directory range.');let p=cd,total=0,ignored=0;const entries=[],seen=new Set();
+    const decoder=new TextDecoder('utf-8',{fatal:true});
+    for(let i=0;i<n;i++){
+      if(p+46>cd+cdSize||u32(p)!==0x02014b50)fail('Invalid ZIP central directory.');
+      const flags=u16(p+8),method=u16(p+10),crc=u32(p+16),packed=u32(p+20),size=u32(p+24),nl=u16(p+28),xl=u16(p+30),cl=u16(p+32),disk=u16(p+34),attrs=u32(p+38),local=u32(p+42);if(p+46+nl+xl+cl>cd+cdSize)fail('Truncated ZIP filename.');
+      let name;try{name=decoder.decode(b.subarray(p+46,p+46+nl));}catch(e){fail('Unsupported filename encoding. Extract the ZIP and select its folder.');}
+      p+=46+nl+xl+cl;
+      if(disk||packed===0xffffffff||size===0xffffffff||local===0xffffffff)fail('ZIP64/multi-disk entry is unsupported.');
+      name=safePath(name);if(!/\.(pcsx|xbsx)$/i.test(name)){ignored++;continue;}
+      if((attrs>>>16&0xf000)===0xa000)fail('Archive symbolic links are not accepted.');
+      if(flags&1)fail('Encrypted ZIPs are not supported.');if(method!==0&&method!==8)fail('Unsupported ZIP compression method '+method+'. Extract the archive first.');
+      if(size>MAX_FILE||(total+=size)>MAX_TOTAL)fail('ZIP expansion exceeds the 32 MiB per-file / 128 MiB collection limit.');
+      if(seen.has(name.toLowerCase()))fail('Duplicate ZIP entry: '+name);seen.add(name.toLowerCase());
+      if(local+30>cd||u32(local)!==0x04034b50)fail('Invalid ZIP local header.');
+      if(u16(local+8)!==method||(u16(local+6)&1))fail('ZIP local/central method or encryption mismatch.');
+      const lnl=u16(local+26),lxl=u16(local+28),start=local+30+lnl+lxl;if(start+packed>cd)fail('ZIP entry exceeds archive data range.');
+      let localName;try{localName=safePath(decoder.decode(b.subarray(local+30,local+30+lnl)));}catch(e){fail('Invalid local ZIP filename.');}
+      if(localName!==name)fail('ZIP local/central filename mismatch.');
+      const input=b.subarray(start,start+packed),out=method===0?new Uint8Array(input):await inflateBounded(input,size);
+      if(out.length!==size||crc32(out)!==crc)fail('ZIP size or CRC-32 mismatch for '+name);entries.push({name,data:out});
+    }
+    if(p!==cd+cdSize)fail('ZIP directory size mismatch.');return {entries,ignored};
+  }
+  function writeZIP(entries){
+    if(entries.length>MAX_ENTRIES)fail('Too many output ZIP entries.');const te=new TextEncoder(),locals=[],centrals=[];let offset=0,total=0;const seen=new Set();
+    for(const entry of entries){const safe=safePath(entry.name),name=te.encode(safe),data=typeof entry.data==='string'?te.encode(entry.data):entry.data instanceof Uint8Array?entry.data:new Uint8Array(entry.data);if(name.length>65535)fail('ZIP filename too long.');if(seen.has(safe.toLowerCase()))fail('Duplicate output path: '+safe);seen.add(safe.toLowerCase());if((total+=data.length)>MAX_TOTAL)fail('Output ZIP exceeds 128 MiB.');
+      const crc=crc32(data),local=new Uint8Array(30+name.length),lv=new DataView(local.buffer),central=new Uint8Array(46+name.length),cv=new DataView(central.buffer);
+      lv.setUint32(0,0x04034b50,true);lv.setUint16(4,20,true);lv.setUint16(6,0x800,true);lv.setUint16(12,33,true);lv.setUint32(14,crc,true);lv.setUint32(18,data.length,true);lv.setUint32(22,data.length,true);lv.setUint16(26,name.length,true);local.set(name,30);
+      cv.setUint32(0,0x02014b50,true);cv.setUint16(4,20,true);cv.setUint16(6,20,true);cv.setUint16(8,0x800,true);cv.setUint16(14,33,true);cv.setUint32(16,crc,true);cv.setUint32(20,data.length,true);cv.setUint32(24,data.length,true);cv.setUint16(28,name.length,true);cv.setUint32(42,offset,true);central.set(name,46);
+      locals.push(local,data);centrals.push(central);offset+=local.length+data.length;
+    }
+    const cdSize=centrals.reduce((n,b)=>n+b.length,0),end=new Uint8Array(22),ev=new DataView(end.buffer);ev.setUint32(0,0x06054b50,true);ev.setUint16(8,entries.length,true);ev.setUint16(10,entries.length,true);ev.setUint32(12,cdSize,true);ev.setUint32(16,offset,true);
+    const out=new Uint8Array(offset+cdSize+22);let p=0;for(const a of [...locals,...centrals,end]){out.set(a,p);p+=a.length;}return out;
+  }
+  async function writeZIPCompressed(entries,onProgress=()=>{}) {
+    if(entries.length>MAX_ENTRIES)fail('Too many output ZIP entries.');
+    const te=new TextEncoder(),locals=[],centrals=[],seen=new Set();let offset=0,total=0,count=0;
+    for(const entry of entries){
+      const safe=safePath(entry.name),name=te.encode(safe),data=typeof entry.data==='string'?te.encode(entry.data):entry.data instanceof Uint8Array?entry.data:new Uint8Array(entry.data);
+      if(name.length>65535)fail('ZIP filename too long.');if(seen.has(safe.toLowerCase()))fail('Duplicate output path: '+safe);seen.add(safe.toLowerCase());if((total+=data.length)>MAX_TOTAL)fail('Output ZIP exceeds 128 MiB. Convert smaller collections.');
+      let packed=data,method=0;
+      if(typeof CompressionStream!=='undefined'&&data.length){try{const cs=new CompressionStream('deflate-raw');const result=new Uint8Array(await new Response(new Blob([data]).stream().pipeThrough(cs)).arrayBuffer());if(result.length<data.length){packed=result;method=8;}}catch(e){/* Stored ZIP remains portable when raw DEFLATE is unavailable. */}}
+      const crc=crc32(data),local=new Uint8Array(30+name.length),lv=new DataView(local.buffer),central=new Uint8Array(46+name.length),cv=new DataView(central.buffer);
+      lv.setUint32(0,0x04034b50,true);lv.setUint16(4,20,true);lv.setUint16(6,0x800,true);lv.setUint16(8,method,true);lv.setUint16(12,33,true);lv.setUint32(14,crc,true);lv.setUint32(18,packed.length,true);lv.setUint32(22,data.length,true);lv.setUint16(26,name.length,true);local.set(name,30);
+      cv.setUint32(0,0x02014b50,true);cv.setUint16(4,20,true);cv.setUint16(6,20,true);cv.setUint16(8,0x800,true);cv.setUint16(10,method,true);cv.setUint16(14,33,true);cv.setUint32(16,crc,true);cv.setUint32(20,packed.length,true);cv.setUint32(24,data.length,true);cv.setUint16(28,name.length,true);cv.setUint32(42,offset,true);central.set(name,46);locals.push(local,packed);centrals.push(central);offset+=local.length+packed.length;
+      if(++count%12===0)onProgress(count,entries.length);
+    }
+    const cdSize=centrals.reduce((n,b)=>n+b.length,0),end=new Uint8Array(22),ev=new DataView(end.buffer);ev.setUint32(0,0x06054b50,true);ev.setUint16(8,entries.length,true);ev.setUint16(10,entries.length,true);ev.setUint32(12,cdSize,true);ev.setUint32(16,offset,true);
+    const out=new Uint8Array(offset+cdSize+22);let p=0;for(const a of [...locals,...centrals,end]){out.set(a,p);p+=a.length;}return out;
+  }
+  return {MAX_TOTAL,MAX_ENTRIES,MAX_FILE,safePath,crc32,readZIP,writeZIP,writeZIPCompressed};
+}
+const SXZipIO=createSXZipIO();if(typeof module!=='undefined'&&module.exports)module.exports=SXZipIO;globalThis.SXZipIO=SXZipIO;
+
+</script>
+<script id="sx-worker" type="text/plain">
+/* App worker: parsing, inference, rebuilding and compression run off the UI thread. */
+self.onmessage=async function(event){const req=event.data,post=(type,data)=>self.postMessage({id:req.id,type,...data});
+ try{
+  const docs={xbox:[],pc:[]},errors={xbox:[],pc:[]};let parsed=0,total=req.xbox.length+req.pc.length;
+  for(const role of ['xbox','pc'])for(const f of req[role]){try{const d=SX.parse(f.data,f.name);if(d.profile.kind!==(role==='xbox'?'XBSX':'PCSX'))throw Error('Parsed format '+d.profile.kind+' is in the wrong input collection.');docs[role].push(d);}catch(e){errors[role].push({name:f.name,error:e.message});}if(++parsed%12===0)post('progress',{text:'Validating file structures: '+parsed+' / '+total});}
+  if(!docs.xbox.length||!docs.pc.length)throw Error('Both collections need at least one valid script. '+Object.values(errors).flat().map(e=>e.name+': '+e.error).join('\n'));
+  post('progress',{text:'Learning IDs from matching script identities…'});
+  const library=SXBatch.createLibrary(docs.xbox,docs.pc,p=>post('progress',{text:'Comparing script pair '+p.done+': '+p.script}));
+  library.inputErrors=errors;const evidence=SXBatch.libraryReport(library);
+  if(req.direction==='analyze'){post('done',{direction:req.direction,evidence,inputErrors:errors,results:[],zipBytes:null});return;}
+  const role=req.direction==='XBSX_to_PCSX'?'xbox':'pc',results=[];
+  for(const d of docs[role]){let r;try{r=SXBatch.convertOne(library,d,req.options);}catch(e){r={name:d.name,script:d.scriptName,source:d,status:'blocked',reason:e.message,report:null,bytes:null};}
+   results.push({name:r.name,script:r.script,status:r.status,reason:r.reason,bytes:r.bytes,report:r.report,source:{name:d.name,profile:{kind:d.profile.kind}}});
+   if(results.length%4===0)post('progress',{text:'Rebuilding and checking '+req.direction.replaceAll('_',' ')+': '+results.length+' / '+docs[role].length});
+  }
+  for(const e of errors[role])results.push({name:e.name,script:'Unparsed',status:'blocked',reason:e.error,report:null,bytes:null,source:{name:e.name,profile:{kind:role==='xbox'?'XBSX':'PCSX'}}});
+  const manifest=SXBatch.manifest(library,results,req.direction,req.options);manifest.inputErrors=errors;
+  post('progress',{text:'Compressing scripts and recovery reports…'});
+  const entries=SXBatch.packageEntries(library,results,req.direction,req.options);entries.find(e=>e.name==='MANIFEST.json').data=JSON.stringify(manifest,null,2);
+  let zipBytes=null,zipError=null;try{zipBytes=await SXZipIO.writeZIPCompressed(entries,(n,t)=>post('progress',{text:'Packaging files and reports: '+n+' / '+t}));}catch(e){zipError=e.message;}
+  post('done',{direction:req.direction,evidence,inputErrors:errors,results,manifest,zipBytes,zipError});
+ }catch(e){post('error',{message:e.message});}
+};
+
+</script>
+<script id="sx-ui">
+(function(){'use strict';
+const $=id=>document.getElementById(id),Z=SXZipIO,U=SXUtil,B=SXBatch,n=x=>Number(x||0).toLocaleString('en-US');
+const st={xbox:[],pc:[],busy:false,epoch:0,worker:null,url:null,evidence:null,result:null,selected:null,page:0};
+const el=(tag,text,cls)=>{const x=document.createElement(tag);if(text!==undefined)x.textContent=text;if(cls)x.className=cls;return x;};
+function status(text,tone=''){$('status').textContent=text;$('status').className='status '+tone;}
+function error(text){$('error').hidden=!text;$('error').textContent=text||'';}
+function stop(){if(st.worker)st.worker.terminate();if(st.url)URL.revokeObjectURL(st.url);st.worker=null;st.url=null;}
+function busy(value){st.busy=value;$('cancel').hidden=!value;$('progress').hidden=!value;for(const role of ['xbox','pc'])for(const s of ['Drop','Input','Folder','FolderButton','Clear'])$(role+s).disabled=value||(s==='Clear'&&!st[role].length);for(const id of ['allowContext','allowUnresolved','allowUnpaired'])$(id).disabled=value;for(const id of ['analyzeButton','forwardButton','reverseButton'])$(id).disabled=value||!st.xbox.length||!st.pc.length;$('downloadZip').disabled=value||!st.result?.zipBytes;$('downloadManifest').disabled=value||!st.result?.manifest;$('downloadEvidence').disabled=value||!st.evidence;}
+function invalidate(clearEvidence=false){++st.epoch;stop();st.result=null;st.selected=null;st.page=0;$('results').hidden=true;$('detail').hidden=true;$('empty').hidden=false;if(clearEvidence){st.evidence=null;$('evidence').hidden=true;}error('');busy(false);}
+function collection(role){const list=st[role];$(role+'Label').textContent=list.length?n(list.length)+' '+(role==='xbox'?'XBSX':'PCSX')+' inputs loaded':'Choose '+(role==='xbox'?'XBSX':'PCSX')+' files or a ZIP';$(role+'Drop').classList.toggle('loaded',!!list.length);$(role+'Size').textContent=list.length?(list.reduce((v,f)=>v+f.data.length,0)/1048576).toFixed(2)+' MiB selected':'No files loaded';$(role+'Files').hidden=!list.length;const ul=$(role+'List');ul.replaceChildren();for(const f of list)ul.append(el('li',f.name+' · '+n(f.data.length)+' bytes'));}
+async function load(role,files){invalidate(true);st[role]=[];collection(role);busy(true);const id=st.epoch;status('Reading selected '+role+' files locally…');
+ try{if(files.length>Z.MAX_ENTRIES)throw Error('Select no more than '+Z.MAX_ENTRIES+' input files.');let entries=[],total=0,ignored=0;const seen=new Set();
+ for(const f of files){if(/\.7z$/i.test(f.name))throw Error('Direct .7z input is not supported in this standalone HTML. Extract the archive and choose its folder, or load the supplied XBSX_inputs.zip / PCSX_inputs.zip.');if(!/\.(pcsx|xbsx|zip)$/i.test(f.name)){ignored++;continue;}if(f.size>Z.MAX_TOTAL||(!/\.zip$/i.test(f.name)&&f.size>SX.MAX_FILE))throw Error('Input exceeds the 32 MiB script / 128 MiB ZIP limit.');const data=new Uint8Array(await f.arrayBuffer());if(id!==st.epoch)return;let add;
+ if(/\.zip$/i.test(f.name)){const read=await Z.readZIP(data);add=read.entries;ignored+=read.ignored;}else add=[{name:Z.safePath(f.webkitRelativePath||f.name),data}];
+ for(const a of add){const k=a.name.toLowerCase();if(seen.has(k))throw Error('Duplicate input path: '+a.name);seen.add(k);total+=a.data.length;if(total>Z.MAX_TOTAL||entries.length>=Z.MAX_ENTRIES)throw Error('Selected collection exceeds the supported size or file count.');entries.push(a);}
+ }
+ if(!entries.length)throw Error('No XBSX or PCSX scripts were found.');entries.sort((a,b)=>a.name.localeCompare(b.name));st[role]=entries;collection(role);status(n(entries.length)+' inputs loaded'+(ignored?'; '+n(ignored)+' non-script entries ignored.':'.'),'good');
+ }catch(e){if(id===st.epoch){st[role]=[];collection(role);error(e.message);status('That selection was not loaded.','warn');}}
+ finally{if(id===st.epoch){busy(false);$(role+'Input').value='';$(role+'Folder').value='';}}
+}
+for(const role of ['xbox','pc']){$(role+'Drop').onclick=()=>$(role+'Input').click();$(role+'FolderButton').onclick=()=>$(role+'Folder').click();$(role+'Input').onchange=e=>load(role,[...e.target.files]);$(role+'Folder').onchange=e=>load(role,[...e.target.files]);$(role+'Clear').onclick=()=>{invalidate(true);st[role]=[];collection(role);busy(false);status('Collection cleared. Load both sides to continue.');};const drop=$(role+'Drop');drop.ondragover=e=>{e.preventDefault();if(!st.busy)drop.classList.add('drag');};drop.ondragleave=()=>drop.classList.remove('drag');drop.ondrop=e=>{e.preventDefault();drop.classList.remove('drag');if(!st.busy)load(role,[...e.dataTransfer.files]);};}
+const options=()=>({allowContext:$('allowContext').checked,allowUnresolved:$('allowUnresolved').checked,allowUnpaired:$('allowUnpaired').checked});
+for(const id of ['allowContext','allowUnresolved','allowUnpaired'])$(id).onchange=()=>{invalidate();status('Policy changed. Build again to apply the new approvals.');};
+function showEvidence(e){st.evidence=e;$('evidence').hidden=false;$('statX').textContent=n(e.xboxFiles);$('statP').textContent=n(e.pcFiles);$('statPairs').textContent=n(e.matchedScriptPairs);$('statIds').textContent=n(Object.values(e.learned).reduce((a,b)=>a+b,0));$('statConflicts').textContent=n(e.conflictCount);$('evidenceSummary').textContent=n(e.learned.native)+' native-call pairs · '+n(e.learned.variable)+' variable pairs · '+n(e.learned.class)+' class pairs. Unpaired scripts: '+n(e.unpairedXbox.length)+' Xbox / '+n(e.unpairedPC.length)+' PC.';const list=$('conflictList');list.replaceChildren();for(const c of e.conflicts)list.append(el('li',c.kind+' '+c.from+' — '+c.reason+'; '+c.candidates.map(x=>x.to).join(' / ')));if(!e.conflicts.length)list.append(el('li','No conflicting accepted candidates were found. This is not engine-symbol verification.'));}
+function run(direction){if(st.busy||!st.xbox.length||!st.pc.length)return;invalidate();const id=st.epoch;busy(true);status('Parsing and validating both collections…');
+ const src=['sx-core','sx-util','sx-batch','sx-zip','sx-worker'].map(id=>$(id).textContent).join('\n');st.url=URL.createObjectURL(new Blob([src],{type:'text/javascript'}));st.worker=new Worker(st.url);
+ st.worker.onerror=e=>{if(id!==st.epoch)return;stop();busy(false);error(e.message||'Worker failed.');status('Conversion stopped without a completed export.','warn');};
+ st.worker.onmessage=event=>{const m=event.data;if(m.id!==st.epoch)return;if(m.type==='progress'){status(m.text);return;}if(m.type==='error'){stop();busy(false);error(m.message);status('Analysis stopped. No new output was exported.','warn');return;}if(m.type==='done'){stop();showEvidence(m.evidence);const errors=Object.values(m.inputErrors).flat();if(errors.length)error(errors.map(x=>x.name+': '+x.error).join('\n'));if(m.direction==='analyze'){status('Analysis complete: '+n(m.evidence.matchedScriptPairs)+' matched script pairs. Choose a conversion direction.','good');$('empty').hidden=true;busy(false);return;}
+ st.result=m;st.selected=null;st.page=0;$('search').value='';$('statusFilter').value='all';$('empty').hidden=true;$('results').hidden=false;$('resultTitle').textContent=direction==='XBSX_to_PCSX'?'XBSX → PCSX results':'PCSX → XBSX results';const s=m.manifest.summary;$('resultSummary').textContent=n(s.converted)+' rebuilt · '+n(s.blocked)+' blocked · '+n(s.unresolvedOccurrences)+' unresolved operand occurrences';renderRows();if(m.results.length)selectRow(0);if(m.zipError)error('Scripts were built, but batch ZIP export failed: '+m.zipError+'. Individual script/report downloads remain available.');status(n(s.converted)+' / '+n(s.inputs)+' scripts rebuilt. '+(s.unresolvedOccurrences?'Experimental outputs retain '+n(s.unresolvedOccurrences)+' unresolved operands.':'All used runtime IDs have accepted reference evidence; game compatibility is still untested.'),s.unresolvedOccurrences||s.blocked?'warn':'good');busy(false);}
+ };
+ st.worker.postMessage({id,direction,xbox:st.xbox,pc:st.pc,options:options()});
+}
+$('analyzeButton').onclick=()=>run('analyze');$('forwardButton').onclick=()=>run('XBSX_to_PCSX');$('reverseButton').onclick=()=>run('PCSX_to_XBSX');$('cancel').onclick=()=>{invalidate();status('Computation canceled. No partial batch was exported.');};
+function rows(){if(!st.result)return [];const q=$('search').value.trim().toLowerCase(),f=$('statusFilter').value;return st.result.results.map((r,i)=>({r,i})).filter(({r})=>(!q||(r.name+' '+r.script).toLowerCase().includes(q))&&(f==='all'||r.status===f));}
+function renderRows(){const data=rows(),pages=Math.max(1,Math.ceil(data.length/25));st.page=Math.max(0,Math.min(st.page,pages-1));const tbody=$('resultBody');tbody.replaceChildren();for(const {r,i} of data.slice(st.page*25,st.page*25+25)){const tr=el('tr');tr.dataset.name=r.name;if(st.selected===i)tr.classList.add('selected');const name=el('td',undefined,'name');name.append(el('span',r.name,'mono'),el('small',r.script));tr.append(name);const summary=r.report?.summary;tr.append(el('td',r.report?.collection?.sameScriptReference?'Same script':r.report?'Collection only':'—'),el('td',summary?n(summary.operandPatches):'—','num'),el('td',summary?n(summary.unresolvedOperandOccurrences):'—','num'));const tag=el('td');tag.append(el('span',r.status==='blocked'?'Blocked':r.status==='experimental-unresolved'?'Experimental / unresolved':'Reference-inferred', 'tag '+(r.status==='blocked'?'blocked':r.status==='experimental-unresolved'?'unknown':'')));tr.append(tag);const cell=el('td'),button=el('button','Details','small');button.onclick=()=>selectRow(i);cell.append(button);tr.append(cell);tbody.append(tr);}if(!data.length){const tr=el('tr'),td=el('td','No matching results.');td.colSpan=6;tr.append(td);tbody.append(tr);}$('pageInfo').textContent=data.length?n(st.page*25+1)+'–'+n(Math.min((st.page+1)*25,data.length))+' of '+n(data.length)+' results':'0 results';$('prevPage').disabled=st.page===0;$('nextPage').disabled=st.page>=pages-1;}
+$('search').oninput=$('statusFilter').onchange=()=>{st.page=0;renderRows();};$('prevPage').onclick=()=>{st.page--;renderRows();};$('nextPage').onclick=()=>{st.page++;renderRows();};
+function selectRow(i){st.selected=i;renderRows();const r=st.result.results[i],rep=r.report,s=rep?.summary;$('detail').hidden=false;$('detailTitle').textContent=r.name;$('detailSub').textContent=r.script+' · '+r.status+(r.reason?' · '+r.reason:'');$('downloadFile').disabled=!r.bytes;$('downloadReport').disabled=$('downloadText').disabled=!rep;
+ $('detailLayout').textContent=s?n(s.sourceSize)+' → '+(s.outputSize?n(s.outputSize):'not built')+' bytes. '+n(s.sourceFunctions)+' source functions; '+n(s.sourceOnlyExcluded)+' excluded. '+(s.direction.includes('PCSX →')?'Xbox 40-byte function records / 0x70 code start.':'Final PC 36-byte function records / 0x6C code start.'):r.reason;
+ $('detailRisk').textContent=s?n(s.operandPatches)+' operand edits; '+n(s.unresolvedOperandOccurrences)+' unresolved occurrences. '+(rep.collection.sameScriptReference?'Same-script reference available.':'No same-script reference: collection evidence and destination layout only.')+' Not tested in-game.': 'No binary was emitted for this input.';
+ $('detailUnresolved').textContent=rep?((rep.unresolvedOperands.length?rep.unresolvedOperands.map(p=>'0x'+SX.hex(p.sourceOffset)+' | '+p.kind+' '+p.retained.join(':')+' | '+p.function+' | '+p.reason).join('\n'):'No unresolved operands under the selected approvals.')+'\n\nFUNCTION DECISIONS\n'+rep.functions.map(f=>f.id+' | '+f.status+(f.reason?' | '+f.reason:'')).join('\n')):(r.reason||'');
+ $('detailPatches').textContent=rep?(rep.patches.slice(0,200).map(p=>'0x'+SX.hex(p.sourceOffset)+' → '+(p.outputOffset===undefined?'not built':'0x'+SX.hex(p.outputOffset))+' | '+p.before.join(':')+' → '+p.after.join(':')+' | '+p.reason).join('\n')||'No operand edits.'):'No conversion report.';
+ $('detailValidation').textContent=rep?Object.entries(rep.hashes).map(([k,v])=>k+' SHA-256: '+(v||'not built')).join('\n')+'\n\n'+rep.validation.map(c=>(c.passed?'PASS':'FAIL')+' '+c.check).join('\n'):'No output checks were run.';
+}
+function save(name,data,type='application/octet-stream'){const blob=new Blob([data],{type}),url=URL.createObjectURL(blob),a=el('a');a.href=url;a.download=U.safeName(name);document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);}
+$('downloadEvidence').onclick=()=>save('SX_Reference_Evidence.json',JSON.stringify(st.evidence,null,2),'application/json');$('downloadManifest').onclick=()=>save(st.result.direction+'_MANIFEST.json',JSON.stringify(st.result.manifest,null,2),'application/json');$('downloadZip').onclick=()=>save(st.result.direction+'_converted.zip',st.result.zipBytes,'application/zip');
+const selected=()=>st.result?.results[st.selected];$('downloadFile').onclick=()=>{const r=selected();if(r?.bytes)save(B.outputName(r.source),r.bytes);};$('downloadReport').onclick=()=>{const r=selected();if(r?.report)save(B.outputName(r.source)+'.report.json',JSON.stringify(r.report,null,2),'application/json');};$('downloadText').onclick=()=>{const r=selected();if(r?.report)save(B.outputName(r.source)+'.report.txt',SX.reportText(r.report),'text/plain');};
+$('restoreButton').onclick=async()=>{const binary=$('recoveryFile').files[0],report=$('recoveryReport').files[0];$('restoreButton').disabled=true;try{if(!binary||!report)throw Error('Select the converted script and its matching JSON report.');if(binary.size>SX.MAX_FILE||report.size>64*1024*1024)throw Error('Recovery input exceeds supported limits.');const rep=JSON.parse(await report.text()),b=new Uint8Array(await binary.arrayBuffer()),restored=U.recover(rep,b);save(restored.name,restored.bytes);$('recoveryStatus').textContent='Both SHA-256 checks passed. Restored '+U.safeName(restored.name)+' ('+n(restored.bytes.length)+' bytes).';}catch(e){$('recoveryStatus').textContent='Recovery blocked: '+e.message;}finally{$('restoreButton').disabled=false;}};
+busy(false);
+})();
+
+</script>
+</body></html>

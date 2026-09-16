@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' blob:; style-src 'unsafe-inline'; worker-src blob:; child-src blob:; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="color-scheme" content="dark"><title>ALS Reference Converter v3 · Beta ⇄ Final</title>
+<style>
+:root{--bg:#0c1018;--card:#141c28;--surface:#101722;--edge:#2b374a;--ink:#eaf1fb;--muted:#9aabc1;--purple:#b6a0ff;--mint:#7ddcc1;--amber:#efc181;--red:#f99ba8}*{box-sizing:border-box}body{background:var(--bg);color:var(--ink);font:14px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;margin:0}button,input,select{font:inherit}button,summary{cursor:pointer}button{border:1px solid var(--edge);background:#1c2839;color:var(--ink);border-radius:8px;padding:10px 14px;font-weight:650}button:hover:not(:disabled){background:#2a3950}button:disabled{opacity:.38;cursor:not-allowed}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--purple);outline-offset:3px}.primary{background:var(--purple);color:#19122d;border-color:var(--purple)}.primary:hover:not(:disabled){background:#cbbcff}.reverse{background:#19382f;border-color:#356b5b;color:#a7efd8}.reverse:hover:not(:disabled){background:#23493c}.export{background:var(--mint);color:#10251d;border-color:var(--mint)}.export:hover:not(:disabled){background:#a0ead4}.quiet{background:transparent}.mini{padding:5px 9px;font-size:11px}.wrap{max-width:1232px;margin:auto;padding:0 28px}h1,h2,h3,p{margin:0}h1{font-size:clamp(30px,4.4vw,48px);letter-spacing:-1.7px;line-height:1.14;font-weight:740}h2{font-size:18px;letter-spacing:-.3px}h3{font-size:14px}.muted{color:var(--muted)}.small{font-size:12px}.mono,code{font:12px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere}.upper{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}.purple{color:var(--purple)}.mint{color:var(--mint)}[hidden]{display:none!important}.top{border-bottom:1px solid var(--edge)}.top .wrap{height:73px;display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{display:flex;gap:12px;align-items:center}.mark{background:#261e3d;border:1px solid #5c4985;color:#d6c7ff;border-radius:9px;width:42px;height:39px;display:grid;place-items:center;font:700 14px ui-monospace,monospace}.brand strong{display:block;font-size:14px}.brand span{color:var(--muted);font-size:10px;letter-spacing:1.3px}.local{color:var(--mint);font-size:11px;letter-spacing:.5px;display:flex;align-items:center;gap:7px}.local:before{content:"";height:6px;width:6px;border-radius:50%;background:var(--mint)}.hero{padding:37px 0 29px;display:flex;gap:35px;align-items:flex-end;justify-content:space-between}.eyebrow{font:600 11px ui-monospace,monospace;letter-spacing:1.9px;color:var(--purple);margin-bottom:13px}.intro{margin-top:15px;color:var(--muted);max-width:660px;font-size:15px}.profile{flex:0 0 220px;border-left:2px solid #394355;padding-left:18px;font-size:12px;color:var(--muted)}.profile strong{display:block;font-size:13px;color:var(--ink);margin-bottom:6px}.files{display:grid;grid-template-columns:1fr 1fr;gap:18px}.card{background:var(--card);border:1px solid var(--edge);border-radius:12px;padding:20px}.beta-card{border-top:2px solid var(--purple)}.final-card{border-top:2px solid var(--mint)}.card-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:7px}.step{font:600 11px ui-monospace,monospace;letter-spacing:1px}.drop{margin-top:17px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px dashed #485a73;border-radius:9px;background:#0f1723;min-height:108px;padding:17px;text-align:center;cursor:pointer}.drop:hover,.drop:focus-within,.drop.drag{border-color:var(--purple);background:#1c2134}.drop.loaded{border-style:solid;border-color:#466d65;background:#11241f}.drop strong{font-size:14px;overflow-wrap:anywhere}.drop .glyph{font:600 22px ui-monospace,monospace;color:var(--purple);margin-bottom:4px}.final-card .drop .glyph{color:var(--mint)}.drop span{margin-top:4px;font-size:12px;color:var(--muted)}.file-actions{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:12px}.file-actions .small{margin-left:auto}.sr{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}.file-list{padding:0;list-style:none;max-height:145px;overflow:auto;margin:9px 0 0;font-size:11px;color:var(--muted)}.file-list li{padding:3px 0;overflow-wrap:anywhere}.inputs-note{margin:12px 2px 21px;font-size:11px;color:var(--muted)}details summary{font-size:12px;color:var(--muted)}.safeguards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:13px}.safeguard{display:flex;align-items:flex-start;gap:9px;border:1px solid var(--edge);background:#111923;border-radius:8px;padding:13px;font-size:12px;cursor:pointer}.safeguard input{accent-color:var(--purple);margin:3px 0 0;width:15px;height:15px;flex-shrink:0}.safeguard strong{display:block;font-size:12px;font-weight:650;margin-bottom:3px}.safeguard span{display:block;color:var(--muted);font-size:11px;line-height:1.5}.actions{margin-top:17px;display:flex;gap:9px;align-items:center;flex-wrap:wrap}.actions select{margin-right:auto;max-width:250px}.actions button{font-size:12px}.actions .analyze{margin-left:auto}.statusline{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-top:13px;min-height:28px}.status{border-left:2px solid #44556d;padding-left:10px;font-size:12px;color:var(--muted)}.status.good{border-color:var(--mint);color:var(--mint)}.status.warn{border-color:var(--amber);color:var(--amber)}.status.bad{border-color:var(--red);color:var(--red)}.error{background:#30202a;color:#ffc1cc;border:1px solid #704353;border-radius:8px;padding:14px;margin-top:12px;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere}select,input[type=search]{background:#101925;color:var(--ink);border:1px solid #3a4a63;padding:9px 10px;border-radius:7px;min-width:0}progress{width:100%;height:4px;accent-color:var(--purple);display:block;margin:12px 0 0}.empty{display:grid;grid-template-columns:repeat(3,1fr);gap:27px;border:1px solid #253245;background:#0f1621;border-radius:12px;margin:26px 0;padding:22px}.empty .upper{color:var(--purple);margin-bottom:7px}.empty h3{margin-bottom:5px}.empty p{font-size:12px;color:var(--muted)}.results{margin-top:29px}.heading{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:15px}.badge{display:inline-block;border:1px solid var(--edge);background:#182436;border-radius:5px;font-size:10px;padding:3px 7px;white-space:nowrap;color:var(--muted);font-weight:650}.badge.good{background:#182e28;border-color:#396858;color:var(--mint)}.badge.warn{background:#2b261d;border-color:#695336;color:var(--amber)}.badge.bad{background:#301f28;border-color:#784454;color:var(--red)}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}.stat{border:1px solid var(--edge);background:var(--card);border-radius:10px;padding:16px 18px}.stat b{display:block;font-weight:650;font-size:29px;line-height:1.2;font-variant-numeric:tabular-nums}.stat span{display:block;font-size:11px;color:var(--muted);margin-top:7px}.review{border:1px solid var(--edge);border-radius:12px;background:var(--card);overflow:hidden}.review-top{padding:17px 20px;display:flex;align-items:center;justify-content:space-between;gap:15px;border-bottom:1px solid var(--edge)}.review-top h3{margin-bottom:3px}.filters{display:flex;gap:8px}.filters input{width:240px}.review-body{padding:0 20px 17px}.table-wrap{overflow:auto;max-width:100%}.files-table{min-width:800px;width:100%}.table-wrap.tall{max-height:350px;border:1px solid var(--edge);border-radius:8px;margin-top:10px}table{border-collapse:collapse;width:100%;text-align:left;font-size:12px}th,td{padding:10px 11px;border-bottom:1px solid #283447}th{font-size:10px;color:var(--muted);font-weight:650;text-transform:uppercase;letter-spacing:.45px;white-space:nowrap}th:first-child,td:first-child{padding-left:0}.tall th:first-child,.tall td:first-child{padding-left:11px}.tall th{background:#111c2b;position:sticky;top:0}td{font-variant-numeric:tabular-nums}td.filename{font-size:11px;font-family:ui-monospace,monospace;max-width:290px;overflow-wrap:anywhere}tbody tr:hover{background:#192637}tr.selected{background:#1f2840}.num{text-align:right;white-space:nowrap}.pagination{display:flex;align-items:center;justify-content:space-between;margin-top:14px;font-size:11px;color:var(--muted);gap:10px}.pager-buttons{display:flex;gap:6px}.detail{margin-top:18px;padding:20px;border:1px solid var(--edge);border-radius:12px;background:var(--card)}.detail-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:15px;flex-wrap:wrap}.detail-heading h3{font-family:ui-monospace,monospace;font-size:13px;overflow-wrap:anywhere}.buttons{display:flex;gap:7px;flex-wrap:wrap}.detail-summary{display:grid;grid-template-columns:1fr 1fr;gap:20px;color:var(--muted);font-size:12px}.detail-summary strong{color:var(--ink);font-weight:600}.callout{background:#29231c;border:1px solid #695336;border-radius:8px;padding:13px;margin:13px 0;font-size:12px;color:var(--amber);white-space:pre-wrap;overflow-wrap:anywhere}.callout.bad{background:#2b1d26;border-color:#704253;color:#ffbdc9}.tabs{display:flex;border-bottom:1px solid var(--edge);gap:3px;margin-top:19px;overflow-x:auto}.tabs button{border:none;border-bottom:2px solid transparent;border-radius:0;background:transparent;font-size:12px;color:var(--muted);white-space:nowrap;padding:12px}.tabs button.active{border-bottom-color:var(--purple);color:var(--ink)}.tab-pane{padding-top:13px}.digest{display:grid;grid-template-columns:120px 1fr;gap:8px;font-size:11px;overflow-wrap:anywhere}.checks{list-style:none;margin:12px 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px;color:var(--mint)}.log-note{font-size:11px;color:var(--muted);margin-top:10px}.exports{margin-top:18px;border:1px solid var(--edge);background:#131e29;border-radius:11px;padding:17px 20px;display:flex;align-items:center;justify-content:space-between;gap:20px}.exports h3{margin-bottom:5px}.exports p{font-size:12px;color:var(--muted);max-width:640px}.notice{color:var(--amber);margin-top:16px;font-size:12px}.help{margin:29px 0 18px;border-top:1px solid var(--edge);padding-top:20px}.help-content{max-width:960px;color:var(--muted);font-size:12px;margin-top:13px}.help-content h3{color:var(--ink);margin:17px 0 6px}.help-content p+p{margin-top:8px}.footer{border-top:1px solid var(--edge);display:flex;justify-content:space-between;gap:12px;color:#8394ac;font-size:10px;padding:19px 0 28px;letter-spacing:.3px}
+@media(max-width:850px){.hero{display:block}.profile{display:none}.review-top{align-items:flex-start;flex-direction:column}.filters{width:100%}.filters input{flex:1;width:auto}.actions select{width:100%;max-width:none}.actions .analyze{margin-left:0}.actions button{flex:1}.safeguards{grid-template-columns:1fr}.safeguard{padding:12px}.detail-summary{grid-template-columns:1fr}.exports{align-items:flex-start;flex-direction:column}}
+@media(max-width:600px){.wrap{padding:0 16px}.top .wrap{height:64px}.local{font-size:9px}.brand span{font-size:9px}.hero{padding:27px 0 22px}h1{font-size:33px;letter-spacing:-1px}.intro{font-size:13px}.files{grid-template-columns:1fr;gap:13px}.card{padding:17px}.drop{min-height:89px}.inputs-note{line-height:1.7}.empty{grid-template-columns:1fr;gap:19px;padding:19px}.stats{grid-template-columns:repeat(2,1fr);gap:9px}.stat{padding:13px}.stat b{font-size:25px}.heading{align-items:flex-start}.heading h2{font-size:16px}.review-top{padding:14px}.review-body{padding:0 14px 15px}.filters{flex-wrap:wrap}.filters input{min-width:140px}.filters select{flex:1}.detail{padding:15px}.checks{grid-template-columns:1fr}.digest{grid-template-columns:1fr;gap:4px}.exports .buttons{width:100%}.exports .buttons button{flex:1}.actions button{flex-basis:45%;font-size:11px}.actions .analyze{flex-basis:100%}.footer{flex-direction:column}.profile{display:none}}
+</style></head><body>
+<header class="top"><div class="wrap"><div class="brand"><div class="mark">ALS</div><div><strong>USM Binary Tools</strong><span>REFERENCE CONVERTER · V3</span></div></div><div class="local">LOCAL PROCESSING</div></div></header>
+<main class="wrap"><section class="hero"><div><p class="eyebrow">BETA ⇄ FINAL / COLLECTION EDITION</p><h1>ALS Reference Converter</h1><p class="intro">Compare complete collections. Learn identifiers from matching records. Convert in either direction without a manual byte map.</p></div><div class="profile"><strong>Read the reference, not a map.</strong>32-bit little-endian USM layouts.<br>Individual files, folders or ZIPs.<br>Source files stay untouched.</div></section>
+<section class="files" aria-label="Input collections">
+<div class="card beta-card"><div class="card-head"><h2>Beta collection</h2><span class="step purple">01 / BETA</span></div><p class="small muted">Source for beta → final. Reference for final → beta.</p><label class="drop" id="betaDrop" for="betaInput"><span class="glyph">{ β }</span><strong id="betaLabel">Drop .ALS files or a .ZIP here</strong><span id="betaMeta">or click to choose files</span><input id="betaInput" class="sr" type="file" multiple accept=".als,.zip"></label><div class="file-actions"><button class="mini quiet" id="betaFolderButton">Choose folder</button><input class="sr" id="betaFolder" type="file" multiple webkitdirectory><button class="mini quiet" id="betaClear" disabled>Clear</button><span class="small muted" id="betaSize">No files loaded</span></div><details id="betaFiles" hidden><summary>View loaded files</summary><ul class="file-list" id="betaFileList"></ul></details></div>
+<div class="card final-card"><div class="card-head"><h2>Final collection</h2><span class="step mint">02 / FINAL</span></div><p class="small muted">Reference for beta → final. Source for final → beta.</p><label class="drop" id="finalDrop" for="finalInput"><span class="glyph">{ F }</span><strong id="finalLabel">Drop .ALS files or a .ZIP here</strong><span id="finalMeta">or click to choose files</span><input id="finalInput" class="sr" type="file" multiple accept=".als,.zip"></label><div class="file-actions"><button class="mini quiet" id="finalFolderButton">Choose folder</button><input class="sr" id="finalFolder" type="file" multiple webkitdirectory><button class="mini quiet" id="finalClear" disabled>Clear</button><span class="small muted" id="finalSize">No files loaded</span></div><details id="finalFiles" hidden><summary>View loaded files</summary><ul class="file-list" id="finalFileList"></ul></details></div>
+</section>
+<p class="inputs-note">Match by filename, ignoring case. A single file on each side forms an explicit pair, even with different names. <strong>For .7z, extract first or use the supplied ZIP copies.</strong> Non-ALS files are ignored.</p>
+<section class="safeguards" aria-label="Conversion approvals"><label class="safeguard"><input id="allowInferred" type="checkbox"><div><strong>Approve numbering inference</strong><span>Allow clearly labeled interpolation and short-range extrapolation when direct evidence is absent.</span></div></label><label class="safeguard"><input id="allowResourceAdaptation" type="checkbox"><div><strong>Approve target aiming payloads</strong><span>Use target animation hashes and aim limits when two-/four-slot resource layouts differ. Original bytes are logged.</span></div></label><label class="safeguard"><input id="allowCollectionOnly" type="checkbox"><div><strong>Allow collection-only migration</strong><span>Include files without a same-name reference, using unique evidence from the loaded collection. Unknowns still block conversion.</span></div></label></section>
+<div class="actions"><label for="direction" class="sr">Analysis direction</label><select id="direction"><option value="beta_to_final">Analysis: beta → final</option><option value="final_to_beta">Analysis: final → beta</option></select><button id="analyzeButton" class="analyze" disabled>Analyze only</button><button id="forwardButton" class="primary" disabled>Convert beta ALS → final</button><button id="reverseButton" class="reverse" disabled>Convert final ALS → beta</button></div>
+<div class="statusline"><p class="status" id="status" role="status" aria-live="polite">Load both collections to begin.</p><button class="mini quiet" id="cancelButton" hidden>Cancel</button></div><progress id="progress" hidden aria-label="Processing files"></progress><div id="error" class="error" role="alert" hidden></div>
+<section class="empty" id="empty"><div><div class="upper">01 / COMPARE</div><h3>Learn from actual records</h3><p>Machine IDs, state and category hashes, transition rules and resource identities supply the evidence.</p></div><div><div class="upper">02 / REVIEW</div><h3>No silent fallback</h3><p>Inferred values, imported resource payloads and unresolved identifiers are reported separately for every file.</p></div><div><div class="upper">03 / EXPORT</div><h3>Keep an audit trail</h3><p>Download converted ALS files, source/target checksums, identifier offsets and reversible structural-edit logs.</p></div></section>
+<section class="results" id="results" hidden><div class="heading"><h2 id="resultsTitle">Collection results</h2><span class="badge" id="directionBadge">BETA → FINAL</span></div><div class="stats"><div class="stat"><b id="statSources">0</b><span>Source ALS files</span></div><div class="stat"><b id="statConverted" class="mint">0</b><span id="statConvertedLabel">Converted & validated</span></div><div class="stat"><b id="statApproval" style="color:var(--amber)">0</b><span>Awaiting approval</span></div><div class="stat"><b id="statBlocked" style="color:var(--red)">0</b><span>Blocked or skipped</span></div></div>
+<div class="review"><div class="review-top"><div><h3>File-by-file results</h3><p class="small muted" id="coverage"></p></div><div class="filters"><label class="sr" for="search">Search files</label><input type="search" id="search" placeholder="Search filename…"><label class="sr" for="statusFilter">Filter status</label><select id="statusFilter"><option value="all">All statuses</option><option value="converted">Converted</option><option value="ready">Ready</option><option value="approval_required">Approval needed</option><option value="blocked">Blocked / skipped</option></select></div></div><div class="review-body"><div class="table-wrap"><table class="files-table"><thead><tr><th>File</th><th>Reference</th><th class="num">ID writes</th><th class="num">Δ bytes</th><th class="num">Inferred</th><th class="num">Aim payloads</th><th>Status</th><th></th></tr></thead><tbody id="rows"></tbody></table></div><div class="pagination"><span id="pageLabel"></span><div class="pager-buttons"><button class="mini" id="previous">Previous</button><button class="mini" id="next">Next</button></div></div></div></div>
+<div class="exports"><div><h3 id="exportHeading">Export reviewed files</h3><p id="exportDescription">Only successfully converted files are included. Blocked, missing-reference and unapproved files stay out of the output ZIP.</p></div><div class="buttons"><button id="downloadBatch" disabled>Batch report</button><button id="downloadZip" class="export" disabled>Download converted ZIP</button></div></div>
+<p class="notice">Experimental migration, not an in-game compatibility guarantee. Final → beta retains final source records; it does not recreate the historical beta file.</p>
+<section class="detail" id="detail" hidden><div class="detail-heading"><div><p class="upper muted" style="margin-bottom:5px">SELECTED FILE / EVIDENCE & OFFSETS</p><h3 id="detailName"></h3></div><div class="buttons"><button id="downloadOne" class="mini export" disabled>Download .ALS</button><button id="downloadJSON" class="mini">JSON report</button><button id="downloadText" class="mini">Text report</button></div></div><div class="detail-summary" id="detailSummary"></div><div class="callout" id="detailWarning" hidden></div><div class="tabs" role="tablist" aria-label="File details"><button class="active" id="tabEvidence" role="tab" aria-selected="true" data-pane="evidencePane">Learned evidence</button><button id="tabPatches" role="tab" aria-selected="false" data-pane="patchPane">Identifier patches</button><button id="tabLayout" role="tab" aria-selected="false" data-pane="layoutPane">Layout & validation</button></div><div class="tab-pane" id="evidencePane"><div class="table-wrap tall"><table><thead><tr><th>Family</th><th>Source → target</th><th class="num">Support</th><th>Evidence</th></tr></thead><tbody id="evidenceRows"></tbody></table></div><p class="log-note">Support counts matching records, not independent game-runtime tests. Full examples and rejected alternatives are recorded in JSON.</p></div><div class="tab-pane" id="patchPane" hidden><label class="sr" for="patchSearch">Search patch offsets or IDs</label><input id="patchSearch" type="search" placeholder="Find an offset, ID or family…"><div class="table-wrap tall"><table><thead><tr><th>Source offset</th><th>Output offset</th><th>Identifier change</th><th>Family / evidence</th></tr></thead><tbody id="patchRows"></tbody></table></div><p class="log-note" id="patchNote"></p></div><div class="tab-pane" id="layoutPane" hidden><div id="layoutInfo"></div><dl class="digest" id="hashes"></dl><ul class="checks" id="checks"></ul></div></section>
+</section>
+<details class="help"><summary>Supported formats, conversion method and recovery</summary><div class="help-content"><h3>Collection coverage</h3><p>The reader was checked against the supplied 51 beta and 100 final ALS files. It traverses root and layer machine vectors, base/layer states, categories, transition groups and supported interaction, aim, wall-run and swing resources. This does not imply support for every .ALS variant or every platform. Non-empty layer transitions, rule post-actions, force-transition conditions and pointer-valued parameter types outside the observed profile remain rejected.</p><h3>Reference method</h3><p>The tool constructs temporary correspondences from the files loaded in this session. It matches machine IDs, state/category identity hashes, unambiguous transition signatures and resource names/hashes. Unique or strongly dominant record matches resolve ordinary IDs. Resource class splits are handled per resource rather than with a global byte replacement. In a collection, every usable same-name pair contributes evidence; a single explicit pair is also supported. No earlier byte map, generated ALS or preset character ID table is required.</p><h3>Forward and reverse are separate analyses</h3><p>Beta → final reads the final collection as its target. Final → beta reads the beta collection as its target and learns that direction anew, rather than blindly reversing a dictionary. Many-to-one type changes can make the reverse ambiguous. A file with any unresolved identifier is blocked, not partially converted and disguised as a successful output.</p><h3>Resource adaptation is not lossless by itself</h3><p>Swing headers can expand or shrink by 48 verified zero bytes. Aiming resources can switch between 96-byte/four-slot and 72-byte/two-slot layouts. The latter requires approval because the matching target payload replaces the source animation hashes and aim limits. The source resource name/hash and overall record ordering remain intact. Original replaced bytes and every edit offset are saved in JSON, so the exact source is recoverable from the converted file and its report. Ordinary forward/reverse re-conversion is not a byte-identical round trip.</p><h3>Inputs and privacy</h3><p>Load individual .ALS files, a folder, or a standard ZIP using stored/DEFLATE compression. Extract .7z archives first, or load the supplied ZIP copies. ZIP64, split and encrypted ZIPs are refused. Limits: 16 MiB per ALS, 128 MiB per collection, and 2000 input entries. Files are processed in browser memory using bundled JavaScript; there are no network requests, external scripts or backend. Original files are never overwritten.</p><h3>Reports and safe use</h3><p>The output ZIP contains only converted ALS files, their detailed JSON/text reports and a batch manifest. Keep the original files and review the skipped list. Every built file is re-parsed and checked for identifier writes, retained records, local indices, filter thresholds, resource shifts and exact restoration from the log. These checks do not verify whether the target game executable implements every retained state or has the required animations. Game-runtime compatibility remains untested.</p></div></details>
+<footer class="footer"><span>ALS Reference Converter · v3.0.0 · standalone HTML</span><span>No manual ID map. No original-file overwrite. Test in-game separately.</span></footer><noscript>This tool requires JavaScript enabled in your browser.</noscript>
+</main>
+<script id="als-core">
+
+/* ALS reference converter, v3.0.0. No beta-to-final ID lookup is embedded.
+ * Layout profile: observed 32-bit little-endian USM ALS machine vectors and meta resources, not arbitrary platform/version ALS.
+ * Correspondences are learned afresh from the two files supplied by the user.
+ */
+function createALSReferenceCore() {
+  'use strict';
+  const VERSION = '3.0.0';
+  const MAX_BYTES = 16 * 1024 * 1024;
+  class FormatError extends Error {
+    constructor(message) { super(message); this.name = 'ALSFormatError'; }
+  }
+  const require = (condition, message) => { if (!condition) throw new FormatError(message); };
+  const hex = (n, width = 4) => '0x' + Number(n).toString(16).toUpperCase().padStart(width, '0');
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  const groupBy = (items, key) => {
+    const groups = new Map();
+    for (const item of items) { const k = key(item); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(item); }
+    return groups;
+  };
+  function asBytes(data) {
+    if (data instanceof Uint8Array) return data;
+    if (data instanceof ArrayBuffer) return new Uint8Array(data);
+    throw new FormatError('Expected an ArrayBuffer or Uint8Array.');
+  }
+  function sha256(input) {
+    // Bundled checksum implementation keeps file:// use independent of Web Crypto.
+    const bytes = asBytes(input), length = bytes.length;
+    const padded = new Uint8Array(Math.ceil((length + 9) / 64) * 64);
+    padded.set(bytes); padded[length] = 0x80;
+    const dv = new DataView(padded.buffer);
+    dv.setUint32(padded.length - 8, Math.floor(length / 0x20000000), false);
+    dv.setUint32(padded.length - 4, (length * 8) >>> 0, false);
+    const K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+      0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+      0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+      0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+      0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+      0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+      0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+      0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+    const h = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+    const w = new Uint32Array(64), r = (x, n) => (x >>> n) | (x << (32 - n));
+    for (let p = 0; p < padded.length; p += 64) {
+      for (let i = 0; i < 16; i++) w[i] = dv.getUint32(p + i * 4, false);
+      for (let i = 16; i < 64; i++) {
+        const a = w[i-15], b = w[i-2];
+        w[i] = (w[i-16] + (r(a,7)^r(a,18)^(a>>>3)) + w[i-7] + (r(b,17)^r(b,19)^(b>>>10))) >>> 0;
+      }
+      let [a,b,c,d,e,f,g,j] = h;
+      for (let i = 0; i < 64; i++) {
+        const t1 = (j + (r(e,6)^r(e,11)^r(e,25)) + ((e&f)^(~e&g)) + K[i] + w[i]) >>> 0;
+        const t2 = ((r(a,2)^r(a,13)^r(a,22)) + ((a&b)^(a&c)^(b&c))) >>> 0;
+        j=g; g=f; f=e; e=(d+t1)>>>0; d=c; c=b; b=a; a=(t1+t2)>>>0;
+      }
+      [a,b,c,d,e,f,g,j].forEach((v,i) => h[i]=(h[i]+v)>>>0);
+    }
+    return h.map(n=>n.toString(16).padStart(8,'0')).join('');
+  }
+  class ALS {
+    constructor(data, label = 'ALS') {
+      this.data = asBytes(data); this.label = label;
+      require(this.data.length <= MAX_BYTES, label + ': maximum file size is 16 MiB.');
+      require(this.data.length >= 0x1c && this.data.length % 4 === 0, label + ': invalid ALS size/alignment.');
+      this.view = new DataView(this.data.buffer, this.data.byteOffset, this.data.byteLength);
+      this.pos=0; this.filters=[]; this.refs=[]; this.rules=[]; this.records=[]; this.tags=[];
+      this.vectors=[]; this.params=[]; this.sections={}; this.names=[]; this.resources=[]; this.machines=[];this.machine=null;this.layerIndex=null;
+    }
+    assert(condition, message) { require(condition, this.label + ': ' + message); }
+    u(p) {
+      this.assert(Number.isInteger(p) && p >= 0 && p <= this.data.length-4, 'out-of-bounds word at ' + hex(p,8));
+      return this.view.getUint32(p,true);
+    }
+    take(size) {
+      const p=this.pos;
+      this.assert(Number.isInteger(size) && size>=0 && p+size<=this.data.length, 'truncated record at '+hex(p,8));
+      this.pos+=size; return p;
+    }
+    vector(offset, reader, basic=false) {
+      const count=this.u(offset+4), pointer=this.u(offset+8), capacity=this.u(offset+12);
+      this.assert(count===capacity && count<=10000, 'invalid vector count/capacity at '+hex(offset,8));
+      this.assert(Boolean(count)===Boolean(pointer), 'unexpected vector pointer at '+hex(offset,8));
+      this.vectors.push([offset,count,basic]);
+      if (count && !basic) {
+        const p=this.take(count*4);
+        for(let i=p;i<p+count*4;i++) this.assert(this.data[i]===0,'unexpected pointer table at '+hex(p,8));
+      }
+      for(let i=0;i<count;i++) reader();
+    }
+    readFilter() {
+      const p=this.take(12);
+      this.assert(this.u(p)<256,'unrecognized filter selector at '+hex(p,8));
+      this.filters.push({offset:p,id:this.u(p),low:this.u(p+4),high:this.u(p+8)});
+    }
+    readRef() { const p=this.take(4); this.refs.push([p,this.u(p)]); }
+    paramEntry() {
+      const p=this.take(12),value=this.u(p),kind=this.u(p+4),name=this.u(p+8);
+      this.assert(kind<=3,'unsupported pointer-valued parameter at '+hex(p,8));
+      this.params.push([p,value,kind,name]);
+    }
+    paramBlock() { const p=this.take(12); if(this.u(p+4)) { const h=this.take(24); this.vector(h,()=>this.paramEntry()); } }
+    readRule(kind) {
+      const size={implicit:36,explicit:40,incoming:44}[kind], fi=this.filters.length, p=this.take(size);
+      this.assert(this.rules.length<200000,'too many rules.');
+      this.vector(p,()=>this.readFilter());
+      if(this.u(p+24)) { const h=this.take(20); this.vector(h,()=>this.take(8)); }
+      this.assert(this.u(p+32)===0,'unsupported post-action data at '+hex(p,8));
+      const extras=[];
+      for(let x=36;x<size;x+=4) extras.push(x===40 ? this.u(p+x)&255 : this.u(p+x));
+      this.rules.push({offset:p,end:this.pos,kind,action:this.u(p+20),target:this.u(p+28),extras,filters:this.filters.slice(fi)});
+    }
+    readRecord(kind) {
+      const size={state:this.layerIndex===null?88:84,category:124,group:64}[kind], p=this.take(size);
+      const fi=this.filters.length,gi=this.refs.length,ri=this.rules.length;
+      this.assert(this.u(p)>0&&this.u(p)<0x1000,'invalid record class at '+hex(p,8));
+      this.tags.push([p,kind]); let basic,implicit,explicit,layer;
+      if(kind==='state') {
+        if(this.layerIndex===null){this.assert(this.u(p+84)<0x1000,'invalid auxiliary type at '+hex(p+84,8));this.tags.push([p+84,'state_auxiliary_id']);} if(this.u(p+16)) this.paramBlock();
+        basic=p+24; implicit=p+40; explicit=p+60; layer=p+80;
+      } else if(kind==='category') {
+        if(this.u(p+12)) this.paramBlock();
+        this.assert(this.u(p+28)===0,'unsupported force-transition conditions at '+hex(p,8));
+        basic=p+44; implicit=p+60; explicit=p+80; layer=p+120;
+      } else { basic=p+4; implicit=p+20; explicit=p+40; layer=p+60; }
+      this.vector(basic,()=>this.readRef(),true);
+      this.vector(implicit,()=>this.readRule('implicit'));
+      this.vector(explicit,()=>this.readRule('explicit'));
+      if(kind==='category') this.vector(p+100,()=>this.readRule('incoming'));
+      this.assert(this.u(layer)===0,'unsupported layer-transition data at '+hex(p,8));
+      this.records.push({kind,machine:this.machine,layer:this.layerIndex,offset:p,end:this.pos,key:kind==='group'?null:this.u(p+4),
+        filters:this.filters.slice(fi),refs:this.refs.slice(gi),rules:this.rules.slice(ri)});
+    }
+    resourceHeader(p) {
+      this.assert(p%8===0 && p+40<=this.data.length,'invalid animation-resource boundary at '+hex(p,8));
+      this.assert(this.u(p)>0 && this.u(p)<0x1000,'unexpected animation-resource class at '+hex(p,8));
+      let end=p+12; while(end<p+40 && this.data[end]!==0) end++;
+      this.assert(end<p+40,'unterminated animation-resource name at '+hex(p,8));
+      const name=String.fromCharCode(...this.data.subarray(p+12,end));
+      this.assert(/^[A-Za-z_][A-Za-z0-9_]{4,27}$/.test(name),'invalid animation-resource name at '+hex(p,8));
+      let kind='aim';
+      if(/std_interact_anim$/.test(name)) kind='interaction';
+      else if(/strength_interact_anim$/.test(name)) kind='strength';
+      else if(name==='usmmeta_wall_run') kind='wall_run';
+      else if(/^usmswing_[A-Za-z0-9_]+$/.test(name)) kind='swing';
+      this.assert(kind!==null,'unsupported animation-resource type: '+name);
+      return {name,hash:this.u(p+8),tag:p,string:p+12,kind};
+    }
+    readResources() {
+      // The registry contains a 24-byte vector envelope and zero pointer slots.
+      // Object boundaries are read sequentially: no search-and-replace or suffix scan.
+      const registry=this.pos,count=this.u(registry+4),pointer=this.u(registry+8);
+      this.assert(count>0 && count<=256 && count===this.u(registry+12) && pointer!==0,
+        'invalid resource-registry vector/count.');
+      this.registryOffset=registry;this.vectors.push([registry,count,false]);
+      this.take(24);const table=this.take(count*4);
+      for(let p=table;p<this.pos;p++)this.assert(this.data[p]===0,'unexpected resource pointer table at '+hex(table,8));
+      const align8=x=>Math.ceil(x/8)*8;this.pos=align8(this.pos);
+      for(let i=0;i<count;i++) {
+        const h=this.resourceHeader(this.pos),p=h.tag;
+        let headerSize=h.kind==='interaction'?48:h.kind==='strength'?56:64,items=0,dataOffset=null,entries=[];
+        if(h.kind==='aim') {
+          const candidates=[];
+          for(const size of [72,96]) {
+            const end=p+size,slots=size===72?2:4;
+            if(end>this.data.length)continue;
+            if(Array.from({length:slots},(_,k)=>this.u(p+44+k*8)).some(x=>x!==0))continue;
+            if(i===count-1){if(end!==this.data.length)continue;}
+            else {try{this.resourceHeader(end);}catch(e){if(e instanceof FormatError)continue;throw e;}}
+            candidates.push(size);
+          }
+          this.assert(candidates.length===1,'unsupported or ambiguous aim resource layout at '+hex(p,8));headerSize=candidates[0];
+          const floatStart=headerSize===72?56:72,floatCount=headerSize===72?3:6;
+          this.assert(Array.from({length:floatCount},(_,k)=>this.view.getFloat32(p+floatStart+k*4,true)).every(Number.isFinite),'non-finite aiming limits at '+hex(p,8));
+        }
+        if(h.kind==='swing'||h.kind==='wall_run') {
+          items=this.u(p+44);
+          this.assert(items<=10000 && items===this.u(p+52) && Boolean(items)===Boolean(this.u(p+48)),
+            'invalid meta-key vector count/capacity/pointer at '+hex(p+40,8));
+          const candidates=[];
+          for(const size of h.kind==='swing'?[64,112]:[64]) {
+            const stop=align8(p+size+items*20);
+            if(stop>this.data.length)continue;
+            if(size===112 && !this.data.subarray(p+60,p+108).every(v=>v===0))continue;
+            if(!this.data.subarray(p+size,p+size+items*4).every(v=>v===0))continue;
+            if(i===count-1) { if(stop!==this.data.length)continue; }
+            else { try {this.resourceHeader(stop);} catch(e) {if(e instanceof FormatError)continue;throw e;} }
+            candidates.push(size);
+          }
+          this.assert(candidates.length===1,'unsupported or ambiguous '+h.kind+' resource layout at '+hex(p,8));
+          headerSize=candidates[0];dataOffset=p+headerSize+items*4;
+          for(let j=0;j<items;j++) {
+            const q=dataOffset+j*16;
+            this.assert(this.u(q+4)===0,'unsupported non-null meta-key animation pointer at '+hex(q+4,8));
+            entries.push([q,this.u(q),this.u(q+4),this.u(q+8),this.u(q+12)]);
+          }
+          this.vectors.push([p+40,items,false]);
+        }
+        const stop=align8(p+headerSize+items*20);
+        this.assert(stop<=this.data.length,'truncated animation-resource object.');
+        this.names.push({name:h.name,hash:h.hash,tag:p,string:h.string});this.tags.push([p,'animation_resource']);
+        this.resources.push({...h,end:stop,header_size:headerSize,count:items,data_offset:dataOffset,entries});
+        this.pos=stop;
+      }
+      this.assert(this.pos===this.data.length,'resource-registry size/count mismatch or trailing unsupported data.');
+      this.profile=this.resources.some(r=>r.kind==='swing'||r.kind==='wall_run')?'ultimate-spiderman':
+        this.names.some(n=>n.name.startsWith('ven'))?'venom':'interaction-only';
+    }
+    readMachine(layerIndex=null) {
+      this.layerIndex=layerIndex;
+      const p=this.take(layerIndex===null?64:72);
+      this.assert(this.u(p)>0 && this.u(p)<0x1000,'invalid machine class at '+hex(p,8));
+      const key=layerIndex===null?'base':'layer:'+this.u(p+68);
+      this.machine=key;
+      this.tags.push([p,layerIndex===null?'base_machine':'layer_machine']);
+      const beforeRefs=this.refs.length, beforeRecords=this.records.length;
+      for(const [kind,off] of [['state',4],['category',24],['group',44]])this.vector(p+off,()=>this.readRecord(kind));
+      this.assert(this.refs.slice(beforeRefs).every(([,i])=>i<this.u(p+48)),'out-of-range local group index in '+key);
+      this.machines.push({key,offset:p,end:this.pos,layer:layerIndex,records:this.records.slice(beforeRecords),class_id:this.u(p)});
+      this.sections[key]=this.pos;
+    }
+    parse() {
+      this.pos=28;
+      let n=0;this.vector(0,()=>this.readMachine(n++));
+      if(this.u(20))this.readMachine(null);
+      if(this.u(24))this.readResources();
+      else {this.profile='generic-machines';this.assert(this.pos===this.data.length,'unexpected trailing data at '+hex(this.pos,8));}
+      this.assert(new Set(this.machines.map(m=>m.key)).size===this.machines.length,'duplicate layer IDs');
+      this.assert(new Set(this.tags.map(([p])=>p)).size===this.tags.length,'overlapping tag slots.');
+      return this;
+    }
+  }
+
+  const basicSignature=r=>[r.kind,r.action,r.target,r.extras];
+  const ruleSignature=r=>JSON.stringify([basicSignature(r),r.filters.map(f=>[f.low,f.high])]);
+  const roleOf=kind=>kind==='state_auxiliary_id'?'auxiliary':kind==='animation_resource'?'resource':'class';
+  const recordKey=r=>r.machine+':'+r.kind+':'+r.key;
+  function collectVotes(source,target,sourceName,targetName) {
+    const votes={class:[],auxiliary:[],filter:[],resource:[]},matches={states:0,categories:0,groups:0,machines:0,resources:0};
+    const add=(family,bo,fo,why,extra={})=>votes[family].push({source:source.u(bo),target:target.u(fo),source_file:sourceName,target_file:targetName,source_offset:bo,target_offset:fo,reason:why,...extra});
+    if(source.data.length===target.data.length && source.data.every((v,i)=>v===target.data[i])){
+      for(const field of tagFields(source)){
+        const resource=field.family==='resource'?source.resources.find(r=>r.tag===field.offset):null;
+        add(field.family,field.offset,field.offset,'Byte-identical input/reference at the same parsed field',resource?{kind:resource.kind,source_size:resource.header_size,target_size:resource.header_size}:{});
+      }
+      matches.states=source.records.filter(r=>r.kind==='state').length;matches.categories=source.records.filter(r=>r.kind==='category').length;matches.groups=source.records.filter(r=>r.kind==='group').length;matches.machines=source.machines.length;matches.resources=source.resources.length;
+      return {votes,matches};
+    }
+    const ruleShape=r=>JSON.stringify([r.kind,r.action,r.target,r.extras,r.filters.map(f=>[f.low,f.high])]);
+    const targetRecords=groupBy(target.records.filter(r=>r.kind!=='group'),recordKey);
+    const targetMachines=groupBy(target.machines,m=>m.key);
+    function record(a,b) {
+      add('class',a.offset,b.offset,'Same machine, record kind and identity hash');
+      if(a.kind==='state' && a.layer===null && b.layer===null)add('auxiliary',a.offset+84,b.offset+84,'Same base-state identity');
+      const ar=groupBy(a.rules,ruleShape),br=groupBy(b.rules,ruleShape);
+      for(const [key,arr] of ar) {
+        const brr=br.get(key);
+        if(arr.length!==1 || brr?.length!==1)continue;
+        arr[0].filters.forEach((af,i)=>add('filter',af.offset,brr[0].filters[i].offset,'Same rule action, destination, extras and ordered thresholds'));
+      }
+    }
+    const srcRecords=groupBy(source.records.filter(r=>r.kind!=='group'),recordKey);
+    for(const [key,rr] of srcRecords){const tt=targetRecords.get(key);if(rr.length===1 && tt?.length===1){record(rr[0],tt[0]);matches[rr[0].kind==='state'?'states':'categories']++;}}
+    for(const m of source.machines) {
+      const tm=targetMachines.get(m.key);if(tm?.length!==1)continue;add('class',m.offset,tm[0].offset,'Same base/layer machine identity');matches.machines++;
+      const gsig=r=>JSON.stringify(r.rules.map(basicSignature));
+      const bg=groupBy(m.records.filter(r=>r.kind==='group'),gsig),fg=groupBy(tm[0].records.filter(r=>r.kind==='group'),gsig);
+      for(const [key,rr]of bg){const tt=fg.get(key);if(rr.length===1 && tt?.length===1){record(rr[0],tt[0]);matches.groups++;}}
+    }
+    const srcResources=groupBy(source.resources,r=>r.name+':'+r.hash),targetResources=groupBy(target.resources,r=>r.name+':'+r.hash);
+    for(const [key,rs]of srcResources){const ts=targetResources.get(key);if(!ts)continue;
+      for(let i=0;i<Math.min(rs.length,ts.length);i++){const r=rs[i],t=ts[i];if(r.kind!==t.kind)continue;
+        add('resource',r.tag,t.tag,'Same resource name/hash and occurrence',{kind:r.kind,source_size:r.header_size,target_size:t.header_size});matches.resources++;
+      }
+    }
+    return {votes,matches};
+  }
+  function emptyVotes(){return {class:[],auxiliary:[],filter:[],resource:[]};}
+  function mergeVotes(a,b){for(const family of Object.keys(a))a[family].push(...b[family]);return a;}
+  function resolveVotes(votes,required,family,allowInference=true) {
+    const candidates=new Map();
+    for(const vote of votes){const k=vote.source+':'+vote.target;let c=candidates.get(k);if(!c){c={source:vote.source,target:vote.target,support:0,examples:[],files:new Set()};candidates.set(k,c);}c.support++;c.files.add(vote.source_file+' → '+vote.target_file);if(c.examples.length<12)c.examples.push(vote);}
+    const grouped=groupBy([...candidates.values()],e=>e.source),map=new Map(),evidence=[],unresolved=[];
+    for(const [source,rows]of [...grouped].sort((a,b)=>a[0]-b[0])){rows.sort((a,b)=>b.support-a.support||a.target-b.target);const top=rows[0],total=rows.reduce((n,r)=>n+r.support,0),runner=rows[1]?.support||0;
+      // Allow directly evidenced many-to-one auxiliary migrations. Never force a global ordering
+      // on resource types: the same source type can split into different target layouts.
+      if(rows.length===1 || (top.support>=3 && top.support>runner*2 && top.support/total>=0.65)) {
+        map.set(source,top.target);evidence.push({...top,files:[...top.files],family,inferred:false,basis:rows.length===1?'Unique matched-record correspondence':'Dominant matched-record correspondence',alternatives:rows.slice(1).map(({target,support})=>({target,support})),total_support:total});
+      }
+    }
+    const directAnchors=new Map(map);
+    // Where a source ID has tied record candidates, accept a candidate only when
+    // it is the sole candidate bracketed by its nearest independently resolved IDs.
+    // This is explicitly labeled inferred and still needs user approval.
+    for(const [source,rows]of [...grouped].sort((a,b)=>a[0]-b[0])){
+      if(map.has(source))continue;
+      const anchors=[...directAnchors].sort((a,b)=>a[0]-b[0]),lo=anchors.filter(([id])=>id<source).at(-1),hi=anchors.find(([id])=>id>source);
+      if(!lo||!hi||lo[1]>=hi[1])continue;
+      const admissible=rows.filter(r=>r.target>lo[1]&&r.target<hi[1]);
+      if(admissible.length===1){const top=admissible[0];map.set(source,top.target);evidence.push({...top,files:[...top.files],family,inferred:true,basis:'Unique observed candidate bracketed by resolved neighboring IDs',alternatives:rows.filter(r=>r!==top).map(({target,support})=>({target,support})),total_support:rows.reduce((n,r)=>n+r.support,0)});}
+    }
+    const completed=new Map(map);
+    for(const id of [...required].sort((a,b)=>a-b)) {
+      if(completed.has(id))continue;
+      if(grouped.has(id)){unresolved.push({family,source:id,reason:'Conflicting matched-record targets without a dominant counterpart',candidates:grouped.get(id).map(({target,support})=>({target,support}))});continue;}
+      const anchors=[...map].sort((a,b)=>a[0]-b[0]),below=anchors.filter(([a])=>a<id),above=anchors.filter(([a])=>a>id);let value=null,why='';
+      if(allowInference&&below.length&&above.length){const lo=below.at(-1),hi=above[0];if(lo[1]-lo[0]===hi[1]-hi[0] && hi[0]-lo[0]<=24){value=id+lo[1]-lo[0];why='Numbering interpolation between '+hex(lo[0])+' → '+hex(lo[1])+' and '+hex(hi[0])+' → '+hex(hi[1]);}}
+      if(allowInference&&value===null&&!above.length&&below.length>=3){const last=below.slice(-3),deltas=new Set(last.map(([a,b])=>b-a));if(deltas.size===1 && id-below.at(-1)[0]<=8){value=id+[...deltas][0];why='Short-range numbering extrapolation from three matching offsets';}}
+      if(value!==null && value>=0 && value<=(family==='filter'?255:4095) && ![...completed.values()].includes(value)) {
+        completed.set(id,value);evidence.push({source:id,target:value,family,support:0,files:[],examples:[],alternatives:[],total_support:0,inferred:true,basis:why});
+      }else unresolved.push({family,source:id,reason:'No supported record match or conservative numbering inference'});
+    }
+    return {mapping:completed,evidence:evidence.filter(e=>required.has(e.source)).sort((a,b)=>a.source-b.source),unresolved};
+  }
+  function tagFields(als){return als.tags.map(([offset,kind])=>({offset,kind,family:roleOf(kind),old:als.u(offset)})).concat(als.filters.map(f=>({offset:f.offset,kind:'filter_selector',family:'filter',old:f.id})));}
+  function counterpartResources(source,target) {
+    const all=target?groupBy(target.resources,r=>r.name+':'+r.hash):new Map(),seen=new Map(),pairs=[];
+    for(const s of source.resources){const key=s.name+':'+s.hash,occ=seen.get(key)||0;seen.set(key,occ+1);const ts=all.get(key)||[];let t=ts[occ];
+      // Reuse an identical duplicate template only when byte-identical past the class word.
+      if(!t && ts.length && ts.every(x=>same(Array.from(target.data.subarray(x.tag,x.end)),Array.from(target.data.subarray(ts[0].tag,ts[0].end)))))t=ts[0];
+      pairs.push([s,t||null]);
+    }
+    return pairs;
+  }
+  function makePlan(source,target,rawVotes,labels={},options={}) {
+    const fields=tagFields(source),learned={},evidence=[],unresolved=[],decisions=[];
+    for(const family of ['class','auxiliary','filter']){
+      const required=new Set(fields.filter(f=>f.family===family).map(f=>f.old));
+      const resolved=resolveVotes(rawVotes[family],required,family,true);learned[family]=resolved.mapping;evidence.push(...resolved.evidence);// Preserve ambiguities until exact, same-record evidence is tried below.
+      const localCandidates=groupBy(rawVotes[family].filter(v=>v.source_file===labels.source),v=>v.source_offset);
+      const localDecided=new Set();
+      for(const f of fields.filter(f=>f.family===family && !resolved.mapping.has(f.old))){
+        const vs=localCandidates.get(f.offset)||[],targets=new Set(vs.map(v=>v.target));
+        if(targets.size===1){const value=[...targets][0];decisions.push({...f,new:value,inferred:false,basis:'Unique corresponding target record resolves an ambiguous collection ID'});localDecided.add(f.offset);evidence.push({family,source:f.old,target:value,support:vs.length,examples:vs.slice(0,12),inferred:false,basis:'Unique corresponding target record resolves an ambiguous collection ID',offset:f.offset,source_fields:1,files:[labels.source+' → '+labels.target]});}
+      }
+      unresolved.push(...resolved.unresolved.filter(e=>fields.some(f=>f.family===family&&f.old===e.source&&!localDecided.has(f.offset))));
+      const ev=new Map(resolved.evidence.map(e=>[e.source,e]));
+      for(const f of fields.filter(f=>f.family===family)){if(resolved.mapping.has(f.old)){const e=ev.get(f.old);decisions.push({...f,new:resolved.mapping.get(f.old),inferred:e.inferred,basis:e.basis});}}
+    }
+    const edits=[];
+    const signatures=groupBy(rawVotes.resource,v=>v.source+':'+v.kind+':'+v.source_size);
+    const resourceProfileDecisions=[];
+    for(const [s,pairedTarget]of counterpartResources(source,target)){
+      let t=pairedTarget,resourceTarget=target,resourceTargetName=labels.target;
+      if(!t && options.resourcePool){
+        const candidates=options.resourcePool.filter(x=>x.resource.name===s.name&&x.resource.hash===s.hash&&x.resource.kind===s.kind);
+        const distinct=groupBy(candidates,x=>hex(x.als.u(x.resource.tag))+':'+x.resource.header_size+':'+sha256(x.als.data.subarray(x.resource.tag+40,x.resource.end)));
+        if(distinct.size===1){const x=candidates[0];t=x.resource;resourceTarget=x.als;resourceTargetName=x.name;}
+      }
+      let to=null,size=null,examples=[],why='';
+      if(t){if(t.kind!==s.kind){unresolved.push({family:'resource',source:source.u(s.tag),offset:s.tag,reason:'Incompatible resource families: '+s.name});continue;}to=resourceTarget.u(t.tag);size=t.header_size;why=pairedTarget?'Matched resource name/hash and occurrence':'Unique same-name/hash resource payload across target collection';examples=[{source_file:labels.source,target_file:resourceTargetName,source_offset:s.tag,target_offset:t.tag}];}
+      else {
+        const vs=signatures.get(source.u(s.tag)+':'+s.kind+':'+s.header_size)||[],dest=groupBy(vs,v=>v.target+':'+v.target_size);
+        if(dest.size===1){const arr=[...dest.values()][0];to=arr[0].target;size=arr[0].target_size;why='Unique resource-class/layout correspondence in matched collection';examples=arr.slice(0,12);}
+        else {unresolved.push({family:'resource',source:source.u(s.tag),offset:s.tag,reason:'No unique target resource class/layout for '+s.name});continue;}
+      }
+      const ev={family:'resource',source:source.u(s.tag),target:to,support:examples.length,examples,inferred:false,basis:why,resource:s.name,offset:s.tag,source_size:s.header_size,target_size:size};evidence.push(ev);resourceProfileDecisions.push(ev);
+      decisions.push({offset:s.tag,kind:'animation_resource',family:'resource',old:source.u(s.tag),new:to,inferred:false,basis:why});
+      if(s.header_size===size)continue;
+      if(s.kind==='swing' && [64,112].includes(s.header_size) && [64,112].includes(size)){
+        const shrink=s.header_size===112;
+        const storage=shrink?source.data.subarray(s.tag+60,s.tag+108):t?resourceTarget.data.subarray(t.tag+60,t.tag+108):null;
+        if(!storage || storage.length!==48 || !storage.every(v=>v===0)){unresolved.push({family:'layout',source:source.u(s.tag),offset:s.tag,reason:'Swing migration requires verified 48-byte zero runtime storage'});continue;}
+        edits.push({kind:shrink?'remove_runtime_storage':'insert_runtime_storage',source_offset:s.tag+60,remove:shrink?48:0,insert:shrink?[]:Array.from(storage),original:shrink?Array.from(storage):[],reference_file:resourceTargetName,reference_offset:t?t.tag+60:null,resource:s.name,source_header_size:s.header_size,target_header_size:size,requires_approval:false,reason:'Resize zero runtime-pointer storage; preserve source trailer and all key entries.'});
+      }else if(s.kind==='aim' && [72,96].includes(s.header_size) && [72,96].includes(size)){
+        if(!t){unresolved.push({family:'layout',source:source.u(s.tag),offset:s.tag,reason:'Aiming-layout change needs the same named target resource; no target payload can be invented for '+s.name});continue;}
+        edits.push({kind:'reference_aim_payload',source_offset:s.tag+40,remove:s.header_size-40,insert:Array.from(resourceTarget.data.subarray(t.tag+40,t.tag+size)),original:Array.from(source.data.subarray(s.tag+40,s.tag+s.header_size)),reference_file:resourceTargetName,reference_offset:t.tag+40,resource:s.name,source_header_size:s.header_size,target_header_size:size,requires_approval:true,reason:'Replace incompatible two-/four-slot aiming payload with the matching target resource payload. Target animation hashes, bounds and padding replace this source payload; original bytes are retained in the report.'});
+      }else unresolved.push({family:'layout',source:source.u(s.tag),offset:s.tag,reason:'Unsupported resource layout migration: '+s.name+' '+s.header_size+' → '+size});
+    }
+    edits.sort((a,b)=>a.source_offset-b.source_offset);let delta=0,end=0;
+    for(const e of edits){require(e.source_offset>=end,'Overlapping structural edits');e.output_offset=e.source_offset+delta;end=e.source_offset+e.remove;delta+=e.insert.length-e.remove;}
+    const shift=p=>{let d=0;for(const e of edits){require(!(p>=e.source_offset&&p<e.source_offset+e.remove),'Identifier inside structural replacement');if(p>=e.source_offset+e.remove)d+=e.insert.length-e.remove;}return p+d;};
+    decisions.sort((a,b)=>a.offset-b.offset);require(new Set(decisions.map(d=>d.offset)).size===decisions.length,'Duplicate ID decisions');
+    for(const d of decisions)d.output_offset=shift(d.offset);
+    for(const e of evidence) e.source_fields=(e.family==='resource'||e.offset!==undefined)?1:fields.filter(f=>f.family===e.family&&f.old===e.source).length;
+    const missingSlots=fields.length-decisions.length;
+    if(missingSlots>0 && !unresolved.length)unresolved.push({family:'internal',reason:'Undecided identifier slots: '+missingSlots});
+    return {decisions,patches:decisions.filter(d=>d.old!==d.new),edits,delta,shift,evidence,unresolved,resourceProfileDecisions};
+  }
+  function applyEdits(bytes,edits){const delta=edits.reduce((d,e)=>d+e.insert.length-e.remove,0),out=new Uint8Array(bytes.length+delta);let r=0,w=0;
+    for(const e of edits){out.set(bytes.subarray(r,e.source_offset),w);w+=e.source_offset-r;out.set(e.insert,w);w+=e.insert.length;r=e.source_offset+e.remove;}out.set(bytes.subarray(r),w);return out;}
+  function undoEdits(bytes,edits){const delta=edits.reduce((d,e)=>d+e.insert.length-e.remove,0),out=new Uint8Array(bytes.length-delta);let r=0,w=0;
+    for(const e of edits){out.set(bytes.subarray(r,e.output_offset),w);w+=e.output_offset-r;out.set(e.original,w);w+=e.original.length;r=e.output_offset+e.insert.length;}out.set(bytes.subarray(r),w);return out;}
+  function counts(a){const n={state:0,category:0,group:0,layers:0,machines:a.machines.length,resources:a.resources.length};a.records.forEach(r=>n[r.kind]++);n.layers=a.machines.filter(m=>m.layer!==null).length;return n;}
+  function prepare(source,target,rawVotes,meta={},options={}){
+    const plan=makePlan(source,target,rawVotes,{source:meta.sourceName||source.label,target:meta.referenceName||target?.label},options);
+    const inferences=plan.evidence.filter(e=>e.inferred),resourceImports=plan.edits.filter(e=>e.requires_approval);
+    const report={tool:'ALS Reference Converter',version:VERSION,direction:meta.direction||'source_to_reference',status:plan.unresolved.length?'blocked':inferences.length||resourceImports.length?'approval_required':'ready',source:meta.sourceName||source.label,reference:meta.referenceName||target?.label||null,reference_mode:target?'paired_file':'collection_only',source_size:source.data.length,reference_size:target?.data.length||null,planned_output_size:source.data.length+plan.delta,source_sha256:sha256(source.data),reference_sha256:target?sha256(target.data):null,output_sha256:null,source_records:counts(source),reference_records:target?counts(target):null,filters_parsed:source.filters.length,patches:plan.patches.length,class_fields_changed:plan.patches.filter(p=>p.family!=='filter').length,filter_fields_changed:plan.patches.filter(p=>p.family==='filter').length,structural_size_delta:plan.delta,structural_changes:plan.edits,reference_payload_adaptations:resourceImports.length,inferred_correspondences:inferences.length,inferred_fields:plan.patches.filter(p=>p.inferred).length,inferences,unresolved:plan.unresolved,evidence:plan.evidence,patch_log:plan.patches,resource_names:source.names.map(n=>n.name),checks:[],game_runtime_tested:false,warnings:[
+      'Reference-guided experimental migration of observed Ultimate Spider-Man 32-bit little-endian ALS layouts. Not a universal converter for every platform/version.',
+      'All identifier correspondences are learned from the loaded files. No predefined beta/final translation table is included.',
+      'Same-record matching is evidence, not proof of semantic equivalence. Auxiliary types can merge or change behavior between versions.',
+      'Numbering-only inferences require separate approval; unresolved or ambiguous IDs block the entire file.',
+      'Source machines, states, categories, transition groups, local indices and rule bodies are retained. New target-only gameplay records are not imported.',
+      'Two-/four-slot aiming-layout adaptation uses the matching target payload and may change animation hashes and aim limits. Its original source payload is logged for exact restoration.',
+      'Final-to-beta is a reference-guided migration, not recovery of the historical beta. Final-only game code or assets may not exist in beta.',
+      'No game-runtime test has been performed. Validation establishes binary preservation and internal consistency only.'
+    ]};
+    require(report.planned_output_size>=28 && report.planned_output_size<=MAX_BYTES,'Output exceeds supported size limits');
+    return {source,target,plan,report};
+  }
+  function analyze(sourceData,referenceData,meta={},progress=()=>{}){
+    progress('Parsing source');const source=new ALS(new Uint8Array(asBytes(sourceData)),meta.sourceName||'Source').parse();
+    progress('Parsing target reference');const target=new ALS(new Uint8Array(asBytes(referenceData)),meta.referenceName||'Target').parse();
+    const matched=collectVotes(source,target,source.label,target.label);
+    require(matched.matches.states+matched.matches.categories>0 || source.records.length===0&&target.records.length===0,'No shared state/category identities; select a related reference ALS.');
+    progress('Learning identifier correspondences');return prepare(source,target,matched.votes,meta);
+  }
+  function convert(session,options={}) {
+    if(typeof options==='boolean')options={allowInferred:options};
+    require(session?.source instanceof ALS,'Analyze source/reference files first.');
+    const {source,target,plan}=session;
+    require(!plan.unresolved.length,'Unresolved identifiers or structures: conversion blocked.');
+    require(options.allowInferred || !session.report.inferred_correspondences,'Numbering inference requires explicit approval.');
+    require(options.allowResourceAdaptation || !session.report.reference_payload_adaptations,'Target aiming-payload adaptation requires explicit approval.');
+    const checks=[],check=(name,ok)=>{require(ok,'Validation failed: '+name);checks.push({name,passed:true});};
+    check('Source checksum stable',sha256(source.data)===session.report.source_sha256);
+    check('Target checksum stable',!target||sha256(target.data)===session.report.reference_sha256);
+    const patched=new Uint8Array(source.data),dv=new DataView(patched.buffer),allowed=new Uint8Array(patched.length);
+    for(const p of plan.patches){dv.setUint32(p.offset,p.new,true);allowed.fill(1,p.offset,p.offset+4);}
+    const output=applyEdits(patched,plan.edits),parsed=new ALS(output,'Output').parse();
+    check('Output parses completely',parsed.pos===output.length);
+    check('Output size matches documented structural edits',output.length===session.report.planned_output_size);
+    check('Every parsed identifier has a target decision',plan.decisions.length===tagFields(source).length);
+    check('Every identifier equals its planned target value',plan.decisions.every(p=>parsed.u(p.output_offset)===p.new));
+    check('Machine/record counts retained',same(counts(parsed),counts(source)));
+    const shift=plan.shift;
+    const shape=a=>a.records.map(r=>[r.machine,r.kind,r.key,r.offset,r.end]);
+    check('Source machines and record identities retained',same(shape(parsed),source.records.map(r=>[r.machine,r.kind,r.key,shift(r.offset),shift(r.end)])));
+    check('Local transition group indices retained',same(parsed.refs,source.refs.map(([p,v])=>[shift(p),v])));
+    check('Parameter data retained',same(parsed.params,source.params.map(([p,...v])=>[shift(p),...v])));
+    check('Vector counts retained',same(parsed.vectors,source.vectors.map(([p,...v])=>[shift(p),...v])));
+    check('Filter thresholds retained',same(parsed.filters.map(f=>[f.offset,f.low,f.high]),source.filters.map(f=>[shift(f.offset),f.low,f.high])));
+    check('Rule actions and destinations retained',same(parsed.rules.map(r=>[r.offset,basicSignature(r)]),source.rules.map(r=>[shift(r.offset),basicSignature(r)])));
+    check('Resource identity hashes, names and order retained',same(parsed.names,source.names.map(n=>({...n,tag:shift(n.tag),string:shift(n.string)}))));
+    check('Vector animation keys retained',same(parsed.resources.flatMap(r=>r.entries),source.resources.flatMap(r=>r.entries.map(([p,...v])=>[shift(p),...v]))));
+    check('Resource layouts equal planned target sizes',plan.resourceProfileDecisions.every(e=>parsed.resources.find(r=>r.tag===shift(e.offset))?.header_size===e.target_size));
+    check('Inserted/replaced payload bytes equal logged reference bytes',plan.edits.every(e=>e.insert.every((v,i)=>v===output[e.output_offset+i])));
+    const flat=undoEdits(output,plan.edits);let outside=0,changed=0;
+    for(let i=0;i<flat.length;i++)if(flat[i]!==source.data[i]){changed++;if(!allowed[i])outside++;}
+    check('Only documented identifier slots changed outside structural edits',outside===0);
+    const reverse=new DataView(flat.buffer);for(const p of plan.patches)reverse.setUint32(p.offset,p.old,true);
+    check('Reverse log restores source byte-for-byte',flat.length===source.data.length&&flat.every((v,i)=>v===source.data[i]));
+    const report={...session.report,status:'converted',output_size:output.length,output_sha256:sha256(output),inference_approved:!!options.allowInferred,resource_adaptation_approved:!!options.allowResourceAdaptation,changed_identifier_bytes:changed,checks};
+    return {output,report};
+  }
+  function canonicalName(name){return String(name).replace(/\\/g,'/').split('/').at(-1).toLowerCase();}
+  function loadCollection(entries,label){
+    require(Array.isArray(entries)&&entries.length<=2000,'Collection exceeds 2000 input files.');let size=0;const good=[],failed=[];
+    for(const e of entries){if(!/\.als$/i.test(e.name))continue;size+=asBytes(e.data).length;require(size<=128*1024*1024,'Collection exceeds 128 MiB of ALS data.');
+      try{const als=new ALS(new Uint8Array(asBytes(e.data)),e.name).parse();good.push({name:e.name,als});}catch(err){failed.push({name:e.name,error:err.message});}}
+    return {label,good,failed};
+  }
+  function analyzeCollections(betaEntries,finalEntries,direction='beta_to_final',options={},progress=()=>{}){
+    require(['beta_to_final','final_to_beta'].includes(direction),'Invalid conversion direction.');
+    progress('Reading beta collection');const beta=loadCollection(betaEntries,'beta');progress('Reading final collection');const final=loadCollection(finalEntries,'final');
+    require(beta.good.length && final.good.length,'At least one readable ALS is required on each side.');
+    const bg=groupBy(beta.good,e=>canonicalName(e.name)),fg=groupBy(final.good,e=>canonicalName(e.name));
+    const pairs=[];
+    if(beta.good.length===1&&final.good.length===1 && betaEntries.length===1&&finalEntries.length===1)pairs.push([beta.good[0],final.good[0]]);
+    else for(const [key,bs]of bg){const fs=fg.get(key);if(bs.length===1&&fs?.length===1)pairs.push([bs[0],fs[0]]);}
+    const votes=emptyVotes(),pairVotes=new Map();
+    for(const [b,f]of pairs){const s=direction==='beta_to_final'?b:f,t=direction==='beta_to_final'?f:b;const v=collectVotes(s.als,t.als,s.name,t.name);mergeVotes(votes,v.votes);pairVotes.set(s.name,{target:t,...v});}
+    const src=direction==='beta_to_final'?beta:final,tgt=direction==='beta_to_final'?final:beta,sourceGroups=direction==='beta_to_final'?bg:fg,targetGroups=direction==='beta_to_final'?fg:bg;
+    const sessions=[],skipped=src.failed.map(e=>({...e,status:'parse_failed'}));
+    for(let i=0;i<src.good.length;i++){
+      const s=src.good[i],p=pairVotes.get(s.name);progress('Analyzing '+(i+1)+' / '+src.good.length+': '+canonicalName(s.name));
+      if(sourceGroups.get(canonicalName(s.name)).length!==1 || (targetGroups.get(canonicalName(s.name))||[]).length>1){skipped.push({name:s.name,status:'duplicate_name',error:'Ambiguous duplicate basename; split collections or select a single explicit pair.'});continue;}
+      if(!p&&!options.allowCollectionOnly){skipped.push({name:s.name,status:'missing_reference',error:'No same-name target reference. Collection-only migration is disabled.'});continue;}
+      try{const raw=options.useCollection===false?(p?.votes||emptyVotes()):votes;
+        if(p && p.matches.states+p.matches.categories===0 && s.als.records.length&&p.target.als.records.length)throw new FormatError('No matching state/category identities for this filename pair.');
+        const session=prepare(s.als,p?.target.als||null,raw,{sourceName:s.name,referenceName:p?.target.name||null,direction},{resourcePool:tgt.good.flatMap(e=>e.als.resources.map(r=>({als:e.als,resource:r,name:e.name})))});sessions.push(session);
+      }catch(e){skipped.push({name:s.name,status:'analysis_failed',error:e.message});}
+    }
+    const summary={version:VERSION,direction,beta_files:betaEntries.filter(e=>/\.als$/i.test(e.name)).length,final_files:finalEntries.filter(e=>/\.als$/i.test(e.name)).length,beta_parsed:beta.good.length,final_parsed:final.good.length,paired_files:pairs.length,source_files:src.good.length+src.failed.length,analyzed:sessions.length,ready:sessions.filter(s=>s.report.status==='ready').length,approval_required:sessions.filter(s=>s.report.status==='approval_required').length,blocked:sessions.filter(s=>s.report.status==='blocked').length,skipped:skipped.length,source_parse_errors:src.failed,target_parse_errors:tgt.failed,use_collection:options.useCollection!==false,collection_only_allowed:!!options.allowCollectionOnly,game_runtime_tested:false};
+    return {summary,sessions,skipped};
+  }
+  function convertCollections(batch,options={},progress=()=>{}){
+    const results=[],skipped=[...batch.skipped];let n=0;
+    for(const s of batch.sessions){progress('Building '+(++n)+' / '+batch.sessions.length+': '+canonicalName(s.report.source));
+      try{const r=convert(s,options);results.push({name:String(s.report.source).replace(/\\/g,'/').split('/').at(-1),...r});}catch(e){skipped.push({name:s.report.source,status:s.report.unresolved.length?'blocked':'not_converted',error:e.message,unresolved:s.report.unresolved});}}
+    return {results,manifest:{...batch.summary,converted:results.length,skipped_count:skipped.length,skipped,files:results.map(({name,report:r})=>({name,source:r.source,reference:r.reference,reference_mode:r.reference_mode,source_sha256:r.source_sha256,output_sha256:r.output_sha256,size:r.output_size,id_changes:r.patches,inferred_fields:r.inferred_fields,reference_payload_adaptations:r.reference_payload_adaptations,structural_size_delta:r.structural_size_delta,validation_checks:r.checks.length})),options,game_runtime_tested:false}};
+  }
+  function textReport(r){const lines=['ALS REFERENCE CONVERTER v'+VERSION,'Direction: '+r.direction,'Status: '+r.status,'Source: '+r.source,'Target reference: '+(r.reference||'(collection only)'),'Source bytes: '+r.source_size,'Output bytes: '+(r.output_size??r.planned_output_size),'Source SHA-256: '+r.source_sha256,'Target SHA-256: '+(r.reference_sha256||'See collection evidence'),'Output SHA-256: '+(r.output_sha256||'not built'),'Identifier fields changed: '+r.patches,'Structural size delta: '+r.structural_size_delta,'Numbering inferences: '+r.inferred_correspondences,'Target aiming payloads adapted: '+r.reference_payload_adaptations,'Game-runtime tested: NO','','WARNINGS',...r.warnings.map(s=>'- '+s),'','SOURCE RECORDS',JSON.stringify(r.source_records),'','UNRESOLVED',...r.unresolved.map(e=>JSON.stringify(e)),'','VALIDATION',...r.checks.map(c=>(c.passed?'PASS ':'FAIL ')+c.name),'','LEARNED EVIDENCE'];
+    for(const e of r.evidence)lines.push(e.family+' '+hex(e.source)+' → '+hex(e.target)+' | support='+e.support+' | '+e.basis+(e.resource?' | '+e.resource:''));
+    lines.push('','STRUCTURAL EDITS (full recovery bytes are in the JSON report)');for(const e of r.structural_changes)lines.push(e.resource+' | '+hex(e.source_offset,8)+' → '+hex(e.output_offset,8)+' | remove='+e.remove+' insert='+e.insert.length+' | '+e.reason);
+    lines.push('','PATCH LOG: SOURCE OFFSET → OUTPUT OFFSET | SOURCE ID → TARGET ID');for(const p of r.patch_log)lines.push(hex(p.offset,8)+' → '+hex(p.output_offset,8)+' | '+p.family+' '+hex(p.old)+' → '+hex(p.new)+(p.inferred?' | NUMBERING INFERENCE':''));return lines.join('\n')+'\n';}
+  return {VERSION,MAX_BYTES,ALS,FormatError,hex,sha256,analyze,convert,textReport,analyzeCollections,convertCollections,collectVotes,canonicalName,undoEdits};
+}
+
+if(typeof module!=="undefined")module.exports=createALSReferenceCore();
+
+</script>
+<script id="als-zip">
+function createALSZipIO() {
+  'use strict';
+  const MAX_TOTAL=128*1024*1024,MAX_ENTRIES=2000,MAX_FILE=16*1024*1024;
+  function fail(message){throw new Error(message);}
+  const crcTable=Uint32Array.from({length:256},(_,n)=>{let c=n;for(let k=0;k<8;k++)c=c&1?0xedb88320^(c>>>1):c>>>1;return c>>>0;});
+  function crc32(a){let c=0xffffffff;for(const v of a)c=crcTable[(c^v)&255]^(c>>>8);return (c^0xffffffff)>>>0;}
+  function safePath(name){
+    name=String(name).replace(/\\/g,'/');
+    if(!name||name.startsWith('/')||/^[A-Za-z]:/.test(name)||/[\x00-\x1F\x7F]/.test(name)||name.split('/').some(p=>p==='..'))fail('Unsafe archive path: '+name);
+    return name.split('/').filter(x=>x&&x!=='.').join('/');
+  }
+  async function inflateBounded(bytes,size){
+    if(typeof DecompressionStream==='undefined')fail('This browser cannot read deflated ZIPs. Extract the ZIP and select the folder, or use a current browser.');
+    let ds;try{ds=new DecompressionStream('deflate-raw');}catch(e){fail('Raw DEFLATE is unavailable. Extract this ZIP and use the folder picker.');}
+    const reader=new Blob([bytes]).stream().pipeThrough(ds).getReader();const parts=[];let total=0;
+    try{for(;;){const {done,value}=await reader.read();if(done)break;total+=value.length;if(total>size||total>MAX_FILE){await reader.cancel();fail('ZIP entry exceeds its declared/supported size.');}parts.push(value);}}finally{reader.releaseLock();}
+    if(total!==size)fail('ZIP decompressed size mismatch.');const out=new Uint8Array(total);let p=0;for(const a of parts){out.set(a,p);p+=a.length;}return out;
+  }
+  async function readZIP(data){
+    const b=data instanceof Uint8Array?data:new Uint8Array(data);if(b.length>MAX_TOTAL)fail('Archive exceeds the 128 MiB input limit.');
+    const v=new DataView(b.buffer,b.byteOffset,b.byteLength),u16=p=>v.getUint16(p,true),u32=p=>v.getUint32(p,true);let end=-1;
+    if(b.length<22)fail('Truncated ZIP.');
+    for(let p=b.length-22;p>=Math.max(0,b.length-65557);p--)if(u32(p)===0x06054b50&&p+22+u16(p+20)===b.length){end=p;break;}
+    if(end<0)fail('ZIP end record not found. Select a standard non-ZIP64 ZIP or an extracted folder.');
+    if(u16(end+4)||u16(end+6)||u16(end+8)!==u16(end+10))fail('Split/multi-disk ZIPs are not supported.');
+    const n=u16(end+10),cdSize=u32(end+12),cd=u32(end+16);if(n>MAX_ENTRIES||n===65535||cdSize===0xffffffff||cd===0xffffffff)fail('ZIP64 or more than 2000 entries is not supported.');
+    if(cd+cdSize>end)fail('Invalid ZIP directory range.');let p=cd,total=0,ignored=0;const entries=[],seen=new Set();
+    const decoder=new TextDecoder('utf-8',{fatal:true});
+    for(let i=0;i<n;i++){
+      if(p+46>cd+cdSize||u32(p)!==0x02014b50)fail('Invalid ZIP central directory.');
+      const flags=u16(p+8),method=u16(p+10),crc=u32(p+16),packed=u32(p+20),size=u32(p+24),nl=u16(p+28),xl=u16(p+30),cl=u16(p+32),disk=u16(p+34),attrs=u32(p+38),local=u32(p+42);if(p+46+nl+xl+cl>cd+cdSize)fail('Truncated ZIP filename.');
+      let name;try{name=decoder.decode(b.subarray(p+46,p+46+nl));}catch(e){fail('Unsupported filename encoding. Extract the ZIP and select its folder.');}
+      p+=46+nl+xl+cl;
+      if(disk||packed===0xffffffff||size===0xffffffff||local===0xffffffff)fail('ZIP64/multi-disk entry is unsupported.');
+      name=safePath(name);if(!/\.als$/i.test(name)){ignored++;continue;}
+      if((attrs>>>16&0xf000)===0xa000)fail('Archive symbolic links are not accepted.');
+      if(flags&1)fail('Encrypted ZIPs are not supported.');if(method!==0&&method!==8)fail('Unsupported ZIP compression method '+method+'. Extract the archive first.');
+      if(size>MAX_FILE||(total+=size)>MAX_TOTAL)fail('ZIP expansion exceeds the 16 MiB per-file / 128 MiB collection limit.');
+      if(seen.has(name.toLowerCase()))fail('Duplicate ZIP entry: '+name);seen.add(name.toLowerCase());
+      if(local+30>cd||u32(local)!==0x04034b50)fail('Invalid ZIP local header.');
+      if(u16(local+8)!==method||(u16(local+6)&1))fail('ZIP local/central method or encryption mismatch.');
+      const lnl=u16(local+26),lxl=u16(local+28),start=local+30+lnl+lxl;if(start+packed>cd)fail('ZIP entry exceeds archive data range.');
+      let localName;try{localName=safePath(decoder.decode(b.subarray(local+30,local+30+lnl)));}catch(e){fail('Invalid local ZIP filename.');}
+      if(localName!==name)fail('ZIP local/central filename mismatch.');
+      const input=b.subarray(start,start+packed),out=method===0?new Uint8Array(input):await inflateBounded(input,size);
+      if(out.length!==size||crc32(out)!==crc)fail('ZIP size or CRC-32 mismatch for '+name);entries.push({name,data:out});
+    }
+    if(p!==cd+cdSize)fail('ZIP directory size mismatch.');return {entries,ignored};
+  }
+  function writeZIP(entries){
+    if(entries.length>MAX_ENTRIES)fail('Too many output ZIP entries.');const te=new TextEncoder(),locals=[],centrals=[];let offset=0,total=0;const seen=new Set();
+    for(const entry of entries){const safe=safePath(entry.name),name=te.encode(safe),data=typeof entry.data==='string'?te.encode(entry.data):entry.data instanceof Uint8Array?entry.data:new Uint8Array(entry.data);if(name.length>65535)fail('ZIP filename too long.');if(seen.has(safe.toLowerCase()))fail('Duplicate output path: '+safe);seen.add(safe.toLowerCase());if((total+=data.length)>MAX_TOTAL)fail('Output ZIP exceeds 128 MiB.');
+      const crc=crc32(data),local=new Uint8Array(30+name.length),lv=new DataView(local.buffer),central=new Uint8Array(46+name.length),cv=new DataView(central.buffer);
+      lv.setUint32(0,0x04034b50,true);lv.setUint16(4,20,true);lv.setUint16(6,0x800,true);lv.setUint16(12,33,true);lv.setUint32(14,crc,true);lv.setUint32(18,data.length,true);lv.setUint32(22,data.length,true);lv.setUint16(26,name.length,true);local.set(name,30);
+      cv.setUint32(0,0x02014b50,true);cv.setUint16(4,20,true);cv.setUint16(6,20,true);cv.setUint16(8,0x800,true);cv.setUint16(14,33,true);cv.setUint32(16,crc,true);cv.setUint32(20,data.length,true);cv.setUint32(24,data.length,true);cv.setUint16(28,name.length,true);cv.setUint32(42,offset,true);central.set(name,46);
+      locals.push(local,data);centrals.push(central);offset+=local.length+data.length;
+    }
+    const cdSize=centrals.reduce((n,b)=>n+b.length,0),end=new Uint8Array(22),ev=new DataView(end.buffer);ev.setUint32(0,0x06054b50,true);ev.setUint16(8,entries.length,true);ev.setUint16(10,entries.length,true);ev.setUint32(12,cdSize,true);ev.setUint32(16,offset,true);
+    const out=new Uint8Array(offset+cdSize+22);let p=0;for(const a of [...locals,...centrals,end]){out.set(a,p);p+=a.length;}return out;
+  }
+  return {MAX_TOTAL,MAX_ENTRIES,MAX_FILE,safePath,crc32,readZIP,writeZIP};
+}
+if(typeof module!=='undefined')module.exports=createALSZipIO();
+
+</script>
+<script id="als-ui">
+(function(){
+'use strict';
+const core=createALSReferenceCore(),zip=createALSZipIO(),$=id=>document.getElementById(id),n=x=>Number(x||0).toLocaleString('en-US'),fmt=x=>n(x)+' bytes',base=x=>String(x).replace(/\\/g,'/').split('/').at(-1);
+const state={beta:[],final:[],busy:false,epoch:0,worker:null,rows:[],selected:null,page:0,result:null,zip:null};
+const el=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;};
+function notify(text,tone=''){ $('status').textContent=text;$('status').className='status '+tone;}
+function error(text){$('error').hidden=!text;$('error').textContent=text||'';}
+function busy(flag){state.busy=flag;$('cancelButton').hidden=!flag;$('progress').hidden=!flag;
+ for(const role of ['beta','final'])for(const suffix of ['Input','Folder','FolderButton','Clear'])$(role+suffix).disabled=flag||(suffix==='Clear'&&!state[role].length);
+ for(const id of ['direction','allowInferred','allowResourceAdaptation','allowCollectionOnly'])$(id).disabled=flag;
+ for(const id of ['analyzeButton','forwardButton','reverseButton'])$(id).disabled=flag||!state.beta.length||!state.final.length;
+ $('downloadZip').disabled=flag||!state.result?.outputs?.length;$('downloadBatch').disabled=flag||!state.result;
+}
+function terminate(){if(state.worker){state.worker.terminate();state.worker=null;}}
+function invalidate(){state.epoch++;terminate();state.result=null;state.rows=[];state.selected=null;state.zip=null;state.page=0;$('results').hidden=true;$('empty').hidden=false;$('detail').hidden=true;error('');busy(false);}
+function renderCollection(role){const entries=state[role],size=entries.reduce((sum,e)=>sum+e.data.length,0);$(role+'Drop').classList.toggle('loaded',!!entries.length);$(role+'Label').textContent=entries.length?n(entries.length)+' ALS files loaded':'Drop .ALS files or a .ZIP here';$(role+'Meta').textContent=entries.length?'Click to replace this collection':'or click to choose files';$(role+'Size').textContent=entries.length?(size/1048576).toFixed(2)+' MiB':'No files loaded';$(role+'Files').hidden=!entries.length;const ul=$(role+'FileList');ul.replaceChildren();for(const e of entries)ul.append(el('li',e.name+' · '+fmt(e.data.length)));}
+async function load(role,list){invalidate();const epoch=state.epoch;state[role]=[];renderCollection(role);busy(true);notify('Reading '+role+' inputs locally…');let entries=[],ignored=0,total=0;
+ try{if(list.length>zip.MAX_ENTRIES)throw new Error('Select at most 2000 input files.');
+  for(const file of list){const name=file.webkitRelativePath||file.name,ext=file.name.toLowerCase();
+   if(ext.endsWith('.7z'))throw new Error('.7z is not a browser input in this standalone tool. Extract it and choose the folder, or select the supplied ALS beta/final ZIP copies.');
+   if(!/\.(als|zip)$/i.test(ext)){ignored++;continue;}if(file.size>zip.MAX_TOTAL)throw new Error('Input exceeds the 128 MiB file limit.');
+   if(ext.endsWith('.als')&&file.size>core.MAX_BYTES)throw new Error(file.name+': maximum ALS size is 16 MiB.');
+   const data=new Uint8Array(await file.arrayBuffer());if(epoch!==state.epoch)return;
+   let added;if(ext.endsWith('.zip')){const r=await zip.readZIP(data);added=r.entries;ignored+=r.ignored;}else added=[{name:zip.safePath(name),data}];
+   for(const e of added){total+=e.data.length;if(total>zip.MAX_TOTAL||entries.length>=zip.MAX_ENTRIES)throw new Error('Collection exceeds 128 MiB or 2000 ALS files.');entries.push(e);}
+  }
+  if(epoch!==state.epoch)return;const paths=new Set();for(const e of entries){const key=e.name.toLowerCase();if(paths.has(key))throw new Error('Duplicate input path: '+e.name);paths.add(key);}
+  if(!entries.length)throw new Error('No .ALS files were found in that selection.');entries.sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));state[role]=entries;renderCollection(role);
+  notify(n(entries.length)+' '+role+' ALS files loaded'+(ignored?'; '+n(ignored)+' non-ALS entries ignored.':'.'), 'good');
+ }catch(e){if(epoch===state.epoch){state[role]=[];renderCollection(role);error(e.message);notify('Input was not loaded.','bad');}}
+ finally{if(epoch===state.epoch){busy(false);$(role+'Input').value='';$(role+'Folder').value='';}}
+}
+for(const role of ['beta','final']){
+ $(role+'Input').addEventListener('change',e=>load(role,[...e.target.files]));$(role+'Folder').addEventListener('change',e=>load(role,[...e.target.files]));$(role+'FolderButton').onclick=()=>$(role+'Folder').click();
+ $(role+'Clear').onclick=()=>{invalidate();state[role]=[];renderCollection(role);busy(false);notify('Load both collections to begin.');};
+ const drop=$(role+'Drop');drop.addEventListener('dragover',e=>{e.preventDefault();if(!state.busy)drop.classList.add('drag');});drop.addEventListener('dragleave',()=>drop.classList.remove('drag'));drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('drag');if(!state.busy)load(role,[...e.dataTransfer.files]);});
+}
+const options=()=>({allowInferred:$('allowInferred').checked,allowResourceAdaptation:$('allowResourceAdaptation').checked,allowCollectionOnly:$('allowCollectionOnly').checked,useCollection:true});
+function run(direction,convert){if(state.busy)return;if(!state.beta.length||!state.final.length)return;terminate();state.epoch++;const epoch=state.epoch;state.zip=null;state.result=null;state.rows=[];state.selected=null;$('direction').value=direction;$('results').hidden=true;$('detail').hidden=true;error('');busy(true);notify('Parsing both collections and learning '+direction.replaceAll('_',' ')+' evidence…');
+ const workerCode='('+createALSReferenceCore.toString()+');\nconst c=createALSReferenceCore();\nonmessage=({data:d})=>{try{const progress=m=>postMessage({type:"progress",message:m});const a=c.analyzeCollections(d.beta,d.final,d.direction,d.options,progress);const built=d.convert?c.convertCollections(a,d.options,progress):null;const reports=a.sessions.map(s=>s.report);const outputs=built?built.results:[];const result={summary:a.summary,reports,skipped:built?built.manifest.skipped:a.skipped,manifest:built?built.manifest:{...a.summary,converted:0,skipped:a.skipped,files:reports.map(r=>({source:r.source,status:r.status,patches:r.patches,unresolved:r.unresolved,inferred_correspondences:r.inferred_correspondences,reference_payload_adaptations:r.reference_payload_adaptations}))},outputs,mode:d.convert?"converted":"analyzed"};postMessage({type:"done",result},outputs.map(x=>x.output.buffer));}catch(e){postMessage({type:"error",message:e.message});}};';
+ // A function expression alone would not bind its name. Declare it in the worker source.
+ const code=workerCode.replace('('+createALSReferenceCore.toString()+');',createALSReferenceCore.toString());
+ const url=URL.createObjectURL(new Blob([code],{type:'text/javascript'}));
+ try{const worker=new Worker(url);URL.revokeObjectURL(url);state.worker=worker;
+ worker.onmessage=e=>{if(epoch!==state.epoch)return;const d=e.data;if(d.type==='progress'){notify(d.message);return;}if(d.type==='error'){terminate();busy(false);error(d.message);notify('Analysis stopped; no outputs were produced.','bad');return;}if(d.type==='done'){state.result=d.result;terminate();busy(false);renderResult();}};
+ worker.onerror=e=>{if(epoch!==state.epoch)return;terminate();busy(false);error(e.message||'Worker failed. Open the saved HTML in a current browser with JavaScript enabled.');notify('Processing failed.','bad');};
+ worker.postMessage({beta:state.beta,final:state.final,direction,options:options(),convert});
+ }catch(e){URL.revokeObjectURL(url);terminate();busy(false);error(e.message);}
+}
+$('analyzeButton').onclick=()=>run($('direction').value,false);$('forwardButton').onclick=()=>run('beta_to_final',true);$('reverseButton').onclick=()=>run('final_to_beta',true);
+$('cancelButton').onclick=()=>{state.epoch++;terminate();busy(false);notify('Canceled. Original files are unchanged.','warn');};
+for(const id of ['allowInferred','allowResourceAdaptation','allowCollectionOnly','direction'])$(id).addEventListener('change',()=>{if(state.result){invalidate();notify('Settings changed. Analyze or convert again to rebuild the results.','warn');}});
+function statusBadge(status){const text={converted:'Converted',ready:'Ready',approval_required:'Approval needed',blocked:'Blocked',missing_reference:'No reference',duplicate_name:'Duplicate name',parse_failed:'Parse failed',analysis_failed:'Analysis failed',not_converted:'Not converted'}[status]||status;const tone=status==='converted'||status==='ready'?'good':status==='approval_required'?'warn':'bad';return el('span',text,'badge '+tone);}
+function renderResult(){const r=state.result,converted=new Map(r.outputs.map(o=>[o.report.source,o])),rows=r.reports.map(report=>{const o=converted.get(report.source);return {name:base(report.source),source:report.source,status:o?'converted':report.status,report:o?o.report:report,output:o?.output};});const existing=new Set(rows.map(x=>x.source));for(const skipped of r.skipped){if(existing.has(skipped.name)){const row=rows.find(x=>x.source===skipped.name);row.error=skipped.error;if(row.status==='ready')row.status='not_converted';}else{rows.push({name:base(skipped.name),source:skipped.name,status:skipped.status,error:skipped.error,unresolved:skipped.unresolved});existing.add(skipped.name);}}
+ rows.sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));state.rows=rows;state.page=0;$('empty').hidden=true;$('results').hidden=false;$('detail').hidden=true;
+ const pending=rows.filter(x=>x.status==='approval_required').length,blocked=rows.filter(x=>!['converted','ready','approval_required'].includes(x.status)).length,ready=rows.filter(x=>x.status==='ready').length;
+ $('statSources').textContent=n(r.summary.source_files);$('statConverted').textContent=n(r.mode==='converted'?r.outputs.length:ready);$('statConvertedLabel').textContent=r.mode==='converted'?'Converted & validated':'Ready without approvals';$('statApproval').textContent=n(pending);$('statBlocked').textContent=n(blocked);
+ const dir=r.summary.direction==='beta_to_final'?'BETA → FINAL':'FINAL → BETA';$('directionBadge').textContent=dir;$('resultsTitle').textContent=r.mode==='converted'?'Conversion results':'Analysis results';$('coverage').textContent=n(r.summary.beta_parsed)+' beta + '+n(r.summary.final_parsed)+' final parsed · '+n(r.summary.paired_files)+' filename pairs';
+ $('exportHeading').textContent=r.outputs.length?n(r.outputs.length)+' validated ALS files ready to download':'No converted files have been built';$('downloadZip').disabled=!r.outputs.length;$('downloadBatch').disabled=false;
+ if(r.mode==='converted')notify(n(r.outputs.length)+' files converted; '+n(pending)+' await approval; '+n(blocked)+' blocked or skipped.',pending||blocked?'warn':'good');else notify('Analysis complete: '+n(ready)+' ready, '+n(pending)+' require approval, '+n(blocked)+' blocked or skipped.',pending||blocked?'warn':'good');
+ renderRows();const first=rows.find(x=>x.status==='converted')||rows[0];if(first)selectRow(first);
+}
+function renderRows(){const q=$('search').value.toLowerCase(),status=$('statusFilter').value,filtered=state.rows.filter(r=>r.name.toLowerCase().includes(q)&&(status==='all'||r.status===status||status==='blocked'&&!['converted','ready','approval_required'].includes(r.status)));const pages=Math.max(1,Math.ceil(filtered.length/25));state.page=Math.max(0,Math.min(state.page,pages-1));const body=$('rows');body.replaceChildren();
+ for(const row of filtered.slice(state.page*25,state.page*25+25)){const r=row.report,tr=el('tr');if(state.selected?.source===row.source)tr.className='selected';tr.append(el('td',row.name,'filename'),el('td',r?(r.reference_mode==='paired_file'?'Paired file':'Collection'):'—','small muted'),el('td',r?n(r.patches):'—','num'),el('td',r?(r.structural_size_delta>0?'+':'')+n(r.structural_size_delta):'—','num'),el('td',r?n(r.inferred_correspondences):'—','num'),el('td',r?n(r.reference_payload_adaptations):'—','num'));const s=el('td');s.append(statusBadge(row.status));const action=el('td'),button=el('button','Inspect','mini quiet');button.onclick=()=>selectRow(row);action.append(button);tr.append(s,action);body.append(tr);}
+ if(!filtered.length){const tr=el('tr'),td=el('td','No files match this filter.','muted');td.colSpan=8;tr.append(td);body.append(tr);}
+ $('pageLabel').textContent=n(filtered.length)+' files · page '+(state.page+1)+' of '+pages;$('previous').disabled=state.page===0;$('next').disabled=state.page+1===pages;
+}
+$('search').oninput=$('statusFilter').onchange=()=>{state.page=0;renderRows();};$('previous').onclick=()=>{state.page--;renderRows();};$('next').onclick=()=>{state.page++;renderRows();};
+function selectRow(row){state.selected=row;$('detail').hidden=false;$('detailName').textContent=row.name;$('downloadOne').disabled=!row.output;$('downloadJSON').disabled=!row.report;$('downloadText').disabled=!row.report;const r=row.report,summary=$('detailSummary');summary.replaceChildren();
+ if(r){const a=el('div');a.append(el('p','Source: '+r.source),el('p','Target: '+(r.reference||'Loaded target collection; see field evidence')));const b=el('div');b.append(el('p',fmt(r.source_size)+' → '+fmt(r.output_size??r.planned_output_size)),el('p',n(r.source_records.state)+' states · '+n(r.source_records.category)+' categories · '+n(r.source_records.group)+' groups · '+n(r.source_records.layers)+' layers'));summary.append(a,b);}
+ const warnings=[];if(row.error)warnings.push(row.error);if(r?.unresolved.length)warnings.push(...r.unresolved.map(e=>(e.source!==undefined?e.family+' '+core.hex(e.source)+': ':'')+e.reason));if(r?.inferred_correspondences)warnings.push(n(r.inferred_correspondences)+' numbering correspondence(s) use inference. '+n(r.inferred_fields)+' changed fields are affected.');if(r?.reference_payload_adaptations)warnings.push(n(r.reference_payload_adaptations)+' aiming payload(s) use matching target animation hashes and aim limits, not the original source payload.');if(r?.reference_mode==='collection_only')warnings.push('No same-name target file: this migration relies on other loaded collection pairs.');$('detailWarning').hidden=!warnings.length;$('detailWarning').className='callout '+(r?.unresolved.length||!r?'bad':'');$('detailWarning').textContent=warnings.join('\n');
+ const ev=$('evidenceRows');ev.replaceChildren();for(const e of r?.evidence||[]){const tr=el('tr');tr.append(el('td',e.family,'small muted'),el('td',core.hex(e.source)+' → '+core.hex(e.target),'mono'),el('td',n(e.support),'num'),el('td',(e.inferred?'INFERRED · ':'')+e.basis+(e.resource?' · '+e.resource:''),'small'));ev.append(tr);}
+ $('patchSearch').value='';renderPatches();const layout=$('layoutInfo');layout.replaceChildren();for(const e of r?.structural_changes||[]){const block=el('div',undefined,'callout');block.append(el('strong',e.resource+' · '+e.source_header_size+' → '+e.target_header_size+' byte header'),el('p',e.reason),el('p','Source '+core.hex(e.source_offset,8)+' → output '+core.hex(e.output_offset,8)+' · remove '+e.remove+' / insert '+e.insert.length,'mono'));if(e.reference_file)block.append(el('p','Target payload: '+e.reference_file,'small'));layout.append(block);}if(!r?.structural_changes.length)layout.append(el('p','No structural resource edits are planned for this file.','small muted'));
+ const hashes=$('hashes');hashes.replaceChildren();for(const [name,key]of [['Source SHA-256','source_sha256'],['Target SHA-256','reference_sha256'],['Output SHA-256','output_sha256']]){hashes.append(el('dt',name,'muted'),el('dd',r?.[key]||'Not available / not built','mono'));}const checks=$('checks');checks.replaceChildren();for(const c of r?.checks||[])checks.append(el('li',(c.passed?'✓ ':'✕ ')+c.name));if(!r?.checks.length)checks.append(el('li','Preservation checks run only when this file is built.','muted'));renderRows();
+}
+function renderPatches(){const r=state.selected?.report,q=$('patchSearch').value.toLowerCase(),all=(r?.patch_log||[]).filter(p=>[core.hex(p.offset,8),core.hex(p.output_offset,8),core.hex(p.old),core.hex(p.new),p.family].join(' ').toLowerCase().includes(q)),body=$('patchRows');body.replaceChildren();for(const p of all.slice(0,200)){const tr=el('tr');tr.append(el('td',core.hex(p.offset,8),'mono'),el('td',core.hex(p.output_offset,8),'mono'),el('td',core.hex(p.old)+' → '+core.hex(p.new),'mono'),el('td',p.family+(p.inferred?' · inferred':''),'small'));body.append(tr);}$('patchNote').textContent='Showing '+n(Math.min(200,all.length))+' of '+n(all.length)+' matching patches. The JSON and text reports contain every patch.';}
+$('patchSearch').oninput=renderPatches;for(const b of document.querySelectorAll('.tabs button'))b.onclick=()=>{for(const x of document.querySelectorAll('.tabs button')){const active=x===b;x.classList.toggle('active',active);x.setAttribute('aria-selected',active);$(x.dataset.pane).hidden=!active;}};
+function download(name,data,type='application/octet-stream'){name=base(name).replace(/[<>:"/\\|?*\x00-\x1F]/g,'_').replace(/[. ]+$/g,'');if(/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(name))name='converted_'+name;const url=URL.createObjectURL(new Blob([data],{type})),a=el('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);}
+$('downloadBatch').onclick=()=>{if(state.result)download('ALS_'+state.result.summary.direction+'_manifest.json',JSON.stringify(state.result.manifest,null,2),'application/json');};
+$('downloadOne').onclick=()=>{const s=state.selected;if(s?.output)download(s.name.replace(/\.als$/i,'')+'_converted.als',s.output);};$('downloadJSON').onclick=()=>{const s=state.selected;if(s?.report)download(s.name+'.report.json',JSON.stringify(s.report,null,2),'application/json');};$('downloadText').onclick=()=>{const s=state.selected;if(s?.report)download(s.name+'.report.txt',core.textReport(s.report),'text/plain');};
+$('downloadZip').onclick=()=>{const r=state.result;if(!r?.outputs.length)return;try{if(!state.zip){const entries=[{name:'manifest.json',data:JSON.stringify(r.manifest,null,2)}];for(const o of r.outputs){entries.push({name:'converted/'+o.name,data:o.output},{name:'reports/'+o.name+'.json',data:JSON.stringify(o.report)},{name:'reports/'+o.name+'.txt',data:core.textReport(o.report)});}entries.push({name:'README.txt',data:'Experimental ALS '+r.summary.direction+' migration. Only successful outputs are in converted/. Read manifest.json for skipped files and reports/ for every edit and recovery bytes. Source files were not overwritten. No game-runtime verification.\n'});state.zip=zip.writeZIP(entries);}download('ALS_'+r.summary.direction+'_converted.zip',state.zip,'application/zip');}catch(e){error(e.message);}};
+busy(false);
+})();
+
+</script>
+</body></html>
